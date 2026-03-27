@@ -1,0 +1,51 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Modal / overlay animations */
+    --animate-modal-in: modal-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    --animate-fade-in: fade-in 0.15s ease-out;
+    --animate-slide-down: slide-down 0.2s ease-out;
+
+    @keyframes modal-in {
+        from {
+            opacity: 0;
+            transform: scale(0.97) translateY(8px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+
+    @keyframes fade-in {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+
+    @keyframes slide-down {
+        from {
+            opacity: 0;
+            transform: translateY(-6px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+}
+
+/* ── Scrollbar styling ──────────────────────────────── */
+@layer base {
+    ::-webkit-scrollbar          { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track    { background: transparent; }
+    ::-webkit-scrollbar-thumb    { background: #d6d3d1; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
+}
