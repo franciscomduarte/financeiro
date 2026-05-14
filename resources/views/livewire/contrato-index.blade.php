@@ -106,9 +106,11 @@
                 <tbody class="divide-y divide-slate-50">
                     @forelse ($contratos as $contrato)
                         @php
-                            $venceEm60    = $contrato->data_fim && $contrato->data_fim->lte(now()->addDays(60));
-                            $reajusteEm30 = $contrato->data_proximo_reajuste && $contrato->data_proximo_reajuste->lte(now()->addDays(30));
-                            $temAlerta    = $venceEm60 || $reajusteEm30;
+                            $venceEm60      = $contrato->data_fim && $contrato->data_fim->lte(now()->addDays(60));
+                            $reajusteEm30   = $contrato->data_proximo_reajuste && $contrato->data_proximo_reajuste->lte(now()->addDays(30));
+                            $diasVenc       = $contrato->diasParaVencimento();
+                            $pagamentoEm5   = $diasVenc !== null && $diasVenc <= 5;
+                            $temAlerta      = $venceEm60 || $reajusteEm30 || $pagamentoEm5;
                         @endphp
                         <tr class="group hover:bg-slate-50/50 transition-colors {{ $temAlerta ? 'bg-amber-50/30' : '' }}">
                             <td class="px-4 py-3">
@@ -144,6 +146,28 @@
                                     @endif
                                 @else
                                     <span class="text-slate-400">—</span>
+                                @endif
+                                @if ($contrato->dia_vencimento)
+                                    @php $proximo = $contrato->proximoVencimento(); @endphp
+                                    <div class="mt-1 flex items-center gap-1 text-xs {{ $pagamentoEm5 ? 'font-semibold text-rose-600' : 'text-slate-400' }}">
+                                        <svg class="h-3 w-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        @if ($pagamentoEm5)
+                                            Pgto {{ $proximo?->format('d/m') }} ({{ $diasVenc === 0 ? 'hoje' : 'em ' . $diasVenc . 'd' }})
+                                        @else
+                                            Pgto mensal dia {{ $contrato->dia_vencimento }}
+                                        @endif
+                                    </div>
+                                    @if ($contrato->pagamentos_max_competencia)
+                                        @php
+                                            [$pAno, $pMes] = explode('-', $contrato->pagamentos_max_competencia);
+                                            $pMeses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+                                            $pLabel = $pMeses[(int)$pMes - 1] . '/' . $pAno;
+                                        @endphp
+                                        <div class="mt-0.5 flex items-center gap-1 text-xs text-emerald-600">
+                                            <svg class="h-3 w-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                            Pago {{ $pLabel }}
+                                        </div>
+                                    @endif
                                 @endif
                             </td>
                             <td class="px-4 py-3">
@@ -194,13 +218,23 @@
                                             class="rounded-md p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600" title="Editar">
                                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                     </button>
+                                    @if ($contrato->status->value === 'ativo' && $contrato->dia_vencimento !== null)
+                                        <button wire:click="abrirModalPagarContrato('{{ $contrato->id }}')"
+                                                class="rounded-md p-1.5 text-slate-400 hover:bg-emerald-50 hover:text-emerald-600" title="Registrar Pagamento">
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                        </button>
+                                    @endif
                                     <button wire:click="abrirModalReajuste('{{ $contrato->id }}')"
                                             class="rounded-md p-1.5 text-slate-400 hover:bg-blue-50 hover:text-blue-600" title="Registrar Reajuste">
                                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>
                                     </button>
                                     <button wire:click="abrirModalArquivo('{{ $contrato->id }}')"
-                                            class="rounded-md p-1.5 text-slate-400 hover:bg-emerald-50 hover:text-emerald-600" title="Enviar Arquivo">
+                                            class="rounded-md p-1.5 text-slate-400 hover:bg-violet-50 hover:text-violet-600" title="Enviar Arquivo">
                                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                                    </button>
+                                    <button wire:click="abrirModalExcluir('{{ $contrato->id }}')"
+                                            class="rounded-md p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600" title="Excluir">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                     </button>
                                 </div>
                             </td>
@@ -286,17 +320,24 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
                         <div>
                             <label class="block text-xs font-medium text-slate-600 mb-1">Data de Início</label>
                             <input wire:model="dataInicio" type="date"
                                    class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-600 mb-1">Data de Vencimento</label>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Data de Encerramento</label>
                             <input wire:model="dataFim" type="date"
                                    class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100 @error('dataFim') border-red-400 @enderror">
                             @error('dataFim') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Dia do Pagamento Mensal</label>
+                            <input wire:model="diaVencimento" type="number" min="1" max="31" placeholder="Ex: 10"
+                                   class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100 @error('diaVencimento') border-red-400 @enderror">
+                            @error('diaVencimento') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                            <p class="mt-1 text-xs text-slate-400">Deixe vazio se não houver pagamento mensal.</p>
                         </div>
                     </div>
 
@@ -465,6 +506,26 @@
                         @endif
                     </div>
 
+                    @if ($c->pagamentos->count() > 0)
+                        <div class="border-t border-slate-100 pt-3">
+                            <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Histórico de Pagamentos</p>
+                            <div class="space-y-2">
+                                @foreach ($c->pagamentos->take(6) as $pgto)
+                                    <div class="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm">
+                                        <div>
+                                            <span class="font-medium text-slate-700">{{ $pgto->competenciaFormatada() }}</span>
+                                            <span class="mx-1.5 text-slate-300">·</span>
+                                            <span class="text-xs text-slate-500">{{ $pgto->data_pagamento->format('d/m/Y') }}</span>
+                                        </div>
+                                        <span class="font-semibold tabular-nums text-slate-800">
+                                            R$ {{ number_format((float) $pgto->getRawOriginal('valor'), 2, ',', '.') }}
+                                        </span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
                     @if ($c->reajustes->count() > 0)
                         <div class="border-t border-slate-100 pt-3">
                             <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Histórico de Reajustes</p>
@@ -494,8 +555,11 @@
                         </div>
                     @endif
                 </div>
-                <div class="flex justify-end gap-3 border-t border-slate-100 px-6 py-4">
+                <div class="flex flex-wrap justify-end gap-3 border-t border-slate-100 px-6 py-4">
                     <button wire:click="fecharModais" class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">Fechar</button>
+                    @if ($c->status->value === 'ativo' && $c->dia_vencimento !== null)
+                        <button wire:click="abrirModalPagarContrato('{{ $c->id }}')" class="rounded-lg border border-emerald-200 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50">Registrar Pagamento</button>
+                    @endif
                     <button wire:click="abrirModalReajuste('{{ $c->id }}')" class="rounded-lg border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50">Reajuste</button>
                     <button wire:click="abrirModalEditar('{{ $c->id }}')" class="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-rose-700">Editar</button>
                 </div>
@@ -555,6 +619,107 @@
                     <button wire:click="registrarReajuste" class="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-rose-700">
                         <span wire:loading.remove wire:target="registrarReajuste">Confirmar Reajuste</span>
                         <span wire:loading wire:target="registrarReajuste">Registrando...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- ════════════════════════════════════════════════════════════
+         MODAL: REGISTRAR PAGAMENTO
+    ════════════════════════════════════════════════════════════ --}}
+    @if ($modalPagarContrato)
+        <div class="fixed inset-0 z-40 flex items-center justify-center p-4" x-data x-init="document.body.style.overflow = 'hidden'" x-destroy="document.body.style.overflow = ''">
+            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModais"></div>
+            <div class="relative z-10 w-full max-w-md rounded-2xl bg-white shadow-xl animate-[modal-in_0.2s_cubic-bezier(0.16,1,0.3,1)]">
+                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+                    <h2 class="text-base font-semibold text-slate-800">Registrar Pagamento</h2>
+                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Competência <span class="text-red-500">*</span></label>
+                            <input wire:model="pgCompetencia" type="month"
+                                   class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100 @error('pgCompetencia') border-red-400 @enderror">
+                            @error('pgCompetencia') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Data do Pagamento <span class="text-red-500">*</span></label>
+                            <input wire:model="pgDataPagamento" type="date"
+                                   class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100 @error('pgDataPagamento') border-red-400 @enderror">
+                            @error('pgDataPagamento') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Valor (R$) <span class="text-red-500">*</span></label>
+                            <input wire:model="pgValor" type="number" step="0.01" min="0.01"
+                                   class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100 @error('pgValor') border-red-400 @enderror"
+                                   placeholder="0,00">
+                            @error('pgValor') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Forma de Pagamento <span class="text-red-500">*</span></label>
+                            <select wire:model="pgFormaPagamento"
+                                    class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100">
+                                <option value="pix">PIX</option>
+                                <option value="boleto">Boleto</option>
+                                <option value="debito">Débito</option>
+                                <option value="credito_1x">Crédito 1x</option>
+                                <option value="dinheiro">Dinheiro</option>
+                                <option value="credito_2x">Crédito 2x</option>
+                                <option value="credito_3x">Crédito 3x</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-600 mb-1">Observações</label>
+                        <textarea wire:model="pgObservacoes" rows="2"
+                                  class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100"
+                                  placeholder="Notas sobre este pagamento..."></textarea>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 border-t border-slate-100 px-6 py-4">
+                    <button wire:click="fecharModais" class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">Cancelar</button>
+                    <button wire:click="pagarContrato" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700">
+                        <span wire:loading.remove wire:target="pagarContrato">Confirmar Pagamento</span>
+                        <span wire:loading wire:target="pagarContrato">Registrando...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- ════════════════════════════════════════════════════════════
+         MODAL: EXCLUIR CONTRATO
+    ════════════════════════════════════════════════════════════ --}}
+    @if ($modalExcluir)
+        <div class="fixed inset-0 z-40 flex items-center justify-center p-4" x-data x-init="document.body.style.overflow = 'hidden'" x-destroy="document.body.style.overflow = ''">
+            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModais"></div>
+            <div class="relative z-10 w-full max-w-sm rounded-2xl bg-white shadow-xl animate-[modal-in_0.2s_cubic-bezier(0.16,1,0.3,1)]">
+                <div class="p-6">
+                    <div class="flex items-start gap-4">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100">
+                            <svg class="h-5 w-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+                        </div>
+                        <div>
+                            <h2 class="text-base font-semibold text-slate-800">Excluir contrato</h2>
+                            <p class="mt-1 text-sm text-slate-500">
+                                Tem certeza que deseja excluir o contrato com
+                                <span class="font-medium text-slate-700">{{ $contratoExcluirNome }}</span>?
+                                Todos os pagamentos e reajustes vinculados também serão removidos.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 border-t border-slate-100 px-6 py-4">
+                    <button wire:click="fecharModais" class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">Cancelar</button>
+                    <button wire:click="excluir" class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700">
+                        <span wire:loading.remove wire:target="excluir">Excluir</span>
+                        <span wire:loading wire:target="excluir">Excluindo...</span>
                     </button>
                 </div>
             </div>

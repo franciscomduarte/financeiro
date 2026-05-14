@@ -6,6 +6,7 @@
     <title>{{ $title ?? 'LC Estética — Gestão' }}</title>
     @livewireStyles
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @stack('head')
 </head>
 <body class="bg-stone-50 font-sans antialiased">
 
@@ -83,17 +84,58 @@
                     </svg>
                     Contratos
                 </a>
+                <a href="{{ route('web.contas-consumo') }}"
+                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
+                          {{ request()->routeIs('web.contas-consumo') ? 'bg-rose-50 text-rose-700' : 'text-stone-600 hover:bg-stone-50 hover:text-stone-800' }}">
+                    <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('web.contas-consumo') ? 'text-rose-600' : 'text-stone-400 group-hover:text-stone-600' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                    </svg>
+                    Contas de Consumo
+                </a>
             </div>
 
             <div class="pt-4">
-                <p class="text-xs font-semibold text-stone-300 uppercase tracking-widest px-2 mb-2">Em breve</p>
-                <span class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-stone-300 cursor-not-allowed select-none">
-                    <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <p class="text-xs font-semibold text-stone-400 uppercase tracking-widest px-2 mb-2">Fiscal</p>
+                <a href="{{ route('web.obrigacoes-fiscais') }}"
+                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
+                          {{ request()->routeIs('web.obrigacoes-fiscais') ? 'bg-rose-50 text-rose-700' : 'text-stone-600 hover:bg-stone-50 hover:text-stone-800' }}">
+                    <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('web.obrigacoes-fiscais') ? 'text-rose-600' : 'text-stone-400 group-hover:text-stone-600' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 14.25l6-6m4.5-3.493V21.75l-3.75-1.5-3.75 1.5-3.75-1.5-3.75 1.5V4.757c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0c1.1.128 1.907 1.077 1.907 2.185z" />
+                    </svg>
+                    Obrigações Fiscais
+                </a>
+            </div>
+
+            <div class="pt-4">
+                <p class="text-xs font-semibold text-stone-400 uppercase tracking-widest px-2 mb-2">Compliance</p>
+                <a href="{{ route('web.documentos') }}"
+                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
+                          {{ request()->routeIs('web.documentos') ? 'bg-rose-50 text-rose-700' : 'text-stone-600 hover:bg-stone-50 hover:text-stone-800' }}">
+                    <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('web.documentos') ? 'text-rose-600' : 'text-stone-400 group-hover:text-stone-600' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12l-3-3m0 0l-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                    </svg>
+                    Documentos
+                </a>
+            </div>
+
+            <div class="pt-4">
+                <p class="text-xs font-semibold text-stone-400 uppercase tracking-widest px-2 mb-2">Visão Geral</p>
+                <a href="{{ route('dashboard') }}"
+                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
+                          {{ request()->routeIs('dashboard') ? 'bg-rose-50 text-rose-700' : 'text-stone-600 hover:bg-stone-50 hover:text-stone-800' }}">
+                    <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('dashboard') ? 'text-rose-600' : 'text-stone-400 group-hover:text-stone-600' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
                     </svg>
                     Dashboard
-                    <span class="ml-auto text-xs bg-stone-100 text-stone-300 px-1.5 py-0.5 rounded-md font-normal">Fase 3</span>
-                </span>
+                </a>
+                <a href="{{ route('web.relatorio') }}"
+                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
+                          {{ request()->routeIs('web.relatorio') ? 'bg-rose-50 text-rose-700' : 'text-stone-600 hover:bg-stone-50 hover:text-stone-800' }}">
+                    <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('web.relatorio') ? 'text-rose-600' : 'text-stone-400 group-hover:text-stone-600' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25M9 16.5v.75m3-3v3M15 12v5.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                    </svg>
+                    Relatório
+                </a>
             </div>
         </nav>
 
@@ -188,5 +230,6 @@
 </div>
 
 @livewireScripts
+@stack('scripts')
 </body>
 </html>

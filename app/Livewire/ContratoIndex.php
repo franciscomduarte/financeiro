@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire;
 
 use App\Actions\CreateContratoAction;
+use App\Actions\PagarContratoAction;
 use App\Actions\RegistrarReajusteAction;
 use App\Actions\UpdateContratoAction;
 use App\Actions\UploadArquivoContratoAction;
@@ -27,20 +28,26 @@ class ContratoIndex extends Component
     public bool   $alertas      = false;
 
     // ─── Estado dos modais ──────────────────────────────────────
-    public bool $modalCriar    = false;
-    public bool $modalEditar   = false;
-    public bool $modalDetalhe  = false;
-    public bool $modalReajuste = false;
-    public bool $modalArquivo  = false;
+    public bool $modalCriar         = false;
+    public bool $modalEditar        = false;
+    public bool $modalDetalhe       = false;
+    public bool $modalReajuste      = false;
+    public bool $modalArquivo       = false;
+    public bool $modalPagarContrato = false;
+    public bool $modalExcluir       = false;
 
     public ?string $contratoEditandoId = null;
     public ?string $contratoDetalheId  = null;
     public ?string $contratoReajusteId = null;
     public ?string $contratoArquivoId  = null;
+    public ?string $contratoPagarId    = null;
+    public ?string $contratoExcluirId  = null;
+    public ?string $contratoExcluirNome = null;
 
     // ─── Formulário do contrato ─────────────────────────────────
     public string $fornecedorId            = '';
     public string $valorMensal             = '';
+    public string $diaVencimento           = '';
     public string $dataInicio              = '';
     public string $dataFim                 = '';
     public string $periodicidadeReajuste   = '';
@@ -59,6 +66,13 @@ class ContratoIndex extends Component
     public string $valorNovo           = '';
     public string $indiceReajusteOp    = '';
     public string $observacoesReajuste = '';
+
+    // ─── Formulário de pagamento ────────────────────────────────
+    public string $pgCompetencia    = '';
+    public string $pgValor          = '';
+    public string $pgDataPagamento  = '';
+    public string $pgFormaPagamento = 'pix';
+    public string $pgObservacoes    = '';
 
     // ─── Upload arquivo ─────────────────────────────────────────
     /** @var mixed */
@@ -111,6 +125,7 @@ class ContratoIndex extends Component
 
         $this->fornecedorId            = $contrato->fornecedor_id ?? '';
         $this->valorMensal             = (string) $contrato->getRawOriginal('valor_mensal');
+        $this->diaVencimento           = $contrato->dia_vencimento ? (string) $contrato->dia_vencimento : '';
         $this->dataInicio              = $contrato->data_inicio?->toDateString() ?? '';
         $this->dataFim                 = $contrato->data_fim?->toDateString() ?? '';
         $this->periodicidadeReajuste   = $contrato->periodicidade_reajuste?->value ?? '';
@@ -182,6 +197,66 @@ class ContratoIndex extends Component
         }
     }
 
+    // ─── Modal Pagar Contrato ───────────────────────────────────
+    public function abrirModalPagarContrato(string $id): void
+    {
+        $contrato = Contrato::findOrFail($id);
+        $this->contratoPagarId    = $id;
+        $this->pgCompetencia      = now()->format('Y-m');
+        $this->pgValor            = (string) $contrato->getRawOriginal('valor_mensal');
+        $this->pgDataPagamento    = now()->toDateString();
+        $this->pgFormaPagamento   = 'pix';
+        $this->pgObservacoes      = '';
+        $this->modalPagarContrato = true;
+    }
+
+    public function pagarContrato(PagarContratoAction $action): void
+    {
+        $this->validate([
+            'pgCompetencia'    => ['required', 'regex:/^\d{4}-\d{2}$/'],
+            'pgValor'          => ['required', 'numeric', 'min:0.01'],
+            'pgDataPagamento'  => ['required', 'date'],
+            'pgFormaPagamento' => ['required', 'string'],
+        ]);
+
+        try {
+            $contrato = Contrato::findOrFail($this->contratoPagarId);
+            $action->execute($contrato, [
+                'competencia'    => $this->pgCompetencia,
+                'valor'          => (float) $this->pgValor,
+                'data_pagamento' => $this->pgDataPagamento,
+                'forma_pagamento'=> $this->pgFormaPagamento,
+                'observacoes'   => $this->pgObservacoes ?: null,
+            ]);
+            $this->modalPagarContrato = false;
+            $this->flashSucesso       = 'Pagamento registrado com sucesso!';
+        } catch (Throwable $e) {
+            $this->flashErro = 'Erro ao registrar pagamento: ' . $e->getMessage();
+        }
+    }
+
+    // ─── Modal Excluir ──────────────────────────────────────────
+    public function abrirModalExcluir(string $id): void
+    {
+        $contrato = Contrato::with('fornecedor')->findOrFail($id);
+        $this->contratoExcluirId   = $id;
+        $this->contratoExcluirNome = $contrato->fornecedor?->nome_fantasia ?? 'este contrato';
+        $this->modalExcluir        = true;
+    }
+
+    public function excluir(): void
+    {
+        try {
+            Contrato::findOrFail($this->contratoExcluirId)->delete();
+            $this->modalExcluir        = false;
+            $this->contratoExcluirId   = null;
+            $this->contratoExcluirNome = null;
+            $this->flashSucesso        = 'Contrato excluído com sucesso!';
+        } catch (Throwable $e) {
+            $this->flashErro = 'Erro ao excluir contrato: ' . $e->getMessage();
+        }
+    }
+
     // ─── Modal Arquivo ──────────────────────────────────────────
     public function abrirModalArquivo(string $id): void
     {
@@ -209,11 +284,13 @@ class ContratoIndex extends Component
     // ─── Fechar modais ──────────────────────────────────────────
     public function fecharModais(): void
     {
-        $this->modalCriar    = false;
-        $this->modalEditar   = false;
-        $this->modalDetalhe  = false;
-        $this->modalReajuste = false;
-        $this->modalArquivo  = false;
+        $this->modalCriar         = false;
+        $this->modalEditar        = false;
+        $this->modalDetalhe       = false;
+        $this->modalReajuste      = false;
+        $this->modalArquivo       = false;
+        $this->modalPagarContrato = false;
+        $this->modalExcluir       = false;
         $this->resetFormulario();
     }
 
@@ -222,6 +299,7 @@ class ContratoIndex extends Component
     {
         $this->fornecedorId            = '';
         $this->valorMensal             = '';
+        $this->diaVencimento           = '';
         $this->dataInicio              = '';
         $this->dataFim                 = '';
         $this->periodicidadeReajuste   = '';
@@ -238,6 +316,14 @@ class ContratoIndex extends Component
         $this->contratoDetalheId       = null;
         $this->contratoReajusteId      = null;
         $this->contratoArquivoId       = null;
+        $this->contratoPagarId         = null;
+        $this->contratoExcluirId       = null;
+        $this->contratoExcluirNome     = null;
+        $this->pgCompetencia           = '';
+        $this->pgValor                 = '';
+        $this->pgDataPagamento         = '';
+        $this->pgFormaPagamento        = 'pix';
+        $this->pgObservacoes           = '';
         $this->arquivoContrato         = null;
         $this->flashSucesso            = null;
         $this->flashErro               = null;
@@ -248,6 +334,7 @@ class ContratoIndex extends Component
         return [
             'fornecedor_id'             => $this->fornecedorId ?: null,
             'valor_mensal'              => (float) $this->valorMensal,
+            'dia_vencimento'            => $this->diaVencimento ? (int) $this->diaVencimento : null,
             'data_inicio'               => $this->dataInicio ?: null,
             'data_fim'                  => $this->dataFim ?: null,
             'periodicidade_reajuste'    => $this->periodicidadeReajuste ?: null,
@@ -266,8 +353,9 @@ class ContratoIndex extends Component
     private function rules(): array
     {
         return [
-            'fornecedorId' => ['nullable', 'string', 'exists:fornecedores,id'],
-            'valorMensal'  => ['required', 'numeric', 'min:0'],
+            'fornecedorId'  => ['nullable', 'string', 'exists:fornecedores,id'],
+            'valorMensal'   => ['required', 'numeric', 'min:0'],
+            'diaVencimento' => ['nullable', 'integer', 'min:1', 'max:31'],
             'dataInicio'   => ['nullable', 'date'],
             'dataFim'      => ['nullable', 'date', 'after_or_equal:dataInicio'],
             'risco'        => ['required', 'in:baixo,medio,alto'],
@@ -281,6 +369,7 @@ class ContratoIndex extends Component
         // ── Lista paginada ───────────────────────────────────────
         $query = Contrato::query()
             ->with('fornecedor')
+            ->withMax('pagamentos', 'competencia')
             ->orderBy('status')
             ->orderBy('data_fim');
 
@@ -292,28 +381,50 @@ class ContratoIndex extends Component
         }
         if ($this->alertas) {
             $query->where(function ($q): void {
-                $q->whereNotNull('data_fim')
-                  ->where('data_fim', '<=', now()->addDays(60)->toDateString())
-                  ->orWhere(function ($q2): void {
-                      $q2->whereNotNull('data_proximo_reajuste')
-                         ->where('data_proximo_reajuste', '<=', now()->addDays(30)->toDateString());
-                  });
+                $q->where(function ($q2): void {
+                    $q2->whereNotNull('data_fim')
+                       ->where('data_fim', '<=', now()->addDays(60)->toDateString());
+                })->orWhere(function ($q2): void {
+                    $q2->whereNotNull('data_proximo_reajuste')
+                       ->where('data_proximo_reajuste', '<=', now()->addDays(30)->toDateString());
+                })->orWhereNotNull('dia_vencimento');
             });
         }
 
         $contratos = $query->paginate(20);
 
+        // Para o filtro "alertas", filtramos também por vencimento mensal em PHP
+        if ($this->alertas) {
+            $ids = $contratos->getCollection()
+                ->filter(function ($c): bool {
+                    $venceEm60    = $c->data_fim && $c->data_fim->lte(now()->addDays(60));
+                    $reajusteEm30 = $c->data_proximo_reajuste && $c->data_proximo_reajuste->lte(now()->addDays(30));
+                    $pagamentoEm5 = ($c->diasParaVencimento() ?? 99) <= 5;
+                    return $venceEm60 || $reajusteEm30 || $pagamentoEm5;
+                })
+                ->pluck('id');
+            $contratos->setCollection($contratos->getCollection()->whereIn('id', $ids));
+        }
+
         // ── Stats ────────────────────────────────────────────────
-        $ativos      = Contrato::where('status', 'ativo')->count();
-        $valorTotal  = (float) Contrato::where('status', 'ativo')->sum('valor_mensal');
-        $alertasCount = Contrato::where(function ($q): void {
+        $ativos     = Contrato::where('status', 'ativo')->count();
+        $valorTotal = (float) Contrato::where('status', 'ativo')->sum('valor_mensal');
+
+        $alertasContrato = Contrato::where('status', 'ativo')->where(function ($q): void {
             $q->whereNotNull('data_fim')
               ->where('data_fim', '<=', now()->addDays(60)->toDateString())
-              ->orWhere(function ($q2): void {
-                  $q2->whereNotNull('data_proximo_reajuste')
-                     ->where('data_proximo_reajuste', '<=', now()->addDays(30)->toDateString());
-              });
+              ->orWhereNotNull('data_proximo_reajuste')
+              ->where('data_proximo_reajuste', '<=', now()->addDays(30)->toDateString());
         })->count();
+
+        // Conta contratos com dia_vencimento cujo próximo vencimento é em ≤ 5 dias
+        $alertasVencimento = Contrato::where('status', 'ativo')
+            ->whereNotNull('dia_vencimento')
+            ->get()
+            ->filter(fn ($c) => ($c->diasParaVencimento() ?? 99) <= 5)
+            ->count();
+
+        $alertasCount = $alertasContrato + $alertasVencimento;
 
         // ── Dados para os modais ─────────────────────────────────
         $fornecedoresAtivos = Fornecedor::where('status', 'ativo')
@@ -321,7 +432,7 @@ class ContratoIndex extends Component
             ->get(['id', 'nome_fantasia']);
 
         $contratoDetalhe = $this->contratoDetalheId
-            ? Contrato::with(['fornecedor', 'reajustes'])->find($this->contratoDetalheId)
+            ? Contrato::with(['fornecedor', 'reajustes', 'pagamentos'])->find($this->contratoDetalheId)
             : null;
 
         return view('livewire.contrato-index', [

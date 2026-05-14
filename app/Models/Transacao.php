@@ -63,6 +63,11 @@ class Transacao extends Model
         'parcela_atual'           => 'integer',
     ];
 
+    public function fornecedor(): BelongsTo
+    {
+        return $this->belongsTo(Fornecedor::class, 'fornecedor_id');
+    }
+
     public function transacaoPai(): BelongsTo
     {
         return $this->belongsTo(Transacao::class, 'transacao_pai_id');

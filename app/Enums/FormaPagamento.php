@@ -8,6 +8,7 @@ enum FormaPagamento: string
 {
     case Pix = 'pix';
     case Dinheiro = 'dinheiro';
+    case Boleto = 'boleto';
     case Debito = 'debito';
     case Credito1x = 'credito_1x';
     case Credito2x = 'credito_2x';

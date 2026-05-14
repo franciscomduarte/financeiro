@@ -21,5 +21,6 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call(TaxasCartaoSeeder::class);
+        $this->call(DocumentoCategoriaSeeder::class);
     }
 }
