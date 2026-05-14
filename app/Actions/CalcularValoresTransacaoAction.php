@@ -18,7 +18,7 @@ class CalcularValoresTransacaoAction
         TipoTransacao $tipo,
     ): array {
         $taxaOperacional  = $this->calcularTaxaOperacional($valorBruto, $formaPagamento);
-        $impostoEstimado  = $this->calcularImposto($valorBruto, $tipo);
+        $impostoEstimado  = $this->calcularImposto($valorBruto, $tipo, $formaPagamento);
         $valorLiquido     = $valorBruto - $taxaOperacional - $impostoEstimado;
 
         return [
@@ -46,9 +46,13 @@ class CalcularValoresTransacaoAction
         return $valorBruto * ((float) $taxa->percentual / 100);
     }
 
-    private function calcularImposto(float $valorBruto, TipoTransacao $tipo): float
+    private function calcularImposto(float $valorBruto, TipoTransacao $tipo, FormaPagamento $formaPagamento): float
     {
         if ($tipo !== TipoTransacao::Entrada) {
+            return 0.0;
+        }
+
+        if ($formaPagamento->semImposto()) {
             return 0.0;
         }
 

@@ -22,6 +22,7 @@ enum FormaPagamento: string
     case Credito10x = 'credito_10x';
     case Credito11x = 'credito_11x';
     case Credito12x = 'credito_12x';
+    case AportePessoal = 'aporte_pessoal';
 
     public function modalidade(): string
     {
@@ -30,6 +31,11 @@ enum FormaPagamento: string
 
     public function semTaxa(): bool
     {
-        return in_array($this, [self::Pix, self::Dinheiro], true);
+        return in_array($this, [self::Pix, self::Dinheiro, self::AportePessoal], true);
+    }
+
+    public function semImposto(): bool
+    {
+        return $this === self::AportePessoal;
     }
 }
