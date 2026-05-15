@@ -477,7 +477,7 @@ class RelatorioIndex extends Component
             ->map(function ($t) {
                 $tipoStr = $t->tipo instanceof \App\Enums\TipoTransacao ? $t->tipo->value : (string) $t->tipo;
                 return [
-                    'data'          => $t->data_competencia->format('Y-m-d'),
+                    'data'          => $t->data_competencia->format('d/m/Y'),
                     'tipo'          => $tipoStr === 'entrada' ? 'Entrada' : 'Saída',
                     'classificacao' => $this->classificarContabil($tipoStr, $t->categoria),
                     'categoria'     => $t->categoria,
