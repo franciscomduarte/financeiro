@@ -45,4 +45,5 @@ Route::middleware('auth')->group(function (): void {
 
     Route::get('/faturas/{id}/arquivo', [ArquivoDownloadController::class, 'downloadFatura'])->name('faturas.arquivo.download');
     Route::get('/lancamentos-fiscais/{id}/arquivo', [ArquivoDownloadController::class, 'downloadGuiaFiscal'])->name('lancamentos-fiscais.arquivo.download');
+    Route::get('/contratos/{id}/arquivo', [ArquivoDownloadController::class, 'downloadContrato'])->name('contratos.arquivo.download');
 });

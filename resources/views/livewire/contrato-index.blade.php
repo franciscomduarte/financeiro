@@ -494,7 +494,12 @@
                         @if ($c->temArquivo())
                             <div class="col-span-2">
                                 <p class="text-xs text-slate-400">Arquivo</p>
-                                <p class="font-medium text-slate-700">{{ $c->arquivo_contrato_nome }}</p>
+                                <a href="{{ route('contratos.arquivo.download', $c->id) }}"
+                                   class="inline-flex items-center gap-1.5 font-medium text-rose-600 hover:text-rose-700 hover:underline text-sm"
+                                   target="_blank">
+                                    <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                    {{ $c->arquivo_contrato_nome }}
+                                </a>
                             </div>
                         @endif
                         @if ($c->link_contrato)

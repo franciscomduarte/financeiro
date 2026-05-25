@@ -342,8 +342,8 @@
                             class="w-full rounded-lg border border-slate-300 text-sm px-3 py-2 focus:border-indigo-500 focus:ring-indigo-500">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Arquivo (PDF, imagem)</label>
-                        <input wire:model="docArquivo" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp"
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Arquivo (PDF, imagem, Word)</label>
+                        <input wire:model="docArquivo" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.docx"
                             class="w-full text-sm text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
                         <div wire:loading wire:target="docArquivo" class="text-xs text-slate-400 mt-1">Enviando…</div>
                         @error('docArquivo') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
@@ -392,8 +392,8 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Arquivo renovado (PDF, imagem)</label>
-                    <input wire:model="renArquivo" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp"
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Arquivo renovado (PDF, imagem, Word)</label>
+                    <input wire:model="renArquivo" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.docx"
                         class="w-full text-sm text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
                     <div wire:loading wire:target="renArquivo" class="text-xs text-slate-400 mt-1">Enviando…</div>
                 </div>

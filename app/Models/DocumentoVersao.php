@@ -12,6 +12,8 @@ class DocumentoVersao extends Model
 {
     use HasUuids;
 
+    protected $table = 'documento_versoes';
+
     protected $fillable = [
         'documento_id',
         'numero_documento',
