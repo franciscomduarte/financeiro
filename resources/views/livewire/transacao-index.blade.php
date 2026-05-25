@@ -511,7 +511,7 @@
                         {{-- Upload buttons --}}
                         <div class="grid grid-cols-2 gap-3">
                             <div class="space-y-2">
-                                <input type="file" wire:model="arquivoBoleto" accept=".pdf,.jpg,.jpeg,.png" id="boleto-upload" class="hidden">
+                                <input type="file" wire:model="arquivoBoleto" accept=".pdf,.jpg,.jpeg,.png,.docx" id="boleto-upload" class="hidden">
                                 <label for="boleto-upload" class="flex items-center justify-center gap-2 cursor-pointer bg-stone-100 hover:bg-stone-200 text-stone-700 px-3 py-2 rounded-xl text-xs font-medium transition-colors w-full">
                                     <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
@@ -526,7 +526,7 @@
                                 @endif
                             </div>
                             <div class="space-y-2">
-                                <input type="file" wire:model="arquivoComprovante" accept=".pdf,.jpg,.jpeg,.png" id="comprovante-upload" class="hidden">
+                                <input type="file" wire:model="arquivoComprovante" accept=".pdf,.jpg,.jpeg,.png,.docx" id="comprovante-upload" class="hidden">
                                 <label for="comprovante-upload" class="flex items-center justify-center gap-2 cursor-pointer bg-stone-100 hover:bg-stone-200 text-stone-700 px-3 py-2 rounded-xl text-xs font-medium transition-colors w-full">
                                     <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

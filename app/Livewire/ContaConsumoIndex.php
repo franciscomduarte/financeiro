@@ -8,6 +8,7 @@ use App\Actions\CreateContaConsumoAction;
 use App\Actions\LancarFaturaAction;
 use App\Actions\PagarFaturaAction;
 use App\Actions\UpdateContaConsumoAction;
+use App\Actions\UploadFaturaConsumoAction;
 use App\Enums\StatusFatura;
 use App\Enums\TipoContaConsumo;
 use App\Models\ContaConsumo;
@@ -16,26 +17,33 @@ use App\Models\Fornecedor;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 use Throwable;
 
 class ContaConsumoIndex extends Component
 {
-    use WithPagination;
+    use WithFileUploads, WithPagination;
 
     // ─── Filtros ────────────────────────────────────────────────
     public string $filtroStatus   = '';
     public string $filtroContaId  = '';
 
     // ─── Estado dos modais ──────────────────────────────────────
-    public bool $modalCriar   = false;
-    public bool $modalEditar  = false;
-    public bool $modalFatura  = false;
-    public bool $modalPagar   = false;
+    public bool $modalCriar        = false;
+    public bool $modalEditar       = false;
+    public bool $modalFatura       = false;
+    public bool $modalPagar        = false;
+    public bool $modalUploadFatura = false;
 
-    public ?string $contaEditandoId = null;
-    public ?string $contaFaturaId   = null;
-    public ?string $faturaId        = null;
+    public ?string $contaEditandoId  = null;
+    public ?string $contaFaturaId    = null;
+    public ?string $faturaId         = null;
+    public ?string $faturaUploadId   = null;
+
+    // ─── Upload fatura ──────────────────────────────────────────
+    /** @var mixed */
+    public $arquivoFatura = null;
 
     // ─── Formulário Conta ───────────────────────────────────────
     public string $tipo           = 'agua';
@@ -198,14 +206,41 @@ class ContaConsumoIndex extends Component
         }
     }
 
+    // ─── Modal Upload Arquivo de Fatura ────────────────────────
+    public function abrirModalUploadFatura(string $id): void
+    {
+        $this->faturaUploadId   = $id;
+        $this->arquivoFatura    = null;
+        $this->modalUploadFatura = true;
+    }
+
+    public function uploadArquivoFatura(UploadFaturaConsumoAction $action): void
+    {
+        $this->validate([
+            'arquivoFatura' => ['required', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,docx'],
+        ]);
+
+        try {
+            $fatura = ContaConsumoFatura::findOrFail($this->faturaUploadId);
+            $action->execute($fatura, $this->arquivoFatura);
+            $this->modalUploadFatura = false;
+            $this->arquivoFatura     = null;
+            $this->flashSucesso      = 'Arquivo enviado com sucesso!';
+        } catch (Throwable $e) {
+            $this->flashErro = 'Erro ao enviar arquivo: ' . $e->getMessage();
+        }
+    }
+
     // ─── Fechar modais ──────────────────────────────────────────
     public function fecharModais(): void
     {
-        $this->modalCriar     = false;
-        $this->modalEditar    = false;
-        $this->modalFatura    = false;
-        $this->modalPagar     = false;
-        $this->flashErro      = null;
+        $this->modalCriar        = false;
+        $this->modalEditar       = false;
+        $this->modalFatura       = false;
+        $this->modalPagar        = false;
+        $this->modalUploadFatura = false;
+        $this->arquivoFatura     = null;
+        $this->flashErro         = null;
         $this->resetFormularioConta();
     }
 

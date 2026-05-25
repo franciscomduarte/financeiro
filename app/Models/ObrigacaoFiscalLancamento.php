@@ -29,6 +29,7 @@ class ObrigacaoFiscalLancamento extends Model
         'codigo_barras',
         'transacao_id',
         'arquivo_path',
+        'arquivo_nome',
         'observacoes',
     ];
 

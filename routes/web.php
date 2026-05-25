@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ArquivoDownloadController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DocumentoDownloadController;
 use App\Http\Controllers\VozTransacaoController;
@@ -41,4 +42,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/documentos', DocumentoIndex::class)->name('web.documentos');
     Route::get('/documentos/{id}/download', [DocumentoDownloadController::class, 'download'])->name('documentos.download');
     Route::get('/documentos/versao/{id}/download', [DocumentoDownloadController::class, 'downloadVersao'])->name('documentos.versao.download');
+
+    Route::get('/faturas/{id}/arquivo', [ArquivoDownloadController::class, 'downloadFatura'])->name('faturas.arquivo.download');
+    Route::get('/lancamentos-fiscais/{id}/arquivo', [ArquivoDownloadController::class, 'downloadGuiaFiscal'])->name('lancamentos-fiscais.arquivo.download');
 });

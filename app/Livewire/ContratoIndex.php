@@ -268,7 +268,7 @@ class ContratoIndex extends Component
     public function uploadArquivo(UploadArquivoContratoAction $action): void
     {
         $this->validate([
-            'arquivoContrato' => ['required', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png'],
+            'arquivoContrato' => ['required', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,docx'],
         ]);
 
         try {

@@ -741,10 +741,10 @@
                 </div>
                 <div class="p-6">
                     <div class="mb-3 rounded-lg border border-blue-100 bg-blue-50 p-3 text-xs text-blue-700">
-                        Formatos aceitos: PDF, JPG, JPEG, PNG. Tamanho máximo: 10 MB.
+                        Formatos aceitos: PDF, JPG, JPEG, PNG, DOCX. Tamanho máximo: 10 MB.
                     </div>
                     <label class="block text-xs font-medium text-slate-600 mb-1">Arquivo <span class="text-red-500">*</span></label>
-                    <input wire:model="arquivoContrato" type="file" accept=".pdf,.jpg,.jpeg,.png"
+                    <input wire:model="arquivoContrato" type="file" accept=".pdf,.jpg,.jpeg,.png,.docx"
                            class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 file:mr-3 file:rounded-md file:border-0 file:bg-rose-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-rose-700 hover:file:bg-rose-100">
                     @error('arquivoContrato') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                     <div wire:loading wire:target="arquivoContrato" class="mt-2 text-xs text-slate-500">Carregando arquivo...</div>

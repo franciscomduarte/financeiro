@@ -8,32 +8,40 @@ use App\Actions\CreateObrigacaoFiscalAction;
 use App\Actions\LancarGuiaFiscalAction;
 use App\Actions\PagarGuiaFiscalAction;
 use App\Actions\UpdateObrigacaoFiscalAction;
+use App\Actions\UploadGuiaFiscalAction;
 use App\Enums\PeriodicidadeFiscal;
 use App\Enums\TipoTributo;
 use App\Models\ObrigacaoFiscal;
 use App\Models\ObrigacaoFiscalLancamento;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 use Throwable;
 
 class ObrigacaoFiscalIndex extends Component
 {
-    use WithPagination;
+    use WithFileUploads, WithPagination;
 
     // ─── Filtros ────────────────────────────────────────────────
     public string $filtroStatus      = '';
     public string $filtroObrigacaoId = '';
 
     // ─── Estado dos modais ──────────────────────────────────────
-    public bool $modalCriar      = false;
-    public bool $modalEditar     = false;
-    public bool $modalLancar     = false;
-    public bool $modalPagar      = false;
+    public bool $modalCriar       = false;
+    public bool $modalEditar      = false;
+    public bool $modalLancar      = false;
+    public bool $modalPagar       = false;
+    public bool $modalUploadGuia  = false;
 
     public ?string $obrigacaoEditandoId = null;
     public ?string $obrigacaoLancarId   = null;
     public ?string $lancamentoId        = null;
+    public ?string $lancamentoUploadId  = null;
+
+    // ─── Upload guia ────────────────────────────────────────────
+    /** @var mixed */
+    public $arquivoGuia = null;
 
     // ─── Formulário Obrigação ───────────────────────────────────
     public string $tipoTributo     = 'das_simples';
@@ -208,14 +216,41 @@ class ObrigacaoFiscalIndex extends Component
         }
     }
 
+    // ─── Modal Upload Arquivo de Guia ───────────────────────────
+    public function abrirModalUploadGuia(string $id): void
+    {
+        $this->lancamentoUploadId = $id;
+        $this->arquivoGuia        = null;
+        $this->modalUploadGuia    = true;
+    }
+
+    public function uploadArquivoGuia(UploadGuiaFiscalAction $action): void
+    {
+        $this->validate([
+            'arquivoGuia' => ['required', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,docx'],
+        ]);
+
+        try {
+            $lancamento = ObrigacaoFiscalLancamento::findOrFail($this->lancamentoUploadId);
+            $action->execute($lancamento, $this->arquivoGuia);
+            $this->modalUploadGuia = false;
+            $this->arquivoGuia     = null;
+            $this->flashSucesso    = 'Arquivo enviado com sucesso!';
+        } catch (Throwable $e) {
+            $this->flashErro = 'Erro ao enviar arquivo: ' . $e->getMessage();
+        }
+    }
+
     // ─── Fechar modais ──────────────────────────────────────────
     public function fecharModais(): void
     {
-        $this->modalCriar  = false;
-        $this->modalEditar = false;
-        $this->modalLancar = false;
-        $this->modalPagar  = false;
-        $this->flashErro   = null;
+        $this->modalCriar      = false;
+        $this->modalEditar     = false;
+        $this->modalLancar     = false;
+        $this->modalPagar      = false;
+        $this->modalUploadGuia = false;
+        $this->arquivoGuia     = null;
+        $this->flashErro       = null;
         $this->resetFormularioOb();
     }
 

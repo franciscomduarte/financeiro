@@ -248,17 +248,34 @@
                                         </span>
                                     </td>
                                     <td class="px-4 py-3 text-right">
-                                        @if ($fatura->status->podeSerPaga())
-                                            <button wire:click="abrirModalPagar('{{ $fatura->id }}')"
-                                                    class="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100">
-                                                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                                Pagar
-                                            </button>
-                                        @elseif ($fatura->transacao_id)
-                                            <span class="text-xs text-slate-400">Lançado ✓</span>
-                                        @else
-                                            <span class="text-xs text-slate-300">—</span>
-                                        @endif
+                                        <div class="flex items-center justify-end gap-2">
+                                            @if ($fatura->status->podeSerPaga())
+                                                <button wire:click="abrirModalPagar('{{ $fatura->id }}')"
+                                                        class="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100">
+                                                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                    Pagar
+                                                </button>
+                                            @elseif ($fatura->transacao_id)
+                                                <span class="text-xs text-slate-400">Lançado ✓</span>
+                                            @else
+                                                <span class="text-xs text-slate-300">—</span>
+                                            @endif
+
+                                            @if ($fatura->arquivo_path)
+                                                <a href="{{ route('faturas.arquivo.download', $fatura->id) }}"
+                                                   target="_blank"
+                                                   class="rounded-md p-1.5 text-slate-400 hover:bg-blue-50 hover:text-blue-600"
+                                                   title="Baixar arquivo">
+                                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                                </a>
+                                            @else
+                                                <button wire:click="abrirModalUploadFatura('{{ $fatura->id }}')"
+                                                        class="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                                                        title="Enviar arquivo">
+                                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                                                </button>
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach
@@ -502,6 +519,40 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    @endif
+
+    {{-- ═══════════════════════════════════════════════════════════════ --}}
+    {{-- MODAL: Upload Arquivo de Fatura                                --}}
+    {{-- ═══════════════════════════════════════════════════════════════ --}}
+    @if ($modalUploadFatura)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModais"></div>
+            <div class="relative w-full max-w-md rounded-2xl bg-white shadow-2xl">
+                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+                    <h2 class="text-base font-semibold text-slate-800">Enviar Arquivo da Fatura</h2>
+                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <div class="mb-3 rounded-lg border border-blue-100 bg-blue-50 p-3 text-xs text-blue-700">
+                        Formatos aceitos: PDF, JPG, JPEG, PNG, DOCX. Tamanho máximo: 10 MB.
+                    </div>
+                    <label class="mb-1 block text-xs font-medium text-slate-600">Arquivo <span class="text-red-500">*</span></label>
+                    <input wire:model="arquivoFatura" type="file" accept=".pdf,.jpg,.jpeg,.png,.docx"
+                           class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 file:mr-3 file:rounded-md file:border-0 file:bg-rose-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-rose-700 hover:file:bg-rose-100">
+                    @error('arquivoFatura') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                    <div wire:loading wire:target="arquivoFatura" class="mt-2 text-xs text-slate-500">Carregando arquivo...</div>
+                </div>
+                <div class="flex justify-end gap-3 border-t border-slate-100 px-6 py-4">
+                    <button wire:click="fecharModais" class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">Cancelar</button>
+                    <button wire:click="uploadArquivoFatura" class="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-rose-700">
+                        <span wire:loading.remove wire:target="uploadArquivoFatura">Enviar</span>
+                        <span wire:loading wire:target="uploadArquivoFatura">Enviando...</span>
+                    </button>
+                </div>
             </div>
         </div>
     @endif

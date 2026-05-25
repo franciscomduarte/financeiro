@@ -26,6 +26,7 @@ class ContaConsumoFatura extends Model
         'status',
         'transacao_id',
         'arquivo_path',
+        'arquivo_nome',
         'observacoes',
     ];
 

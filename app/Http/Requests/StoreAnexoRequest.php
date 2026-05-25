@@ -22,7 +22,7 @@ class StoreAnexoRequest extends FormRequest
             'arquivo' => [
                 'required',
                 'file',
-                'mimes:pdf,jpg,jpeg,png',
+                'mimes:pdf,jpg,jpeg,png,docx',
                 'max:10240',
             ],
         ];
@@ -32,7 +32,7 @@ class StoreAnexoRequest extends FormRequest
     {
         return [
             'arquivo.max'   => 'O arquivo não pode ultrapassar 10MB.',
-            'arquivo.mimes' => 'Apenas arquivos PDF, JPG e PNG são aceitos.',
+            'arquivo.mimes' => 'Apenas arquivos PDF, JPG, PNG e DOCX são aceitos.',
         ];
     }
 }
