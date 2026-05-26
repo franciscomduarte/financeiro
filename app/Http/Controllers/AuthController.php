@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -26,6 +27,13 @@ class AuthController extends Controller
             'email'    => ['required', 'email'],
             'password' => ['required', 'string'],
         ]);
+
+        $user = User::where('email', $credentials['email'])->first();
+        if ($user && ! $user->active) {
+            return back()
+                ->withInput($request->only('email'))
+                ->withErrors(['email' => 'Esta conta está desativada. Entre em contato com o administrador.']);
+        }
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();

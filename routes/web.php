@@ -3,10 +3,13 @@
 use App\Http\Controllers\ArquivoDownloadController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DocumentoDownloadController;
+use App\Http\Controllers\EsqueciSenhaController;
 use App\Http\Controllers\VozTransacaoController;
+use App\Livewire\AdminUsuarioIndex;
 use App\Livewire\ContaConsumoIndex;
 use App\Livewire\DashboardIndex;
 use App\Livewire\DocumentoIndex;
+use App\Livewire\MinhaConta;
 use App\Livewire\RelatorioIndex;
 use App\Livewire\ContratoIndex;
 use App\Livewire\FornecedorIndex;
@@ -24,6 +27,12 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
+// ─── Recuperação de senha ────────────────────────────────────────
+Route::get('/esqueci-senha', [EsqueciSenhaController::class, 'showForm'])->name('password.request');
+Route::post('/esqueci-senha', [EsqueciSenhaController::class, 'sendLink'])->name('password.email');
+Route::get('/redefinir-senha/{token}', [EsqueciSenhaController::class, 'showReset'])->name('password.reset');
+Route::post('/redefinir-senha', [EsqueciSenhaController::class, 'reset'])->name('password.update');
+
 // ─── Rotas protegidas ───────────────────────────────────────────
 Route::middleware('auth')->group(function (): void {
     Route::redirect('/', '/dashboard');
@@ -38,6 +47,12 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/obrigacoes-fiscais', ObrigacaoFiscalIndex::class)->name('web.obrigacoes-fiscais');
 
     Route::post('/voz/transacao', [VozTransacaoController::class, 'processar'])->name('voz.transacao');
+
+    Route::get('/minha-conta', MinhaConta::class)->name('minha-conta');
+
+    Route::middleware('admin')->prefix('admin')->group(function (): void {
+        Route::get('/usuarios', AdminUsuarioIndex::class)->name('admin.usuarios');
+    });
 
     Route::get('/documentos', DocumentoIndex::class)->name('web.documentos');
     Route::get('/documentos/{id}/download', [DocumentoDownloadController::class, 'download'])->name('documentos.download');
