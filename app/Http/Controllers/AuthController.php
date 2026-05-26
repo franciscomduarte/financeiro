@@ -29,7 +29,7 @@ class AuthController extends Controller
         ]);
 
         $user = User::where('email', $credentials['email'])->first();
-        if ($user && ! $user->active) {
+        if ($user && $user->active === false) {
             return back()
                 ->withInput($request->only('email'))
                 ->withErrors(['email' => 'Esta conta está desativada. Entre em contato com o administrador.']);
