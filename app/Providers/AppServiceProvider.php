@@ -28,6 +28,9 @@ class AppServiceProvider extends ServiceProvider
             \Illuminate\Support\Facades\URL::forceRootUrl(config('app.url'));
             \Illuminate\Support\Facades\URL::forceScheme('https');
             request()->server->set('HTTPS', 'on');
+        } elseif (str_starts_with(config('app.url', ''), 'https://')) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+            request()->server->set('HTTPS', 'on');
         }
     }
 }
