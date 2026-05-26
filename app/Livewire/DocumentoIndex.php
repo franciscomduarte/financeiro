@@ -165,9 +165,7 @@ class DocumentoIndex extends Component
                 'status'           => $this->docStatus,
                 'observacoes'      => $this->docObservacoes ?: null,
             ];
-            $arquivo = $this->docArquivo instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile
-                ? $this->docArquivo
-                : null;
+            $arquivo = $this->resolveArquivo($this->docArquivo);
             if ($this->documentoEditandoId) {
                 $atualizar->execute(Documento::findOrFail($this->documentoEditandoId), $dados, $arquivo);
                 $this->flashSucesso = 'Documento atualizado!';
@@ -203,9 +201,7 @@ class DocumentoIndex extends Component
             'renArquivo'      => ['nullable', 'file', 'max:10240'],
         ]);
         try {
-            $arquivo = $this->renArquivo instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile
-                ? $this->renArquivo
-                : null;
+            $arquivo = $this->resolveArquivo($this->renArquivo);
             $action->execute(Documento::findOrFail($this->documentoRenovarId), [
                 'numero_documento' => $this->renNumero ?: null,
                 'data_emissao'     => $this->renDataEmissao,
@@ -247,6 +243,17 @@ class DocumentoIndex extends Component
         $this->catCor              = 'slate';
         $this->catRequerValidade   = true;
         $this->catAlertaDias       = '30';
+    }
+
+    private function resolveArquivo(mixed $value): ?\Livewire\Features\SupportFileUploads\TemporaryUploadedFile
+    {
+        if ($value instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile) {
+            return $value;
+        }
+        if (is_string($value) && \Livewire\Features\SupportFileUploads\TemporaryUploadedFile::canUnserialize($value)) {
+            return \Livewire\Features\SupportFileUploads\TemporaryUploadedFile::unserializeFromLivewireRequest($value);
+        }
+        return null;
     }
 
     private function resetFormDocumento(): void
