@@ -89,7 +89,7 @@ class ContratoController extends Controller
     public function uploadArquivo(Request $request, Contrato $contrato, UploadArquivoContratoAction $action): ContratoResource
     {
         $request->validate([
-            'arquivo' => ['required', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png'],
+            'arquivo' => ['required', 'file', 'max:102400', 'mimes:pdf,jpg,jpeg,png'],
         ]);
 
         $contrato = $action->execute($contrato, $request->file('arquivo'));

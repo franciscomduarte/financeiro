@@ -23,7 +23,7 @@ class StoreAnexoRequest extends FormRequest
                 'required',
                 'file',
                 'mimes:pdf,jpg,jpeg,png,docx',
-                'max:10240',
+                'max:102400',
             ],
         ];
     }

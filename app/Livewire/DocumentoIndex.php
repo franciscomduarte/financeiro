@@ -198,7 +198,7 @@ class DocumentoIndex extends Component
         $this->validate([
             'renDataEmissao'  => ['required', 'date'],
             'renDataValidade' => ['nullable', 'date', 'after:renDataEmissao'],
-            'renArquivo'      => ['nullable', 'file', 'max:10240'],
+            'renArquivo'      => ['nullable', 'file', 'max:102400'],
         ]);
         try {
             $arquivo = $this->resolveArquivo($this->renArquivo);
@@ -275,8 +275,8 @@ class DocumentoIndex extends Component
     protected function messages(): array
     {
         return [
-            'docArquivo.max' => 'O arquivo não pode ser maior que 10 MB.',
-            'renArquivo.max' => 'O arquivo não pode ser maior que 10 MB.',
+            'docArquivo.max' => 'O arquivo não pode ser maior que 100 MB.',
+            'renArquivo.max' => 'O arquivo não pode ser maior que 100 MB.',
         ];
     }
 
@@ -323,7 +323,7 @@ class DocumentoIndex extends Component
             'docDataValidade' => ['nullable', 'date'],
             'docAlertaDias'   => ['nullable', 'integer', 'min:1', 'max:365'],
             'docStatus'       => ['required', 'in:vigente,renovando,arquivado'],
-            'docArquivo'      => ['nullable', 'file', 'max:10240'],
+            'docArquivo'      => ['nullable', 'file', 'max:102400'],
         ];
     }
 

@@ -227,7 +227,7 @@ class ObrigacaoFiscalIndex extends Component
     public function uploadArquivoGuia(UploadGuiaFiscalAction $action): void
     {
         $this->validate([
-            'arquivoGuia' => ['required', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,docx'],
+            'arquivoGuia' => ['required', 'file', 'max:102400', 'mimes:pdf,jpg,jpeg,png,docx'],
         ]);
 
         try {

@@ -319,7 +319,7 @@ class TransacaoIndex extends Component
     // ─── Upload de anexos ────────────────────────────────────────
     public function uploadBoleto(): void
     {
-        $this->validate(['arquivoBoleto' => 'required|file|max:10240|mimes:pdf,jpg,jpeg,png,docx']);
+        $this->validate(['arquivoBoleto' => 'required|file|max:102400|mimes:pdf,jpg,jpeg,png,docx']);
 
         try {
             $transacao = Transacao::findOrFail($this->transacaoDetalheId);
@@ -336,7 +336,7 @@ class TransacaoIndex extends Component
 
     public function uploadComprovante(): void
     {
-        $this->validate(['arquivoComprovante' => 'required|file|max:10240|mimes:pdf,jpg,jpeg,png,docx']);
+        $this->validate(['arquivoComprovante' => 'required|file|max:102400|mimes:pdf,jpg,jpeg,png,docx']);
 
         try {
             $transacao = Transacao::findOrFail($this->transacaoDetalheId);

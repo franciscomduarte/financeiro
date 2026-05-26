@@ -217,7 +217,7 @@ class ContaConsumoIndex extends Component
     public function uploadArquivoFatura(UploadFaturaConsumoAction $action): void
     {
         $this->validate([
-            'arquivoFatura' => ['required', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png,docx'],
+            'arquivoFatura' => ['required', 'file', 'max:102400', 'mimes:pdf,jpg,jpeg,png,docx'],
         ]);
 
         try {
