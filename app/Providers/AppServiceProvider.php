@@ -24,13 +24,8 @@ class AppServiceProvider extends ServiceProvider
     {
         Model::preventLazyLoading(! app()->isProduction());
 
-        if (app()->isProduction()) {
-            \Illuminate\Support\Facades\URL::forceRootUrl(config('app.url'));
+        if (app()->isProduction() || str_starts_with(config('app.url', ''), 'https://')) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
-            request()->server->set('HTTPS', 'on');
-        } elseif (str_starts_with(config('app.url', ''), 'https://')) {
-            \Illuminate\Support\Facades\URL::forceScheme('https');
-            request()->server->set('HTTPS', 'on');
         }
     }
 }
