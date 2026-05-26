@@ -272,6 +272,35 @@ class DocumentoIndex extends Component
         $this->docArquivo          = null;
     }
 
+    protected function messages(): array
+    {
+        return [
+            'docArquivo.max' => 'O arquivo não pode ser maior que 10 MB.',
+            'renArquivo.max' => 'O arquivo não pode ser maior que 10 MB.',
+        ];
+    }
+
+    protected function validationAttributes(): array
+    {
+        return [
+            'docCategoriaId'  => 'categoria',
+            'docTitulo'       => 'título',
+            'docNumero'       => 'número do documento',
+            'docOrgao'        => 'órgão emissor',
+            'docResponsavel'  => 'responsável',
+            'docDataEmissao'  => 'data de emissão',
+            'docDataValidade' => 'data de validade',
+            'docAlertaDias'   => 'alerta em dias',
+            'docStatus'       => 'status',
+            'docArquivo'      => 'arquivo',
+            'renArquivo'      => 'arquivo',
+            'catNome'         => 'nome',
+            'catDescricao'    => 'descrição',
+            'catCor'          => 'cor',
+            'catAlertaDias'   => 'alerta em dias',
+        ];
+    }
+
     private function rulesCat(): array
     {
         return [
