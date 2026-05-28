@@ -139,7 +139,8 @@ class ContratoIndex extends Component
         $this->status                  = $contrato->status->value;
         $this->observacoes             = $contrato->observacoes ?? '';
 
-        $this->modalEditar = true;
+        $this->modalDetalhe = false;
+        $this->modalEditar  = true;
     }
 
     public function atualizar(UpdateContratoAction $action): void
