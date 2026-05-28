@@ -529,11 +529,11 @@
                                     <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
                                     </svg>
-                                    {{ $arquivoBoleto ? $arquivoBoleto->getClientOriginalName() : 'Boleto' }}
+                                    {{ $arquivoBoleto ? $arquivoBoleto->getClientOriginalName() : 'Nota Fiscal' }}
                                 </label>
                                 @if ($arquivoBoleto)
                                     <button wire:click="uploadBoleto" wire:loading.attr="disabled" class="w-full bg-rose-600 hover:bg-rose-700 text-white px-3 py-2 rounded-xl text-xs font-semibold transition-colors disabled:opacity-60">
-                                        <span wire:loading.remove wire:target="uploadBoleto">Anexar Boleto</span>
+                                        <span wire:loading.remove wire:target="uploadBoleto">Anexar Nota Fiscal</span>
                                         <span wire:loading wire:target="uploadBoleto">Enviando...</span>
                                     </button>
                                 @endif
