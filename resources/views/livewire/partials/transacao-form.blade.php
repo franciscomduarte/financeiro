@@ -78,16 +78,42 @@
         </div>
     </div>
 
-    {{-- Cliente (só para entrada) --}}
+    {{-- Paciente (só para entrada) --}}
     @if ($tipo === 'entrada')
-        <div>
-            <label class="block text-xs font-medium text-stone-600 mb-1.5">Cliente</label>
-            <input
-                type="text"
-                wire:model="cliente"
-                placeholder="Nome do cliente"
-                class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
-            >
+        <div x-data="{ aberto: false }">
+            <label class="block text-xs font-medium text-stone-600 mb-1.5">Paciente</label>
+            <div class="relative">
+                <input
+                    type="text"
+                    wire:model.live.debounce.300ms="pacienteBusca"
+                    x-on:focus="aberto = true"
+                    x-on:blur="setTimeout(() => aberto = false, 200)"
+                    placeholder="Buscar paciente por nome ou CPF..."
+                    autocomplete="off"
+                    class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
+                >
+                @if ($this->pacientesFiltrados->isNotEmpty())
+                    <div x-show="aberto"
+                         class="absolute z-20 w-full mt-1 bg-white border border-stone-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        @foreach ($this->pacientesFiltrados as $p)
+                            <button type="button"
+                                    wire:click="selecionarPaciente('{{ $p->id }}', '{{ addslashes($p->nome) }}')"
+                                    class="w-full text-left px-3 py-2.5 text-sm hover:bg-stone-50 flex flex-col border-b border-stone-50 last:border-0">
+                                <span class="font-medium text-stone-800">{{ $p->nome }}</span>
+                                @if ($p->cpf)
+                                    <span class="text-xs text-stone-400">CPF: {{ $p->cpf }}</span>
+                                @endif
+                            </button>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+            @if ($pacienteId)
+                <p class="text-xs text-emerald-600 mt-1 flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    Paciente vinculado: {{ $pacienteBusca }}
+                </p>
+            @endif
         </div>
     @endif
 

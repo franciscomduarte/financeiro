@@ -220,7 +220,9 @@
                             </td>
                             <td class="px-4 py-3 max-w-[220px]">
                                 <p class="text-stone-800 font-medium truncate text-sm">{{ $transacao->descricao }}</p>
-                                @if ($transacao->cliente)
+                                @if ($transacao->paciente)
+                                    <p class="text-xs text-stone-400 truncate mt-0.5">{{ $transacao->paciente->nome }}</p>
+                                @elseif ($transacao->cliente)
                                     <p class="text-xs text-stone-400 truncate mt-0.5">{{ $transacao->cliente }}</p>
                                 @endif
                             </td>
@@ -442,7 +444,12 @@
                             <p class="text-xs font-medium text-stone-400 mb-1">Categoria</p>
                             <p class="text-sm text-stone-700 font-medium">{{ $t->categoria }}</p>
                         </div>
-                        @if ($t->cliente)
+                        @if ($t->paciente)
+                        <div>
+                            <p class="text-xs font-medium text-stone-400 mb-1">Paciente</p>
+                            <p class="text-sm text-stone-700 font-medium">{{ $t->paciente->nome }}</p>
+                        </div>
+                        @elseif ($t->cliente)
                         <div>
                             <p class="text-xs font-medium text-stone-400 mb-1">Cliente</p>
                             <p class="text-sm text-stone-700 font-medium">{{ $t->cliente }}</p>
