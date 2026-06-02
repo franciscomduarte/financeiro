@@ -29,6 +29,7 @@ class Transacao extends Model
         'centro_custo',
         'descricao',
         'cliente',
+        'paciente_id',
         'fornecedor_id',
         'valor_bruto',
         'taxa_operacional',
@@ -62,6 +63,11 @@ class Transacao extends Model
         'num_parcelas'            => 'integer',
         'parcela_atual'           => 'integer',
     ];
+
+    public function paciente(): BelongsTo
+    {
+        return $this->belongsTo(Paciente::class, 'paciente_id');
+    }
 
     public function fornecedor(): BelongsTo
     {

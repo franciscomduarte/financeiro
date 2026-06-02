@@ -14,8 +14,10 @@ use App\Enums\RecorrenciaTransacao;
 use App\Enums\StatusTransacao;
 use App\Enums\TipoAnexo;
 use App\Enums\TipoTransacao;
+use App\Models\Paciente;
 use App\Models\Transacao;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Computed;
@@ -50,7 +52,8 @@ class TransacaoIndex extends Component
     public string $fase             = 'operacao';
     public string $categoria        = '';
     public string $descricao        = '';
-    public string $cliente          = '';
+    public string $pacienteId       = '';
+    public string $pacienteBusca    = '';
     public string $valorBruto       = '';
     public string $formaPagamento   = 'pix';
     public string $numParcelas      = '1';
@@ -218,14 +221,15 @@ class TransacaoIndex extends Component
 
     public function abrirModalEditar(string $id): void
     {
-        $transacao = Transacao::with('anexos')->findOrFail($id);
+        $transacao = Transacao::with(['anexos', 'paciente:id,nome'])->findOrFail($id);
 
         $this->transacaoEditandoId = $id;
         $this->tipo                = $transacao->tipo->value;
         $this->fase                = $transacao->fase->value;
         $this->categoria           = $transacao->categoria;
         $this->descricao           = $transacao->descricao;
-        $this->cliente             = $transacao->cliente ?? '';
+        $this->pacienteId          = $transacao->paciente_id ?? '';
+        $this->pacienteBusca       = $transacao->paciente?->nome ?? '';
         $this->valorBruto          = (string) $transacao->valor_bruto;
         $this->formaPagamento      = $transacao->forma_pagamento->value;
         $this->numParcelas         = (string) ($transacao->num_parcelas ?? 1);
@@ -374,7 +378,8 @@ class TransacaoIndex extends Component
         $this->fase            = 'operacao';
         $this->categoria       = '';
         $this->descricao       = '';
-        $this->cliente         = '';
+        $this->pacienteId      = '';
+        $this->pacienteBusca   = '';
         $this->valorBruto      = '';
         $this->formaPagamento  = 'pix';
         $this->numParcelas     = '1';
@@ -403,7 +408,7 @@ class TransacaoIndex extends Component
             'status'           => 'required|in:pago,pendente,cancelado',
             'recorrencia'      => 'required|string',
             'numParcelas'      => 'nullable|integer|min:1|max:12',
-            'cliente'          => 'nullable|string|max:255',
+            'pacienteId'       => 'nullable|uuid|exists:pacientes,id',
             'observacoes'      => 'nullable|string|max:1000',
         ]);
     }
@@ -415,7 +420,8 @@ class TransacaoIndex extends Component
             'fase'             => $this->fase,
             'categoria'        => $this->categoria,
             'descricao'        => $this->descricao,
-            'cliente'          => $this->cliente ?: null,
+            'paciente_id'      => $this->pacienteId ?: null,
+            'cliente'          => null,
             'valor_bruto'      => (float) str_replace(',', '.', $this->valorBruto),
             'forma_pagamento'  => $this->formaPagamento,
             'num_parcelas'     => (int) $this->numParcelas ?: 1,
@@ -425,6 +431,30 @@ class TransacaoIndex extends Component
             'recorrencia'      => $this->recorrencia,
             'observacoes'      => $this->observacoes ?: null,
         ];
+    }
+
+    // ─── Paciente typeahead ──────────────────────────────────────
+    #[Computed]
+    public function pacientesFiltrados(): Collection
+    {
+        if (mb_strlen($this->pacienteBusca) < 2) {
+            return collect();
+        }
+
+        return Paciente::where(function ($q): void {
+            $q->where('nome', 'ilike', "%{$this->pacienteBusca}%")
+                ->orWhere('cpf', 'like', "%{$this->pacienteBusca}%");
+        })
+            ->where('status', 'ativo')
+            ->orderBy('nome')
+            ->limit(10)
+            ->get(['id', 'nome', 'cpf']);
+    }
+
+    public function selecionarPaciente(string $id, string $nome): void
+    {
+        $this->pacienteId    = $id;
+        $this->pacienteBusca = $nome;
     }
 
     // ─── Preenchimento por Voz ───────────────────────────────────
@@ -450,7 +480,7 @@ class TransacaoIndex extends Component
             return null;
         }
 
-        return Transacao::with('anexos')->find($this->transacaoDetalheId);
+        return Transacao::with(['anexos', 'paciente:id,nome'])->find($this->transacaoDetalheId);
     }
 
     // ─── Render ──────────────────────────────────────────────────
@@ -459,10 +489,12 @@ class TransacaoIndex extends Component
         $query = Transacao::query()
             ->select([
                 'id', 'tipo', 'fase', 'categoria', 'descricao', 'cliente',
+                'paciente_id', 'fornecedor_id',
                 'valor_bruto', 'taxa_operacional', 'imposto_estimado', 'valor_liquido',
                 'data_competencia', 'data_pagamento', 'forma_pagamento',
                 'num_parcelas', 'status', 'recorrencia', 'observacoes',
             ])
+            ->with(['paciente:id,nome'])
             ->orderBy('data_competencia', 'desc')
             ->orderBy('created_at', 'desc');
 
