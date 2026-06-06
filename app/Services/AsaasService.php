@@ -85,7 +85,7 @@ class AsaasService
         return (string) ($resposta->json('status') ?? 'UNKNOWN');
     }
 
-    private function buscarQrCode(string $pagamentoId): array
+    public function buscarQrCode(string $pagamentoId): array
     {
         $resposta = Http::withHeaders($this->headers())
             ->get("{$this->baseUrl}/payments/{$pagamentoId}/pixQrCode");
