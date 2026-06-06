@@ -10,12 +10,14 @@ use Illuminate\Support\Facades\Log;
 class WhatsAppService
 {
     private string $baseUrl;
+    private string $apiKey;
+    private string $instance;
 
     public function __construct()
     {
-        $instanceId    = config('zapi.instance_id');
-        $token         = config('zapi.token');
-        $this->baseUrl = "https://api.z-api.io/instances/{$instanceId}/token/{$token}";
+        $this->baseUrl  = rtrim((string) config('evolution.url'), '/');
+        $this->apiKey   = (string) config('evolution.api_key');
+        $this->instance = (string) config('evolution.instance');
     }
 
     public function enviarCobranca(string $telefone, array $cobranca, string $nomePaciente): bool
@@ -63,13 +65,17 @@ class WhatsAppService
 
     private function enviarTexto(string $numero, string $mensagem): bool
     {
-        $resposta = Http::post("{$this->baseUrl}/send-text", [
-            'phone'   => $numero,
-            'message' => $mensagem,
-        ]);
+        $resposta = Http::withHeaders(['apikey' => $this->apiKey])
+            ->post("{$this->baseUrl}/message/sendText/{$this->instance}", [
+                'number'      => $numero,
+                'textMessage' => ['text' => $mensagem],
+            ]);
 
         if ($resposta->failed()) {
-            Log::warning('WhatsApp: falha ao enviar texto', ['numero' => $numero, 'response' => $resposta->body()]);
+            Log::warning('WhatsApp: falha ao enviar texto', [
+                'numero'   => $numero,
+                'response' => $resposta->body(),
+            ]);
             return false;
         }
 
@@ -78,11 +84,14 @@ class WhatsAppService
 
     private function enviarImagem(string $numero, string $base64, string $caption = ''): bool
     {
-        $resposta = Http::post("{$this->baseUrl}/send-image", [
-            'phone'   => $numero,
-            'image'   => "data:image/png;base64,{$base64}",
-            'caption' => $caption,
-        ]);
+        $resposta = Http::withHeaders(['apikey' => $this->apiKey])
+            ->post("{$this->baseUrl}/message/sendMedia/{$this->instance}", [
+                'number'      => $numero,
+                'mediatype'   => 'image',
+                'mimetype'    => 'image/png',
+                'caption'     => $caption,
+                'media'       => $base64,
+            ]);
 
         return $resposta->successful();
     }
