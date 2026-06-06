@@ -1,0 +1,100 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Services;
+
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+
+class WhatsAppService
+{
+    private string $baseUrl;
+
+    public function __construct()
+    {
+        $instanceId    = config('zapi.instance_id');
+        $token         = config('zapi.token');
+        $this->baseUrl = "https://api.z-api.io/instances/{$instanceId}/token/{$token}";
+    }
+
+    public function enviarCobranca(string $telefone, array $cobranca, string $nomePaciente): bool
+    {
+        $numero = $this->formatarTelefone($telefone);
+
+        $this->enviarTexto($numero, $this->montarMensagem($nomePaciente, $cobranca));
+
+        if (!empty($cobranca['qr_code_base64'])) {
+            $this->enviarImagem($numero, $cobranca['qr_code_base64'], 'QR Code Pix');
+        }
+
+        if (!empty($cobranca['qr_code_texto'])) {
+            $this->enviarTexto($numero, "📋 *Pix Copia e Cola:*\n```{$cobranca['qr_code_texto']}```");
+        }
+
+        return true;
+    }
+
+    public function enviarLembrete(string $telefone, string $nomePaciente, float $valor, string $vencimento): bool
+    {
+        $numero         = $this->formatarTelefone($telefone);
+        $valorFormatado = number_format($valor, 2, ',', '.');
+
+        $mensagem = "⏰ *Lembrete de pagamento*\n\n"
+            . "Olá, {$nomePaciente}!\n\n"
+            . "Sua mensalidade de *R$ {$valorFormatado}* vence *amanhã ({$vencimento})*.\n\n"
+            . "Caso já tenha pago, desconsidere esta mensagem. 😊";
+
+        return $this->enviarTexto($numero, $mensagem);
+    }
+
+    private function montarMensagem(string $nome, array $cobranca): string
+    {
+        $valor = number_format((float) $cobranca['valor'], 2, ',', '.');
+
+        return "💚 *Cobrança mensal - Clínica*\n\n"
+            . "Olá, *{$nome}*!\n\n"
+            . "Segue sua cobrança do mês:\n"
+            . "💰 Valor: *R$ {$valor}*\n"
+            . "📅 Vencimento: *{$cobranca['vencimento']}*\n\n"
+            . "Escaneie o QR Code ou use o código Pix abaixo.\n\n"
+            . "Em caso de dúvidas, entre em contato. 🙏";
+    }
+
+    private function enviarTexto(string $numero, string $mensagem): bool
+    {
+        $resposta = Http::post("{$this->baseUrl}/send-text", [
+            'phone'   => $numero,
+            'message' => $mensagem,
+        ]);
+
+        if ($resposta->failed()) {
+            Log::warning('WhatsApp: falha ao enviar texto', ['numero' => $numero, 'response' => $resposta->body()]);
+            return false;
+        }
+
+        return true;
+    }
+
+    private function enviarImagem(string $numero, string $base64, string $caption = ''): bool
+    {
+        $resposta = Http::post("{$this->baseUrl}/send-image", [
+            'phone'   => $numero,
+            'image'   => "data:image/png;base64,{$base64}",
+            'caption' => $caption,
+        ]);
+
+        return $resposta->successful();
+    }
+
+    private function formatarTelefone(string $telefone): string
+    {
+        $numero = preg_replace('/\D/', '', $telefone) ?? '';
+
+        if (strlen($numero) <= 11) {
+            $numero = '55' . $numero;
+        }
+
+        return $numero;
+    }
+}

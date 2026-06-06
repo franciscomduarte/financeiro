@@ -7,12 +7,16 @@ use App\Http\Controllers\Api\V1\ContratoController;
 use App\Http\Controllers\Api\V1\FornecedorController;
 use App\Http\Controllers\Api\V1\TaxaCartaoController;
 use App\Http\Controllers\Api\V1\TransacaoController;
+use App\Http\Controllers\CobrancaController;
 use App\Http\Controllers\WhatsAppWebhookController;
 use Illuminate\Support\Facades\Route;
 
-// ─── Webhook WhatsApp (sem autenticação — validação feita no controller) ─────
+// ─── Webhooks públicos (sem autenticação) ────────────────────────────────────
 Route::post('/whatsapp/webhook', [WhatsAppWebhookController::class, 'handle'])
     ->name('whatsapp.webhook');
+
+Route::post('/webhook/asaas', [CobrancaController::class, 'webhook'])
+    ->name('webhook.asaas');
 
 Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function (): void {
 
@@ -46,4 +50,13 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
     // Taxas de cartão
     Route::get('taxas-cartao', [TaxaCartaoController::class, 'index']);
     Route::put('taxas-cartao/{taxaCartao}', [TaxaCartaoController::class, 'update']);
+
+    // Cobranças
+    Route::prefix('cobrancas')->name('cobrancas.')->group(function (): void {
+        Route::get('/', [CobrancaController::class, 'index'])->name('index');
+        Route::post('/disparar-todas', [CobrancaController::class, 'dispararTodas'])->name('disparar-todas');
+        Route::post('/disparar/{pacienteId}', [CobrancaController::class, 'dispararManual'])->name('disparar');
+        Route::post('/reenviar/{cobrancaId}', [CobrancaController::class, 'reenviar'])->name('reenviar');
+        Route::post('/sincronizar-status', [CobrancaController::class, 'sincronizarStatus'])->name('sincronizar');
+    });
 });

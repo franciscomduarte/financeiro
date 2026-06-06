@@ -23,14 +23,17 @@ class Paciente extends Model
         'data_nascimento',
         'telefone',
         'email',
+        'valor_mensalidade',
+        'forma_pagamento',
         'anamnese',
         'observacoes',
         'status',
     ];
 
     protected $casts = [
-        'status'          => StatusPaciente::class,
-        'data_nascimento' => 'date',
+        'status'             => StatusPaciente::class,
+        'data_nascimento'    => 'date',
+        'valor_mensalidade'  => 'decimal:2',
     ];
 
     public function getFotoUrlAttribute(): ?string
@@ -43,5 +46,10 @@ class Paciente extends Model
     public function transacoes(): HasMany
     {
         return $this->hasMany(Transacao::class, 'paciente_id');
+    }
+
+    public function cobrancas(): HasMany
+    {
+        return $this->hasMany(Cobranca::class, 'paciente_id');
     }
 }
