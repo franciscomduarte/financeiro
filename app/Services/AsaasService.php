@@ -64,6 +64,7 @@ class AsaasService
         }
 
         $pagamentoId = (string) $resposta->json('id');
+        sleep(2);
         $qrCode      = $this->buscarQrCode($pagamentoId);
 
         return [
