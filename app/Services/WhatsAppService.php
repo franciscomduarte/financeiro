@@ -26,12 +26,9 @@ class WhatsAppService
 
         $this->enviarTexto($numero, $this->montarMensagem($nomePaciente, $cobranca));
 
+        // Imagem do QR Code — apenas se o Asaas retornar o base64
         if (!empty($cobranca['qr_code_base64'])) {
             $this->enviarImagem($numero, $cobranca['qr_code_base64'], 'QR Code Pix');
-        }
-
-        if (!empty($cobranca['qr_code_texto'])) {
-            $this->enviarTexto($numero, "📋 *Pix Copia e Cola:*\n```{$cobranca['qr_code_texto']}```");
         }
 
         return true;
@@ -54,13 +51,23 @@ class WhatsAppService
     {
         $valor = number_format((float) $cobranca['valor'], 2, ',', '.');
 
-        return "💚 *Cobrança mensal - LC Estética*\n\n"
+        $msg = "💚 *Cobrança mensal - LC Estética*\n\n"
             . "Olá, *{$nome}*!\n\n"
             . "Segue sua cobrança do mês:\n"
             . "💰 Valor: *R$ {$valor}*\n"
-            . "📅 Vencimento: *{$cobranca['vencimento']}*\n\n"
-            . "Escaneie o QR Code ou use o código Pix abaixo.\n\n"
-            . "Em caso de dúvidas, entre em contato. 🙏";
+            . "📅 Vencimento: *{$cobranca['vencimento']}*\n";
+
+        if (!empty($cobranca['link_fatura'])) {
+            $msg .= "\n🔗 *Clique para pagar:*\n{$cobranca['link_fatura']}\n";
+        }
+
+        if (!empty($cobranca['qr_code_texto'])) {
+            $msg .= "\n📋 *Pix Copia e Cola:*\n```{$cobranca['qr_code_texto']}```\n";
+        }
+
+        $msg .= "\nEm caso de dúvidas, entre em contato. 🙏";
+
+        return $msg;
     }
 
     private function enviarTexto(string $numero, string $mensagem): bool

@@ -90,7 +90,17 @@ class AsaasService
         $resposta = Http::withHeaders($this->headers())
             ->get("{$this->baseUrl}/payments/{$pagamentoId}/pixQrCode");
 
-        return $resposta->json() ?? [];
+        $data = $resposta->json() ?? [];
+
+        Log::info('Asaas pixQrCode response', [
+            'pagamento_id' => $pagamentoId,
+            'status'       => $resposta->status(),
+            'tem_payload'  => !empty($data['payload']),
+            'tem_imagem'   => !empty($data['encodedImage']),
+            'erros'        => $data['errors'] ?? null,
+        ]);
+
+        return $data;
     }
 
     private function buscarQrCodeComRetry(string $pagamentoId, int $tentativas = 5): array
