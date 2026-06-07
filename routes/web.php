@@ -6,6 +6,7 @@ use App\Http\Controllers\DocumentoDownloadController;
 use App\Http\Controllers\EsqueciSenhaController;
 use App\Http\Controllers\VozTransacaoController;
 use App\Livewire\AdminUsuarioIndex;
+use App\Livewire\CobrancaIndex;
 use App\Livewire\ContaConsumoIndex;
 use App\Livewire\DashboardIndex;
 use App\Livewire\DocumentoIndex;
@@ -41,6 +42,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/dashboard', DashboardIndex::class)->name('dashboard');
     Route::get('/relatorio', RelatorioIndex::class)->name('web.relatorio');
     Route::get('/pacientes', PacienteIndex::class)->name('pacientes.index');
+    Route::get('/cobrancas', CobrancaIndex::class)->name('cobrancas.index');
     Route::get('/transacoes', TransacaoIndex::class)->name('transacoes.index');
     Route::get('/taxas-cartao', TaxasCartaoIndex::class)->name('taxas-cartao.index');
     Route::get('/fornecedores', FornecedorIndex::class)->name('web.fornecedores');

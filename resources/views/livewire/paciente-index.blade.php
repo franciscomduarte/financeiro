@@ -93,6 +93,7 @@
                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-500">Paciente</th>
                         <th class="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-500 sm:table-cell">CPF</th>
                         <th class="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-500 md:table-cell">Telefone</th>
+                        <th class="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-500 lg:table-cell">Mensalidade</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-500">Status</th>
                         <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-stone-500">Ações</th>
                     </tr>
@@ -125,6 +126,20 @@
                             </td>
                             <td class="hidden px-4 py-3 text-stone-600 md:table-cell">
                                 {{ $paciente->telefone ?? '—' }}
+                            </td>
+                            <td class="hidden px-4 py-3 lg:table-cell">
+                                @if ($paciente->valor_mensalidade > 0)
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-sm font-medium text-stone-700">R$ {{ number_format((float) $paciente->valor_mensalidade, 2, ',', '.') }}</span>
+                                        @php
+                                            $badgeMap = ['pix' => ['PIX','text-emerald-700 bg-emerald-50'], 'cartao' => ['Cartão','text-blue-700 bg-blue-50'], 'dinheiro' => ['Dinheiro','text-amber-700 bg-amber-50'], 'boleto' => ['Boleto','text-slate-700 bg-slate-100']];
+                                            [$label, $cls] = $badgeMap[$paciente->forma_pagamento] ?? ['—','text-stone-400 bg-stone-50'];
+                                        @endphp
+                                        <span class="rounded-full px-1.5 py-0.5 text-xs font-medium {{ $cls }}">{{ $label }}</span>
+                                    </div>
+                                @else
+                                    <span class="text-stone-400">—</span>
+                                @endif
                             </td>
                             <td class="px-4 py-3">
                                 @if ($paciente->status->value === 'ativo')
@@ -284,6 +299,26 @@
                             </div>
                         @endif
                     </div>
+
+                    {{-- Cobrança --}}
+                    @if ($p->valor_mensalidade > 0 || $p->forma_pagamento)
+                        <div>
+                            <p class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-2">Cobrança Mensal</p>
+                            <div class="grid grid-cols-2 gap-4 bg-emerald-50 border border-emerald-100 rounded-xl p-4">
+                                <div>
+                                    <p class="text-xs text-stone-400">Mensalidade</p>
+                                    <p class="text-sm font-semibold text-emerald-700">R$ {{ number_format((float) $p->valor_mensalidade, 2, ',', '.') }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-stone-400">Forma de Pagamento</p>
+                                    @php
+                                        $labelMap = ['pix' => 'PIX', 'cartao' => 'Cartão', 'dinheiro' => 'Dinheiro', 'boleto' => 'Boleto'];
+                                    @endphp
+                                    <p class="text-sm font-medium text-stone-700">{{ $labelMap[$p->forma_pagamento] ?? '—' }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
 
                     {{-- Anamnese --}}
                     @if ($p->anamnese)

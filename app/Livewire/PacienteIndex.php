@@ -37,14 +37,16 @@ class PacienteIndex extends Component
     public ?string $pacienteDetalheId  = null;
 
     // ─── Campos do formulário ───────────────────────────────────
-    public string $nome           = '';
-    public string $cpf            = '';
-    public string $dataNascimento = '';
-    public string $telefone       = '';
-    public string $email          = '';
-    public string $anamnese       = '';
-    public string $observacoes    = '';
-    public string $status         = 'ativo';
+    public string $nome             = '';
+    public string $cpf              = '';
+    public string $dataNascimento   = '';
+    public string $telefone         = '';
+    public string $email            = '';
+    public string $valorMensalidade = '';
+    public string $formaPagamento   = 'pix';
+    public string $anamnese         = '';
+    public string $observacoes      = '';
+    public string $status           = 'ativo';
 
     /** @var mixed */
     public $foto = null;
@@ -101,6 +103,8 @@ class PacienteIndex extends Component
         $this->dataNascimento     = $paciente->data_nascimento?->toDateString() ?? '';
         $this->telefone           = $paciente->telefone ?? '';
         $this->email              = $paciente->email ?? '';
+        $this->valorMensalidade   = $paciente->valor_mensalidade ? (string) $paciente->valor_mensalidade : '';
+        $this->formaPagamento     = $paciente->forma_pagamento ?? 'pix';
         $this->anamnese           = $paciente->anamnese ?? '';
         $this->observacoes        = $paciente->observacoes ?? '';
         $this->status             = $paciente->status->value;
@@ -168,7 +172,7 @@ class PacienteIndex extends Component
     public function render(): View
     {
         $query = Paciente::query()
-            ->select(['id', 'nome', 'cpf', 'telefone', 'email', 'status', 'foto_path', 'created_at'])
+            ->select(['id', 'nome', 'cpf', 'telefone', 'email', 'status', 'foto_path', 'valor_mensalidade', 'forma_pagamento', 'created_at'])
             ->orderBy('nome');
 
         if ($this->filtroStatus !== '') {
@@ -200,32 +204,36 @@ class PacienteIndex extends Component
     private function rules(): array
     {
         return [
-            'nome'           => ['required', 'string', 'max:150'],
-            'cpf'            => [
+            'nome'             => ['required', 'string', 'max:150'],
+            'cpf'              => [
                 'nullable', 'string', 'max:14',
                 Rule::unique('pacientes', 'cpf')->ignore($this->pacienteEditandoId),
             ],
-            'dataNascimento' => ['nullable', 'date', 'before:today'],
-            'telefone'       => ['nullable', 'string', 'max:20'],
-            'email'          => ['nullable', 'email', 'max:150'],
-            'anamnese'       => ['nullable', 'string'],
-            'observacoes'    => ['nullable', 'string'],
-            'status'         => ['required', 'in:ativo,inativo'],
-            'foto'           => ['nullable', 'image', 'max:2048', 'mimes:jpg,jpeg,png,webp'],
+            'dataNascimento'   => ['nullable', 'date', 'before:today'],
+            'telefone'         => ['nullable', 'string', 'max:20'],
+            'email'            => ['nullable', 'email', 'max:150'],
+            'valorMensalidade' => ['nullable', 'numeric', 'min:0'],
+            'formaPagamento'   => ['required', 'in:pix,cartao,dinheiro,boleto'],
+            'anamnese'         => ['nullable', 'string'],
+            'observacoes'      => ['nullable', 'string'],
+            'status'           => ['required', 'in:ativo,inativo'],
+            'foto'             => ['nullable', 'image', 'max:2048', 'mimes:jpg,jpeg,png,webp'],
         ];
     }
 
     private function dadosFormulario(): array
     {
         return [
-            'nome'            => $this->nome,
-            'cpf'             => $this->cpf ?: null,
-            'data_nascimento' => $this->dataNascimento ?: null,
-            'telefone'        => $this->telefone ?: null,
-            'email'           => $this->email ?: null,
-            'anamnese'        => $this->anamnese ?: null,
-            'observacoes'     => $this->observacoes ?: null,
-            'status'          => $this->status,
+            'nome'              => $this->nome,
+            'cpf'               => $this->cpf ?: null,
+            'data_nascimento'   => $this->dataNascimento ?: null,
+            'telefone'          => $this->telefone ?: null,
+            'email'             => $this->email ?: null,
+            'valor_mensalidade' => $this->valorMensalidade !== '' ? (float) $this->valorMensalidade : 0,
+            'forma_pagamento'   => $this->formaPagamento,
+            'anamnese'          => $this->anamnese ?: null,
+            'observacoes'       => $this->observacoes ?: null,
+            'status'            => $this->status,
         ];
     }
 
@@ -236,6 +244,8 @@ class PacienteIndex extends Component
         $this->dataNascimento     = '';
         $this->telefone           = '';
         $this->email              = '';
+        $this->valorMensalidade   = '';
+        $this->formaPagamento     = 'pix';
         $this->anamnese           = '';
         $this->observacoes        = '';
         $this->status             = 'ativo';
