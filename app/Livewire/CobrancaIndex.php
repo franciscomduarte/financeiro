@@ -62,9 +62,18 @@ class CobrancaIndex extends Component
         $this->resetPage();
     }
 
+    // ─── Confirmar disparar todas ───────────────────────────────
+    public bool $modalDispararTodas = false;
+
+    public function abrirModalDispararTodas(): void
+    {
+        $this->modalDispararTodas = true;
+    }
+
     // ─── Disparar para todos os ativos ──────────────────────────
     public function dispararTodas(): void
     {
+        $this->modalDispararTodas = false;
         $pacientes = Paciente::where('status', 'ativo')
             ->where('forma_pagamento', 'pix')
             ->where('valor_mensalidade', '>', 0)
@@ -125,17 +134,27 @@ class CobrancaIndex extends Component
         $this->modalReenviar      = true;
     }
 
-    public function confirmarReenviar(WhatsAppService $whatsapp): void
+    public function confirmarReenviar(WhatsAppService $whatsapp, \App\Services\AsaasService $asaas): void
     {
         try {
             $cobranca = Cobranca::with('paciente')->findOrFail($this->cobrancaReenviarId);
+
+            // Se o QR Code não foi salvo (job criou antes do fix de retry), busca agora
+            $qrCodeTexto = $cobranca->qr_code_texto;
+            if (empty($qrCodeTexto) && $cobranca->asaas_id) {
+                $qr = $asaas->buscarQrCode($cobranca->asaas_id);
+                $qrCodeTexto = $qr['payload'] ?? null;
+                if ($qrCodeTexto) {
+                    $cobranca->update(['qr_code_texto' => $qrCodeTexto]);
+                }
+            }
 
             $dados = [
                 'pagamento_id'   => $cobranca->asaas_id,
                 'valor'          => $cobranca->valor,
                 'vencimento'     => Carbon::parse($cobranca->vencimento)->format('d/m/Y'),
                 'link_fatura'    => $cobranca->link_fatura,
-                'qr_code_texto'  => $cobranca->qr_code_texto,
+                'qr_code_texto'  => $qrCodeTexto,
                 'qr_code_base64' => null,
             ];
 
@@ -159,6 +178,7 @@ class CobrancaIndex extends Component
 
     public function fecharModais(): void
     {
+        $this->modalDispararTodas = false;
         $this->modalDisparar      = false;
         $this->modalReenviar      = false;
         $this->cobrancaReenviarId = null;

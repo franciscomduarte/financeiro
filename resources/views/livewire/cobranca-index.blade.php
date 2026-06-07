@@ -34,12 +34,10 @@
                     <a href="{{ route('pacientes.index') }}" class="font-semibold underline hover:text-amber-900">Editar pacientes →</a>
                 </div>
             @else
-                <button wire:click="dispararTodas" wire:loading.attr="disabled"
-                        wire:confirm="Disparar cobranças para {{ $pacientesAtivos }} paciente(s) com mensalidade PIX?"
-                        class="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-rose-700 disabled:opacity-60 transition-colors">
+                <button wire:click="abrirModalDispararTodas"
+                        class="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-rose-700 transition-colors">
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
-                    <span wire:loading.remove wire:target="dispararTodas">Disparar para {{ $pacientesAtivos }} paciente(s)</span>
-                    <span wire:loading wire:target="dispararTodas">Agendando...</span>
+                    Disparar para {{ $pacientesAtivos }} paciente(s)
                 </button>
             @endif
         </div>
@@ -220,6 +218,38 @@
             @endif
         @endif
     </div>
+
+    {{-- ════════════════════════════════════════════════════════════
+         MODAL: CONFIRMAR DISPARAR TODAS
+    ════════════════════════════════════════════════════════════ --}}
+    @if ($modalDispararTodas)
+        <div class="fixed inset-0 z-40 flex items-center justify-center p-4" x-data x-init="document.body.style.overflow = 'hidden'" x-destroy="document.body.style.overflow = ''">
+            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModais"></div>
+            <div class="relative z-10 w-full max-w-sm rounded-2xl bg-white shadow-xl">
+                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+                    <h2 class="text-base font-semibold text-slate-800">Disparar Cobranças</h2>
+                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <div class="px-6 py-5 space-y-3">
+                    <p class="text-sm text-stone-600">
+                        Serão geradas cobranças PIX via Asaas e enviadas por WhatsApp/e-mail para
+                        <span class="font-semibold text-stone-900">{{ $pacientesAtivos }} paciente(s)</span> ativos.
+                    </p>
+                    <p class="text-xs text-stone-400">Pacientes que já possuem cobrança para o mês atual serão ignorados automaticamente.</p>
+                </div>
+                <div class="flex justify-end gap-3 border-t border-slate-100 px-6 py-4">
+                    <button wire:click="fecharModais" class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">Cancelar</button>
+                    <button wire:click="dispararTodas" wire:loading.attr="disabled"
+                            class="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-60 transition-colors">
+                        <span wire:loading.remove wire:target="dispararTodas">Confirmar e Disparar</span>
+                        <span wire:loading wire:target="dispararTodas">Agendando...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
 
     {{-- ════════════════════════════════════════════════════════════
          MODAL: DISPARAR MANUAL
