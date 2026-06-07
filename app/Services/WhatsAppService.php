@@ -49,12 +49,26 @@ class WhatsAppService
 
     private function montarMensagem(string $nome, array $cobranca): string
     {
-        $valor = number_format((float) $cobranca['valor'], 2, ',', '.');
+        $valor    = number_format((float) $cobranca['valor'], 2, ',', '.');
+        $isParcela = ! empty($cobranca['parcela_info']);
 
-        $msg = "💚 *Cobrança mensal - LC Estética*\n\n"
-            . "Olá, *{$nome}*!\n\n"
-            . "Segue sua cobrança do mês:\n"
-            . "💰 Valor: *R$ {$valor}*\n"
+        $titulo = $isParcela
+            ? "💚 *Parcela {$cobranca['parcela_info']} - LC Estética*"
+            : "💚 *Cobrança mensal - LC Estética*";
+
+        $msg = "{$titulo}\n\n"
+            . "Olá, *{$nome}*!\n\n";
+
+        if ($isParcela) {
+            $msg .= "Segue sua cobrança de parcelamento:\n";
+            if (! empty($cobranca['descricao'])) {
+                $msg .= "📝 Ref.: *{$cobranca['descricao']}*\n";
+            }
+        } else {
+            $msg .= "Segue sua cobrança do mês:\n";
+        }
+
+        $msg .= "💰 Valor: *R$ {$valor}*\n"
             . "📅 Vencimento: *{$cobranca['vencimento']}*\n";
 
         if (!empty($cobranca['link_fatura'])) {

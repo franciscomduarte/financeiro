@@ -16,6 +16,9 @@ use App\Livewire\ContratoIndex;
 use App\Livewire\FornecedorIndex;
 use App\Livewire\ObrigacaoFiscalIndex;
 use App\Livewire\TaxasCartaoIndex;
+use App\Livewire\EstoqueIndex;
+use App\Livewire\EstoqueMovimentacaoIndex;
+use App\Livewire\EstoqueProdutoIndex;
 use App\Livewire\PacienteIndex;
 use App\Livewire\TransacaoIndex;
 use Illuminate\Support\Facades\Route;
@@ -61,6 +64,10 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/documentos', DocumentoIndex::class)->name('web.documentos');
     Route::get('/documentos/{id}/download', [DocumentoDownloadController::class, 'download'])->name('documentos.download');
     Route::get('/documentos/versao/{id}/download', [DocumentoDownloadController::class, 'downloadVersao'])->name('documentos.versao.download');
+
+    Route::get('/estoque', EstoqueIndex::class)->name('estoque.index');
+    Route::get('/estoque/produtos', EstoqueProdutoIndex::class)->name('estoque.produtos');
+    Route::get('/estoque/movimentacoes', EstoqueMovimentacaoIndex::class)->name('estoque.movimentacoes');
 
     Route::get('/faturas/{id}/arquivo', [ArquivoDownloadController::class, 'downloadFatura'])->name('faturas.arquivo.download');
     Route::get('/lancamentos-fiscais/{id}/arquivo', [ArquivoDownloadController::class, 'downloadGuiaFiscal'])->name('lancamentos-fiscais.arquivo.download');

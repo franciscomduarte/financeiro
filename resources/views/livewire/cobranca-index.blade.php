@@ -24,26 +24,35 @@
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
             <h1 class="text-xl font-bold text-stone-900">Cobranças</h1>
-            <p class="text-sm text-stone-500 mt-0.5">Mensalidades PIX via Asaas · {{ Carbon\Carbon::now()->translatedFormat('F Y') }}</p>
+            <p class="text-sm text-stone-500 mt-0.5">{{ Carbon\Carbon::now()->translatedFormat('F Y') }}</p>
         </div>
         <div class="flex items-center gap-2 flex-wrap">
-            @if ($pacientesAtivos === 0)
-                <div class="flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-200 px-4 py-2.5 text-sm text-amber-700">
-                    <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    Nenhum paciente com mensalidade PIX cadastrada.
-                    <a href="{{ route('pacientes.index') }}" class="font-semibold underline hover:text-amber-900">Editar pacientes →</a>
-                </div>
+            @if ($abaAtiva === 'mensalidades')
+                @if ($pacientesAtivos === 0)
+                    <div class="flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-200 px-4 py-2.5 text-sm text-amber-700">
+                        <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Nenhum paciente com mensalidade PIX.
+                        <a href="{{ route('pacientes.index') }}" class="font-semibold underline hover:text-amber-900">Editar pacientes →</a>
+                    </div>
+                @else
+                    <button wire:click="abrirModalDispararTodas"
+                            class="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-rose-700 transition-colors">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                        Disparar para {{ $pacientesAtivos }} paciente(s)
+                    </button>
+                @endif
             @else
-                <button wire:click="abrirModalDispararTodas"
+                <button wire:click="abrirModalNovoParcelamento"
                         class="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-rose-700 transition-colors">
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
-                    Disparar para {{ $pacientesAtivos }} paciente(s)
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Novo Parcelamento
                 </button>
             @endif
         </div>
     </div>
 
-    {{-- Stats do mês atual --}}
+    {{-- Stats do mês (apenas aba mensalidades) --}}
+    @if ($abaAtiva === 'mensalidades')
     <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-5">
         <div class="rounded-xl border border-stone-100 bg-white p-4 shadow-sm">
             <p class="text-xs font-medium text-stone-500">Total (mês)</p>
@@ -67,6 +76,28 @@
             <p class="text-xs text-stone-400 mt-0.5">pacientes PIX ativos</p>
         </div>
     </div>
+    @endif
+
+    {{-- Tab bar --}}
+    <div class="flex gap-1 rounded-xl bg-stone-100 p-1">
+        <button wire:click="$set('abaAtiva', 'mensalidades')"
+                class="{{ $abaAtiva === 'mensalidades' ? 'bg-white shadow-sm text-stone-900 font-semibold' : 'text-stone-500 hover:text-stone-700 font-medium' }} flex-1 rounded-lg px-4 py-2 text-sm transition-all">
+            Cobranças Mensais
+        </button>
+        <button wire:click="$set('abaAtiva', 'parcelamentos')"
+                class="{{ $abaAtiva === 'parcelamentos' ? 'bg-white shadow-sm text-stone-900 font-semibold' : 'text-stone-500 hover:text-stone-700 font-medium' }} flex-1 rounded-lg px-4 py-2 text-sm transition-all flex items-center justify-center gap-2">
+            Parcelamentos
+            @php $ativos = $parcelamentos->where('status', 'ativo')->count(); @endphp
+            @if ($ativos > 0)
+                <span class="rounded-full bg-rose-100 px-1.5 py-0.5 text-xs font-semibold text-rose-600">{{ $ativos }}</span>
+            @endif
+        </button>
+    </div>
+
+    {{-- ════════════════════════════════════════════════════════════
+         ABA: COBRANÇAS MENSAIS
+    ════════════════════════════════════════════════════════════ --}}
+    @if ($abaAtiva === 'mensalidades')
 
     {{-- Filtros --}}
     <div class="rounded-2xl border border-stone-100 bg-white p-4 shadow-sm">
@@ -100,7 +131,7 @@
         </div>
     </div>
 
-    {{-- Tabela --}}
+    {{-- Tabela de cobranças --}}
     <div class="rounded-2xl border border-stone-100 bg-white shadow-sm overflow-hidden">
         @if ($cobrancas->isEmpty())
             <div class="flex flex-col items-center justify-center py-16 text-center">
@@ -120,6 +151,7 @@
                             <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-stone-500">Valor</th>
                             <th class="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-500 md:table-cell">Vencimento</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-500">Status</th>
+                            <th class="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-500 lg:table-cell">Parcela</th>
                             <th class="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-500 lg:table-cell">Envios</th>
                             <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-stone-500">Ações</th>
                         </tr>
@@ -171,6 +203,16 @@
                                         {{ $statusLabel }}
                                     </span>
                                 </td>
+                                {{-- Parcela --}}
+                                <td class="hidden px-4 py-3 lg:table-cell">
+                                    @if ($cobranca->numero_parcela && $cobranca->parcelamento)
+                                        <span class="inline-flex items-center rounded-full border border-violet-200 bg-violet-50 px-2 py-0.5 text-xs font-medium text-violet-700">
+                                            {{ $cobranca->numero_parcela }}/{{ $cobranca->parcelamento->total_parcelas }}
+                                        </span>
+                                    @else
+                                        <span class="text-xs text-stone-400">Mensalidade</span>
+                                    @endif
+                                </td>
                                 {{-- Envios --}}
                                 <td class="hidden px-4 py-3 lg:table-cell">
                                     <div class="flex items-center gap-1.5">
@@ -219,11 +261,126 @@
         @endif
     </div>
 
+    @endif {{-- fim aba mensalidades --}}
+
+    {{-- ════════════════════════════════════════════════════════════
+         ABA: PARCELAMENTOS
+    ════════════════════════════════════════════════════════════ --}}
+    @if ($abaAtiva === 'parcelamentos')
+
+    @if ($parcelamentos->isEmpty())
+        <div class="flex flex-col items-center justify-center rounded-2xl border border-stone-100 bg-white py-16 text-center shadow-sm">
+            <svg class="h-10 w-10 text-stone-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+            <p class="text-stone-500 font-medium">Nenhum parcelamento cadastrado</p>
+            <p class="text-stone-400 text-sm mt-1">Clique em "Novo Parcelamento" para cadastrar</p>
+        </div>
+    @else
+        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            @foreach ($parcelamentos as $parcelamento)
+                @php
+                    $enviadas  = $parcelamento->cobrancas->count();
+                    $recebidas = $parcelamento->cobrancas->where('status', 'RECEIVED')->count();
+                    $total     = $parcelamento->total_parcelas;
+                    $pctEnv    = $total > 0 ? round($enviadas / $total * 100) : 0;
+                    $pctRec    = $total > 0 ? round($recebidas / $total * 100) : 0;
+                    $podeDisp  = $parcelamento->status === 'ativo' && ($enviadas + 1) <= $total;
+
+                    $statusBadge = match($parcelamento->status) {
+                        'ativo'     => 'text-emerald-700 bg-emerald-50 border-emerald-200',
+                        'concluido' => 'text-blue-700 bg-blue-50 border-blue-200',
+                        default     => 'text-stone-500 bg-stone-100 border-stone-200',
+                    };
+                    $statusLabel = match($parcelamento->status) {
+                        'ativo'     => 'Ativo',
+                        'concluido' => 'Concluído',
+                        default     => 'Cancelado',
+                    };
+                @endphp
+                <div class="rounded-2xl border border-stone-100 bg-white p-5 shadow-sm space-y-4">
+
+                    {{-- Cabeçalho do card --}}
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="min-w-0">
+                            <p class="font-semibold text-stone-800 truncate">{{ $parcelamento->paciente?->nome ?? '—' }}</p>
+                            <p class="text-sm text-stone-500 truncate">{{ $parcelamento->descricao }}</p>
+                        </div>
+                        <span class="shrink-0 inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium {{ $statusBadge }}">
+                            {{ $statusLabel }}
+                        </span>
+                    </div>
+
+                    {{-- Valores --}}
+                    <div class="flex items-center justify-between text-sm">
+                        <div>
+                            <span class="font-semibold text-stone-800">R$ {{ number_format((float) $parcelamento->valor_parcela, 2, ',', '.') }}</span>
+                            <span class="text-stone-400"> × {{ $total }}x</span>
+                        </div>
+                        <div class="text-right text-stone-500">
+                            Total: <span class="font-medium text-stone-700">R$ {{ number_format((float) $parcelamento->valor_total, 2, ',', '.') }}</span>
+                        </div>
+                    </div>
+
+                    {{-- Barra de progresso --}}
+                    <div class="space-y-1.5">
+                        {{-- Enviadas --}}
+                        <div class="flex items-center justify-between text-xs text-stone-500 mb-0.5">
+                            <span>Enviadas</span>
+                            <span class="font-medium text-stone-700">{{ $enviadas }}/{{ $total }}</span>
+                        </div>
+                        <div class="h-2 w-full rounded-full bg-stone-100">
+                            <div class="h-2 rounded-full bg-rose-400 transition-all" style="width: {{ $pctEnv }}%"></div>
+                        </div>
+                        {{-- Recebidas --}}
+                        <div class="flex items-center justify-between text-xs text-stone-500 mt-1 mb-0.5">
+                            <span>Recebidas</span>
+                            <span class="font-medium text-emerald-700">{{ $recebidas }}/{{ $total }}</span>
+                        </div>
+                        <div class="h-2 w-full rounded-full bg-stone-100">
+                            <div class="h-2 rounded-full bg-emerald-500 transition-all" style="width: {{ $pctRec }}%"></div>
+                        </div>
+                    </div>
+
+                    {{-- Próximo disparo --}}
+                    <p class="text-xs text-stone-400">
+                        Dia de cobrança: <span class="font-medium text-stone-600">{{ $parcelamento->dia_cobranca }}</span> de cada mês
+                        · Início: {{ $parcelamento->data_inicio->format('m/Y') }}
+                    </p>
+
+                    {{-- Ações --}}
+                    @if ($parcelamento->status === 'ativo')
+                        <div class="flex items-center gap-2 pt-1">
+                            <button wire:click="abrirModalDispararParcela({{ $parcelamento->id }})"
+                                    @disabled(! $podeDisp)
+                                    class="flex-1 flex items-center justify-center gap-1.5 rounded-lg {{ $podeDisp ? 'bg-rose-600 hover:bg-rose-700 text-white' : 'bg-stone-100 text-stone-400 cursor-not-allowed' }} px-3 py-2 text-xs font-semibold transition-colors">
+                                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                                @if ($podeDisp)
+                                    Enviar parcela {{ $enviadas + 1 }}/{{ $total }}
+                                @else
+                                    Todas enviadas
+                                @endif
+                            </button>
+                            <button wire:click="abrirModalCancelarParcelamento({{ $parcelamento->id }})"
+                                    class="rounded-lg border border-stone-200 p-2 text-stone-400 hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors"
+                                    title="Cancelar parcelamento">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                    @endif
+
+                </div>
+            @endforeach
+        </div>
+    @endif
+
+    @endif {{-- fim aba parcelamentos --}}
+
     {{-- ════════════════════════════════════════════════════════════
          MODAL: CONFIRMAR DISPARAR TODAS
     ════════════════════════════════════════════════════════════ --}}
     @if ($modalDispararTodas)
-        <div class="fixed inset-0 z-40 flex items-center justify-center p-4" x-data x-init="document.body.style.overflow = 'hidden'" x-destroy="document.body.style.overflow = ''">
+        <div class="fixed inset-0 z-40 flex items-center justify-center p-4">
             <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModais"></div>
             <div class="relative z-10 w-full max-w-sm rounded-2xl bg-white shadow-xl">
                 <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
@@ -237,7 +394,7 @@
                         Serão geradas cobranças PIX via Asaas e enviadas por WhatsApp/e-mail para
                         <span class="font-semibold text-stone-900">{{ $pacientesAtivos }} paciente(s)</span> ativos.
                     </p>
-                    <p class="text-xs text-stone-400">Pacientes que já possuem cobrança para o mês atual serão ignorados automaticamente.</p>
+                    <p class="text-xs text-stone-400">Pacientes que já possuem cobrança para o mês atual serão ignorados.</p>
                 </div>
                 <div class="flex justify-end gap-3 border-t border-slate-100 px-6 py-4">
                     <button wire:click="fecharModais" class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">Cancelar</button>
@@ -252,10 +409,10 @@
     @endif
 
     {{-- ════════════════════════════════════════════════════════════
-         MODAL: DISPARAR MANUAL
+         MODAL: DISPARAR MANUAL (mensalidade)
     ════════════════════════════════════════════════════════════ --}}
     @if ($modalDisparar)
-        <div class="fixed inset-0 z-40 flex items-center justify-center p-4" x-data x-init="document.body.style.overflow = 'hidden'" x-destroy="document.body.style.overflow = ''">
+        <div class="fixed inset-0 z-40 flex items-center justify-center p-4">
             <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModais"></div>
             <div class="relative z-10 w-full max-w-sm rounded-2xl bg-white shadow-xl">
                 <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
@@ -268,17 +425,15 @@
                     <p class="text-sm text-stone-600">Gerar e enviar cobrança PIX para <span class="font-semibold text-stone-800">{{ $pacienteDispararNome }}</span>.</p>
                     <div class="space-y-2">
                         <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="checkbox" wire:model="dispararWhatsapp"
-                                   class="h-4 w-4 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500">
+                            <input type="checkbox" wire:model="dispararWhatsapp" class="h-4 w-4 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500">
                             <span class="text-sm text-stone-700">Enviar por WhatsApp</span>
                         </label>
                         <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="checkbox" wire:model="dispararEmail"
-                                   class="h-4 w-4 rounded border-stone-300 text-blue-600 focus:ring-blue-500">
+                            <input type="checkbox" wire:model="dispararEmail" class="h-4 w-4 rounded border-stone-300 text-blue-600 focus:ring-blue-500">
                             <span class="text-sm text-stone-700">Enviar por E-mail</span>
                         </label>
                     </div>
-                    <p class="text-xs text-stone-400">Se já existe cobrança para o mês atual, o disparo será ignorado automaticamente.</p>
+                    <p class="text-xs text-stone-400">Se já existe cobrança para o mês atual, o disparo será ignorado.</p>
                 </div>
                 <div class="flex justify-end gap-3 border-t border-slate-100 px-6 py-4">
                     <button wire:click="fecharModais" class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">Cancelar</button>
@@ -296,7 +451,7 @@
          MODAL: REENVIAR
     ════════════════════════════════════════════════════════════ --}}
     @if ($modalReenviar)
-        <div class="fixed inset-0 z-40 flex items-center justify-center p-4" x-data x-init="document.body.style.overflow = 'hidden'" x-destroy="document.body.style.overflow = ''">
+        <div class="fixed inset-0 z-40 flex items-center justify-center p-4">
             <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModais"></div>
             <div class="relative z-10 w-full max-w-sm rounded-2xl bg-white shadow-xl">
                 <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
@@ -309,13 +464,11 @@
                     <p class="text-sm text-stone-600">Reenviar notificação da cobrança existente.</p>
                     <div class="space-y-2">
                         <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="checkbox" wire:model="reenviarWhatsapp"
-                                   class="h-4 w-4 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500">
+                            <input type="checkbox" wire:model="reenviarWhatsapp" class="h-4 w-4 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500">
                             <span class="text-sm text-stone-700">Reenviar por WhatsApp</span>
                         </label>
                         <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="checkbox" wire:model="reenviarEmail"
-                                   class="h-4 w-4 rounded border-stone-300 text-blue-600 focus:ring-blue-500">
+                            <input type="checkbox" wire:model="reenviarEmail" class="h-4 w-4 rounded border-stone-300 text-blue-600 focus:ring-blue-500">
                             <span class="text-sm text-stone-700">Reenviar por E-mail</span>
                         </label>
                     </div>
@@ -326,6 +479,155 @@
                             class="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-60 transition-colors">
                         <span wire:loading.remove wire:target="confirmarReenviar">Reenviar</span>
                         <span wire:loading wire:target="confirmarReenviar">Enviando...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- ════════════════════════════════════════════════════════════
+         MODAL: NOVO PARCELAMENTO
+    ════════════════════════════════════════════════════════════ --}}
+    @if ($modalNovoParcelamento)
+        <div class="fixed inset-0 z-40 flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModais"></div>
+            <div class="relative z-10 w-full max-w-lg rounded-2xl bg-white shadow-xl">
+                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+                    <h2 class="text-base font-semibold text-slate-800">Novo Parcelamento</h2>
+                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <form wire:submit="salvarParcelamento" class="px-6 py-5 space-y-4">
+
+                    {{-- Paciente --}}
+                    <div>
+                        <label class="block text-sm font-medium text-stone-700 mb-1">Paciente</label>
+                        <select wire:model="formPacienteId"
+                                class="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm text-stone-700 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100">
+                            <option value="">Selecione o paciente</option>
+                            @foreach ($pacientesSelect as $p)
+                                <option value="{{ $p->id }}">{{ $p->nome }}</option>
+                            @endforeach
+                        </select>
+                        @error('formPacienteId') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                    </div>
+
+                    {{-- Descrição --}}
+                    <div>
+                        <label class="block text-sm font-medium text-stone-700 mb-1">Descrição</label>
+                        <input type="text" wire:model="formDescricao" placeholder="Ex: Tratamento Laser"
+                               class="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100">
+                        @error('formDescricao') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                    </div>
+
+                    {{-- Valores --}}
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-stone-700 mb-1">Valor Total (R$)</label>
+                            <input type="number" wire:model="formValorTotal" step="0.01" min="0.01" placeholder="1000,00"
+                                   class="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100">
+                            @error('formValorTotal') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-stone-700 mb-1">Nº Parcelas</label>
+                            <input type="number" wire:model="formTotalParcelas" min="2" max="999" placeholder="10"
+                                   class="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100">
+                            @error('formTotalParcelas') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-stone-700 mb-1">Valor Parcela (R$)</label>
+                            <input type="number" wire:model="formValorParcela" step="0.01" min="0.01" placeholder="100,00"
+                                   class="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100">
+                            @error('formValorParcela') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+
+                    {{-- Dia e data início --}}
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-stone-700 mb-1">Dia do mês (cobrança)</label>
+                            <input type="number" wire:model="formDiaCobranca" min="1" max="28" placeholder="5"
+                                   class="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100">
+                            <p class="mt-0.5 text-xs text-stone-400">Máx. 28 p/ evitar meses curtos</p>
+                            @error('formDiaCobranca') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-stone-700 mb-1">Data de início</label>
+                            <input type="date" wire:model="formDataInicio"
+                                   class="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100">
+                            @error('formDataInicio') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-2">
+                        <button type="button" wire:click="fecharModais" class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">Cancelar</button>
+                        <button type="submit" wire:loading.attr="disabled"
+                                class="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-60 transition-colors">
+                            <span wire:loading.remove wire:target="salvarParcelamento">Cadastrar</span>
+                            <span wire:loading wire:target="salvarParcelamento">Salvando...</span>
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    @endif
+
+    {{-- ════════════════════════════════════════════════════════════
+         MODAL: CANCELAR PARCELAMENTO
+    ════════════════════════════════════════════════════════════ --}}
+    @if ($modalCancelarParcelamento)
+        <div class="fixed inset-0 z-40 flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModais"></div>
+            <div class="relative z-10 w-full max-w-sm rounded-2xl bg-white shadow-xl">
+                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+                    <h2 class="text-base font-semibold text-slate-800">Cancelar Parcelamento</h2>
+                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <div class="px-6 py-5 space-y-3">
+                    <p class="text-sm text-stone-600">Tem certeza que deseja cancelar o parcelamento:</p>
+                    <p class="rounded-lg bg-stone-50 px-4 py-3 text-sm font-medium text-stone-800">{{ $parcelamentoCancelarNome }}</p>
+                    <p class="text-xs text-stone-400">As cobranças já enviadas não serão afetadas.</p>
+                </div>
+                <div class="flex justify-end gap-3 border-t border-slate-100 px-6 py-4">
+                    <button wire:click="fecharModais" class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">Voltar</button>
+                    <button wire:click="confirmarCancelarParcelamento" wire:loading.attr="disabled"
+                            class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60 transition-colors">
+                        <span wire:loading.remove wire:target="confirmarCancelarParcelamento">Cancelar Parcelamento</span>
+                        <span wire:loading wire:target="confirmarCancelarParcelamento">Cancelando...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- ════════════════════════════════════════════════════════════
+         MODAL: DISPARAR PARCELA MANUAL
+    ════════════════════════════════════════════════════════════ --}}
+    @if ($modalDispararParcela)
+        <div class="fixed inset-0 z-40 flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModais"></div>
+            <div class="relative z-10 w-full max-w-sm rounded-2xl bg-white shadow-xl">
+                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+                    <h2 class="text-base font-semibold text-slate-800">Enviar Parcela</h2>
+                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <div class="px-6 py-5 space-y-3">
+                    <p class="text-sm text-stone-600">Gerar e enviar a cobrança PIX para:</p>
+                    <p class="rounded-lg bg-stone-50 px-4 py-3 text-sm font-medium text-stone-800">{{ $parcelamentoDispararNome }}</p>
+                    <p class="text-xs text-stone-400">A cobrança será gerada no Asaas e enviada por WhatsApp.</p>
+                </div>
+                <div class="flex justify-end gap-3 border-t border-slate-100 px-6 py-4">
+                    <button wire:click="fecharModais" class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">Cancelar</button>
+                    <button wire:click="confirmarDispararParcela" wire:loading.attr="disabled"
+                            class="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-60 transition-colors">
+                        <span wire:loading.remove wire:target="confirmarDispararParcela">Confirmar Envio</span>
+                        <span wire:loading wire:target="confirmarDispararParcela">Agendando...</span>
                     </button>
                 </div>
             </div>

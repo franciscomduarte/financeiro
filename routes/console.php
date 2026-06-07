@@ -1,7 +1,10 @@
 <?php
 
+use App\Console\Commands\CheckExpiredBatchesCommand;
 use App\Http\Controllers\CobrancaController;
+use App\Jobs\DisparadorParcelaJob;
 use App\Jobs\LembreteVencimentoJob;
+use App\Models\Parcelamento;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -25,4 +28,31 @@ Schedule::job(new LembreteVencimentoJob())->dailyAt('10:00');
 Schedule::call(fn () => app(CobrancaController::class)->sincronizarStatus())
     ->dailyAt('08:00')
     ->name('sync-status-asaas')
+    ->withoutOverlapping();
+
+// ─── Agendamentos de estoque ─────────────────────────────────────────────────
+
+// Expira frascos abertos cujo beyond-use date passou, a cada hora
+Schedule::command('stock:check-expired-batches')
+    ->hourly()
+    ->name('stock-expire-batches')
+    ->withoutOverlapping();
+
+// Relatório diário de estoque mínimo às 07:00
+Schedule::command('stock:daily-report')
+    ->dailyAt('07:00')
+    ->name('stock-daily-report');
+
+// ─── Parcelamentos ────────────────────────────────────────────────────────────
+
+// Dispara parcelas cujo dia_cobranca == hoje, diariamente às 09:05
+Schedule::call(function () {
+    $hoje = now()->day;
+    Parcelamento::where('status', 'ativo')
+        ->where('dia_cobranca', $hoje)
+        ->get()
+        ->each(fn (Parcelamento $p) => DisparadorParcelaJob::dispatch($p->id)->onQueue('cobrancas'));
+})
+    ->dailyAt('09:05')
+    ->name('parcelamentos-diario')
     ->withoutOverlapping();

@@ -122,12 +122,18 @@ class CobrancaController extends Controller
         ];
 
         if (isset($statusMap[$evento])) {
-            $pagamento = isset($statusMap[$evento]) ? now() : null;
+            $cobranca = Cobranca::with('parcelamento')->where('asaas_id', $pagamentoId)->first();
 
-            Cobranca::where('asaas_id', $pagamentoId)->update([
-                'status'  => $statusMap[$evento],
-                'pago_em' => in_array($evento, ['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED'], true) ? now() : null,
-            ]);
+            if ($cobranca) {
+                $cobranca->update([
+                    'status'  => $statusMap[$evento],
+                    'pago_em' => in_array($evento, ['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED'], true) ? now() : null,
+                ]);
+
+                if (in_array($evento, ['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED'], true)) {
+                    $cobranca->parcelamento?->verificarConclusao();
+                }
+            }
         }
 
         return response()->json(['ok' => true]);

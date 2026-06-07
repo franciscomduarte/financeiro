@@ -13,6 +13,8 @@ class Cobranca extends Model
 
     protected $fillable = [
         'paciente_id',
+        'parcelamento_id',
+        'numero_parcela',
         'asaas_id',
         'valor',
         'vencimento',
@@ -31,11 +33,17 @@ class Cobranca extends Model
         'email_enviado_em'    => 'datetime',
         'pago_em'             => 'datetime',
         'valor'               => 'decimal:2',
+        'numero_parcela'      => 'integer',
     ];
 
     public function paciente(): BelongsTo
     {
         return $this->belongsTo(Paciente::class, 'paciente_id');
+    }
+
+    public function parcelamento(): BelongsTo
+    {
+        return $this->belongsTo(Parcelamento::class, 'parcelamento_id');
     }
 
     public function isPago(): bool
