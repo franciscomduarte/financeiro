@@ -64,8 +64,7 @@ class AsaasService
         }
 
         $pagamentoId = (string) $resposta->json('id');
-        sleep(2);
-        $qrCode      = $this->buscarQrCode($pagamentoId);
+        $qrCode      = $this->buscarQrCodeComRetry($pagamentoId);
 
         return [
             'pagamento_id'   => $pagamentoId,
@@ -92,6 +91,35 @@ class AsaasService
             ->get("{$this->baseUrl}/payments/{$pagamentoId}/pixQrCode");
 
         return $resposta->json() ?? [];
+    }
+
+    private function buscarQrCodeComRetry(string $pagamentoId, int $tentativas = 5): array
+    {
+        $esperas = [2, 3, 5, 8, 10]; // segundos entre cada tentativa
+
+        foreach ($esperas as $i => $espera) {
+            sleep($espera);
+
+            $qrCode = $this->buscarQrCode($pagamentoId);
+
+            if (!empty($qrCode['payload'])) {
+                return $qrCode;
+            }
+
+            Log::info("Asaas QR Code não disponível ainda. Tentativa " . ($i + 1) . " de {$tentativas}.", [
+                'pagamento_id' => $pagamentoId,
+            ]);
+
+            if ($i + 1 >= $tentativas) {
+                break;
+            }
+        }
+
+        Log::warning('Asaas: QR Code não disponível após todas as tentativas.', [
+            'pagamento_id' => $pagamentoId,
+        ]);
+
+        return [];
     }
 
     private function headers(): array

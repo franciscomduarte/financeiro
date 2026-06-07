@@ -27,13 +27,21 @@
             <p class="text-sm text-stone-500 mt-0.5">Mensalidades PIX via Asaas · {{ Carbon\Carbon::now()->translatedFormat('F Y') }}</p>
         </div>
         <div class="flex items-center gap-2 flex-wrap">
-            <button wire:click="dispararTodas" wire:loading.attr="disabled"
-                    wire:confirm="Disparar cobranças para TODOS os pacientes ativos com mensalidade PIX neste mês?"
-                    class="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-rose-700 disabled:opacity-60 transition-colors">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
-                <span wire:loading.remove wire:target="dispararTodas">Disparar Todas</span>
-                <span wire:loading wire:target="dispararTodas">Agendando...</span>
-            </button>
+            @if ($pacientesAtivos === 0)
+                <div class="flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-200 px-4 py-2.5 text-sm text-amber-700">
+                    <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Nenhum paciente com mensalidade PIX cadastrada.
+                    <a href="{{ route('pacientes.index') }}" class="font-semibold underline hover:text-amber-900">Editar pacientes →</a>
+                </div>
+            @else
+                <button wire:click="dispararTodas" wire:loading.attr="disabled"
+                        wire:confirm="Disparar cobranças para {{ $pacientesAtivos }} paciente(s) com mensalidade PIX?"
+                        class="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-rose-700 disabled:opacity-60 transition-colors">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                    <span wire:loading.remove wire:target="dispararTodas">Disparar para {{ $pacientesAtivos }} paciente(s)</span>
+                    <span wire:loading wire:target="dispararTodas">Agendando...</span>
+                </button>
+            @endif
         </div>
     </div>
 

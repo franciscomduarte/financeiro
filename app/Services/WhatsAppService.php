@@ -54,7 +54,7 @@ class WhatsAppService
     {
         $valor = number_format((float) $cobranca['valor'], 2, ',', '.');
 
-        return "💚 *Cobrança mensal - Clínica*\n\n"
+        return "💚 *Cobrança mensal - LC Estética*\n\n"
             . "Olá, *{$nome}*!\n\n"
             . "Segue sua cobrança do mês:\n"
             . "💰 Valor: *R$ {$valor}*\n"
