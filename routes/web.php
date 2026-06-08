@@ -16,6 +16,8 @@ use App\Livewire\ContratoIndex;
 use App\Livewire\FornecedorIndex;
 use App\Livewire\ObrigacaoFiscalIndex;
 use App\Livewire\TaxasCartaoIndex;
+use App\Livewire\AgendamentoConfiguracaoIndex;
+use App\Livewire\AgendamentoIndex;
 use App\Livewire\EstoqueIndex;
 use App\Livewire\EstoqueMovimentacaoIndex;
 use App\Livewire\EstoqueProdutoIndex;
@@ -64,6 +66,9 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/documentos', DocumentoIndex::class)->name('web.documentos');
     Route::get('/documentos/{id}/download', [DocumentoDownloadController::class, 'download'])->name('documentos.download');
     Route::get('/documentos/versao/{id}/download', [DocumentoDownloadController::class, 'downloadVersao'])->name('documentos.versao.download');
+
+    Route::get('/agenda', AgendamentoIndex::class)->name('agenda.index');
+    Route::get('/agenda/configuracao', AgendamentoConfiguracaoIndex::class)->name('agenda.configuracao');
 
     Route::get('/estoque', EstoqueIndex::class)->name('estoque.index');
     Route::get('/estoque/produtos', EstoqueProdutoIndex::class)->name('estoque.produtos');
