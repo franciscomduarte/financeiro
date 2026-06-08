@@ -37,6 +37,10 @@ class AgendamentoIndex extends Component
     public ?string $flashSucesso = null;
     public ?string $flashErro    = null;
 
+    // ─── Lista de pacientes para o combobox (carregada no mount) ──
+    /** @var array<int, array{id: string, nome: string}> */
+    public array $pacientesLista = [];
+
     // ─── Modal Criar ──────────────────────────────────────────────
     public bool   $modalCriar          = false;
     public string $criarPacienteId     = '';
@@ -69,17 +73,17 @@ class AgendamentoIndex extends Component
         if (empty($this->filtroData)) {
             $this->filtroData = now()->toDateString();
         }
-        $this->criarData    = now()->toDateString();
+        $this->criarData     = now()->toDateString();
         $this->reagendarData = now()->toDateString();
+
+        $this->pacientesLista = Paciente::orderBy('nome')
+            ->get(['id', 'nome'])
+            ->map(fn ($p) => ['id' => (string) $p->id, 'nome' => $p->nome])
+            ->values()
+            ->toArray();
     }
 
     // ─── Computed ─────────────────────────────────────────────────
-    #[Computed]
-    public function pacientes(): Collection
-    {
-        return Paciente::orderBy('nome')->get(['id', 'nome']);
-    }
-
     #[Computed]
     public function profissionais(): Collection
     {

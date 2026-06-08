@@ -268,13 +268,14 @@
                 <div x-data="{
                         open: false,
                         search: '',
-                        patients: @json($this->pacientes->map(fn($p) => ['id' => $p->id, 'nome' => $p->nome])->values()),
+                        patients: [],
                         get filtered() {
                             if (!this.search) return this.patients;
                             const q = this.search.toLowerCase();
                             return this.patients.filter(p => p.nome.toLowerCase().includes(q));
                         }
                     }"
+                     x-init="patients = $wire.pacientesLista"
                      x-on:click.outside="open = false">
                     <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-stone-500">Paciente <span class="text-red-400">*</span></label>
                     <div class="relative">
