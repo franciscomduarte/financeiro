@@ -21,6 +21,7 @@ class Agendamento extends Model
         'paciente_id',
         'profissional_id',
         'procedimento_id',
+        'procedimentos_ids',
         'inicio_em',
         'fim_em',
         'status',
@@ -35,6 +36,7 @@ class Agendamento extends Model
     ];
 
     protected $casts = [
+        'procedimentos_ids'   => 'array',
         'inicio_em'           => 'datetime',
         'fim_em'              => 'datetime',
         'whatsapp_enviado_em' => 'datetime',

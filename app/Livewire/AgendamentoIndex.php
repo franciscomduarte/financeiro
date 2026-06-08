@@ -41,30 +41,27 @@ class AgendamentoIndex extends Component
     public bool   $modalCriar          = false;
     public string $criarPacienteId     = '';
     public string $criarPacienteNome   = '';
-    public string $criarPacienteBusca  = '';
     public string $criarProfissionalId = '';
-    public string $criarProcedimentoId = '';
+    /** @var array<int, int> */
+    public array  $criarProcedimentoIds = [];
     public string $criarData           = '';
     public string $criarSlot           = '';
     public string $criarObservacoes    = '';
-    /** @var array<int, array{id: string, nome: string}> */
-    public array $sugestoesPaciente = [];
-    public bool  $mostrarSugestoes  = false;
 
     // ─── Modal Cancelar ───────────────────────────────────────────
-    public bool   $modalCancelar   = false;
-    public string $cancelarId      = '';
-    public string $cancelarMotivo  = '';
+    public bool   $modalCancelar  = false;
+    public string $cancelarId     = '';
+    public string $cancelarMotivo = '';
 
     // ─── Modal Reagendar ──────────────────────────────────────────
-    public bool   $modalReagendar  = false;
-    public string $reagendarId     = '';
-    public string $reagendarData   = '';
-    public string $reagendarSlot   = '';
+    public bool   $modalReagendar = false;
+    public string $reagendarId    = '';
+    public string $reagendarData  = '';
+    public string $reagendarSlot  = '';
 
     // ─── Detalhe ──────────────────────────────────────────────────
-    public bool    $modalDetalhe    = false;
-    public ?string $detalheId       = null;
+    public bool    $modalDetalhe = false;
+    public ?string $detalheId    = null;
 
     // ─── Boot ─────────────────────────────────────────────────────
     public function mount(): void
@@ -76,23 +73,57 @@ class AgendamentoIndex extends Component
         $this->reagendarData = now()->toDateString();
     }
 
-    // ─── Slots (criar) ────────────────────────────────────────────
+    // ─── Computed ─────────────────────────────────────────────────
+    #[Computed]
+    public function pacientes(): Collection
+    {
+        return Paciente::orderBy('nome')->get(['id', 'nome']);
+    }
+
+    #[Computed]
+    public function profissionais(): Collection
+    {
+        return Profissional::where('ativo', true)->orderBy('nome')->get(['id', 'nome']);
+    }
+
+    #[Computed]
+    public function procedimentos(): Collection
+    {
+        return Procedimento::where('ativo', true)->orderBy('nome')
+            ->get(['id', 'nome', 'duracao_minutos', 'valor']);
+    }
+
+    #[Computed]
+    public function statusOpcoes(): array
+    {
+        return StatusAgendamento::cases();
+    }
+
+    #[Computed]
+    public function duracaoTotal(): int
+    {
+        if (empty($this->criarProcedimentoIds)) {
+            return 0;
+        }
+        return (int) Procedimento::whereIn('id', $this->criarProcedimentoIds)
+            ->sum('duracao_minutos');
+    }
+
     #[Computed]
     public function slots(): array
     {
-        if (! $this->criarProfissionalId || ! $this->criarProcedimentoId || ! $this->criarData) {
+        if (! $this->criarProfissionalId || empty($this->criarProcedimentoIds) || ! $this->criarData) {
             return [];
         }
 
-        $procedimento = Procedimento::find((int) $this->criarProcedimentoId);
-        if (! $procedimento) {
+        $duracao = $this->duracaoTotal;
+        if ($duracao === 0) {
             return [];
         }
 
         /** @var AgendamentoService $service */
         $service = app(AgendamentoService::class);
-
-        return $service->slotsDisponiveis($this->criarProfissionalId, $this->criarData, $procedimento->duracao_minutos);
+        return $service->slotsDisponiveis($this->criarProfissionalId, $this->criarData, $duracao);
     }
 
     #[Computed]
@@ -107,81 +138,43 @@ class AgendamentoIndex extends Component
             return [];
         }
 
+        $duracao = $agendamento->procedimentos_ids
+            ? (int) Procedimento::whereIn('id', $agendamento->procedimentos_ids)->sum('duracao_minutos')
+            : $agendamento->procedimento->duracao_minutos;
+
         /** @var AgendamentoService $service */
         $service = app(AgendamentoService::class);
-
         return $service->slotsDisponiveis(
             $agendamento->profissional_id,
             $this->reagendarData,
-            $agendamento->procedimento->duracao_minutos,
+            $duracao,
         );
     }
 
-    #[Computed]
-    public function profissionais(): Collection
-    {
-        return Profissional::where('ativo', true)->orderBy('nome')->get(['id', 'nome']);
-    }
-
-    #[Computed]
-    public function procedimentos(): Collection
-    {
-        return Procedimento::where('ativo', true)->orderBy('nome')->get(['id', 'nome', 'duracao_minutos', 'valor']);
-    }
-
-    #[Computed]
-    public function statusOpcoes(): array
-    {
-        return StatusAgendamento::cases();
-    }
-
-    // ─── Busca de paciente ────────────────────────────────────────
-    public function updatedCriarPacienteBusca(string $valor): void
-    {
-        if (strlen($valor) < 2) {
-            $this->sugestoesPaciente = [];
-            $this->mostrarSugestoes  = false;
-            return;
-        }
-
-        $this->sugestoesPaciente = Paciente::where('nome', 'ilike', "%{$valor}%")
-            ->orderBy('nome')
-            ->limit(8)
-            ->get(['id', 'nome'])
-            ->map(fn ($p) => ['id' => $p->id, 'nome' => $p->nome])
-            ->toArray();
-
-        $this->mostrarSugestoes = true;
-    }
-
+    // ─── Paciente (seleção via combobox Alpine) ───────────────────
     public function selecionarPaciente(string $id, string $nome): void
     {
-        $this->criarPacienteId    = $id;
-        $this->criarPacienteNome  = $nome;
-        $this->criarPacienteBusca = $nome;
-        $this->mostrarSugestoes   = false;
-        $this->sugestoesPaciente  = [];
+        $this->criarPacienteId   = $id;
+        $this->criarPacienteNome = $nome;
     }
 
     public function limparPaciente(): void
     {
-        $this->criarPacienteId    = '';
-        $this->criarPacienteNome  = '';
-        $this->criarPacienteBusca = '';
-        $this->mostrarSugestoes   = false;
+        $this->criarPacienteId   = '';
+        $this->criarPacienteNome = '';
     }
 
-    // ─── Slots: reload quando muda profissional, procedimento ou data ──
+    // ─── Reload de slots ao mudar campos do formulário ────────────
     public function updatedCriarProfissionalId(): void
     {
         $this->criarSlot = '';
         unset($this->slots);
     }
 
-    public function updatedCriarProcedimentoId(): void
+    public function updatedCriarProcedimentoIds(): void
     {
         $this->criarSlot = '';
-        unset($this->slots);
+        unset($this->slots, $this->duracaoTotal);
     }
 
     public function updatedCriarData(): void
@@ -212,26 +205,29 @@ class AgendamentoIndex extends Component
     public function salvarAgendamento(AgendamentoService $service): void
     {
         $this->validate([
-            'criarPacienteId'     => 'required|uuid|exists:pacientes,id',
-            'criarProfissionalId' => 'required|uuid|exists:profissionais,id',
-            'criarProcedimentoId' => 'required|integer|exists:procedimentos,id',
-            'criarData'           => 'required|date_format:Y-m-d',
-            'criarSlot'           => 'required|date_format:H:i',
+            'criarPacienteId'      => 'required|uuid|exists:pacientes,id',
+            'criarProfissionalId'  => 'required|uuid|exists:profissionais,id',
+            'criarProcedimentoIds' => 'required|array|min:1',
+            'criarProcedimentoIds.*' => 'integer|exists:procedimentos,id',
+            'criarData'            => 'required|date_format:Y-m-d',
+            'criarSlot'            => 'required|date_format:H:i',
         ], [
-            'criarPacienteId.required'     => 'Selecione um paciente.',
-            'criarProfissionalId.required' => 'Selecione um profissional.',
-            'criarProcedimentoId.required' => 'Selecione um procedimento.',
-            'criarData.required'           => 'Informe a data.',
-            'criarSlot.required'           => 'Selecione um horário disponível.',
+            'criarPacienteId.required'      => 'Selecione um paciente.',
+            'criarProfissionalId.required'  => 'Selecione um profissional.',
+            'criarProcedimentoIds.required' => 'Selecione ao menos um procedimento.',
+            'criarProcedimentoIds.min'      => 'Selecione ao menos um procedimento.',
+            'criarData.required'            => 'Informe a data.',
+            'criarSlot.required'            => 'Selecione um horário disponível.',
         ]);
 
         try {
             $service->criar([
-                'paciente_id'     => $this->criarPacienteId,
-                'profissional_id' => $this->criarProfissionalId,
-                'procedimento_id' => (int) $this->criarProcedimentoId,
-                'inicio_em'       => "{$this->criarData} {$this->criarSlot}",
-                'observacoes'     => $this->criarObservacoes ?: null,
+                'paciente_id'      => $this->criarPacienteId,
+                'profissional_id'  => $this->criarProfissionalId,
+                'procedimentos_ids' => array_map('intval', $this->criarProcedimentoIds),
+                'procedimento_id'  => (int) $this->criarProcedimentoIds[0],
+                'inicio_em'        => "{$this->criarData} {$this->criarSlot}",
+                'observacoes'      => $this->criarObservacoes ?: null,
             ]);
 
             $this->flashSucesso = 'Agendamento criado com sucesso.';
@@ -245,18 +241,15 @@ class AgendamentoIndex extends Component
 
     private function resetCriarForm(): void
     {
-        $this->criarPacienteId     = '';
-        $this->criarPacienteNome   = '';
-        $this->criarPacienteBusca  = '';
-        $this->criarProfissionalId = '';
-        $this->criarProcedimentoId = '';
-        $this->criarData           = now()->toDateString();
-        $this->criarSlot           = '';
-        $this->criarObservacoes    = '';
-        $this->sugestoesPaciente   = [];
-        $this->mostrarSugestoes    = false;
+        $this->criarPacienteId      = '';
+        $this->criarPacienteNome    = '';
+        $this->criarProfissionalId  = '';
+        $this->criarProcedimentoIds = [];
+        $this->criarData            = now()->toDateString();
+        $this->criarSlot            = '';
+        $this->criarObservacoes     = '';
         $this->resetErrorBag();
-        unset($this->slots);
+        unset($this->slots, $this->duracaoTotal);
     }
 
     // ─── Cancelar ─────────────────────────────────────────────────
@@ -299,9 +292,9 @@ class AgendamentoIndex extends Component
     // ─── Reagendar ────────────────────────────────────────────────
     public function abrirModalReagendar(string $id): void
     {
-        $this->reagendarId   = $id;
-        $this->reagendarData = now()->addDay()->toDateString();
-        $this->reagendarSlot = '';
+        $this->reagendarId    = $id;
+        $this->reagendarData  = now()->addDay()->toDateString();
+        $this->reagendarSlot  = '';
         $this->modalReagendar = true;
         unset($this->slotsReagendar);
     }
@@ -392,21 +385,26 @@ class AgendamentoIndex extends Component
     // ─── Filtros ──────────────────────────────────────────────────
     public function limparFiltros(): void
     {
-        $this->filtroData          = now()->toDateString();
+        $this->filtroData           = now()->toDateString();
         $this->filtroProfissionalId = '';
-        $this->filtroStatus        = '';
+        $this->filtroStatus         = '';
         $this->resetPage();
     }
 
-    public function updatedFiltroData(): void    { $this->resetPage(); }
+    public function updatedFiltroData(): void           { $this->resetPage(); }
     public function updatedFiltroProfissionalId(): void { $this->resetPage(); }
-    public function updatedFiltroStatus(): void  { $this->resetPage(); }
+    public function updatedFiltroStatus(): void         { $this->resetPage(); }
 
     // ─── Render ───────────────────────────────────────────────────
     public function render(): View
     {
-        $query = Agendamento::with(['paciente:id,nome,telefone', 'profissional:id,nome,cor_agenda', 'procedimento:id,nome,duracao_minutos'])
-            ->select(['id', 'paciente_id', 'profissional_id', 'procedimento_id', 'inicio_em', 'fim_em', 'status', 'observacoes', 'motivo_cancelamento', 'google_event_id'])
+        $query = Agendamento::with([
+            'paciente:id,nome,telefone',
+            'profissional:id,nome,cor_agenda',
+            'procedimento:id,nome,duracao_minutos',
+        ])
+            ->select(['id', 'paciente_id', 'profissional_id', 'procedimento_id', 'procedimentos_ids',
+                      'inicio_em', 'fim_em', 'status', 'observacoes', 'motivo_cancelamento', 'google_event_id'])
             ->orderBy('inicio_em', 'asc');
 
         if ($this->filtroData) {
@@ -421,11 +419,24 @@ class AgendamentoIndex extends Component
 
         $agendamentos = $query->paginate(20);
 
+        // Stats com queries diretas (não baseadas na página atual)
+        $statsBase = Agendamento::when($this->filtroData, fn ($q) => $q->whereDate('inicio_em', $this->filtroData))
+            ->when($this->filtroProfissionalId, fn ($q) => $q->where('profissional_id', $this->filtroProfissionalId));
+
+        $statsTotal      = (clone $statsBase)->count();
+        $statsConfirmado = (clone $statsBase)->where('status', StatusAgendamento::Confirmado->value)->count();
+        $statsPendente   = (clone $statsBase)->whereIn('status', [
+            StatusAgendamento::Agendado->value,
+            StatusAgendamento::Confirmado->value,
+        ])->count();
+
         $agendamentoDetalhe = $this->detalheId
             ? Agendamento::with(['paciente', 'profissional', 'procedimento', 'agendamentoOrigem'])->find($this->detalheId)
             : null;
 
-        return view('livewire.agendamento-index', compact('agendamentos', 'agendamentoDetalhe'))
-            ->layout('layouts.app', ['title' => 'Agenda']);
+        return view('livewire.agendamento-index', compact(
+            'agendamentos', 'agendamentoDetalhe',
+            'statsTotal', 'statsConfirmado', 'statsPendente',
+        ))->layout('layouts.app', ['title' => 'Agenda']);
     }
 }

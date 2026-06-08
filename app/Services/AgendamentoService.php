@@ -26,16 +26,21 @@ class AgendamentoService
     public function criar(array $dados): Agendamento
     {
         return DB::transaction(function () use ($dados): Agendamento {
-            $procedimentoId = $dados['procedimento_id'];
-            $procedimento   = \App\Models\Procedimento::findOrFail($procedimentoId);
+            // Suporta array de procedimentos ou ID único (retrocompatibilidade)
+            $procedimentoIds = $dados['procedimentos_ids'] ?? [$dados['procedimento_id']];
+            $procedimentoIdPrincipal = $procedimentoIds[0];
+
+            $duracaoTotal = \App\Models\Procedimento::whereIn('id', $procedimentoIds)
+                ->sum('duracao_minutos');
 
             $inicioEm = Carbon::parse($dados['inicio_em'])->timezone(config('app.timezone'));
-            $fimEm    = $inicioEm->copy()->addMinutes($procedimento->duracao_minutos);
+            $fimEm    = $inicioEm->copy()->addMinutes(max(1, $duracaoTotal));
 
             $agendamento = Agendamento::create([
                 'paciente_id'           => $dados['paciente_id'],
                 'profissional_id'       => $dados['profissional_id'],
-                'procedimento_id'       => $procedimentoId,
+                'procedimento_id'       => $procedimentoIdPrincipal,
+                'procedimentos_ids'     => $procedimentoIds,
                 'inicio_em'             => $inicioEm,
                 'fim_em'                => $fimEm,
                 'status'                => StatusAgendamento::Agendado->value,

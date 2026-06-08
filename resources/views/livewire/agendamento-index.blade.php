@@ -52,24 +52,19 @@
     </div>
 
     {{-- ─── Stats ───────────────────────────────────────────────────────── --}}
-    @php
-        $hojeTotal      = $agendamentos->total();
-        $hojeConfirmado = $agendamentos->getCollection()->filter(fn($a) => $a->status === \App\Enums\StatusAgendamento::Confirmado)->count();
-        $hojePendente   = $agendamentos->getCollection()->filter(fn($a) => $a->status->isPendente())->count();
-    @endphp
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div class="rounded-2xl border border-stone-100 bg-white p-5 shadow-sm">
             <p class="text-xs font-semibold uppercase tracking-widest text-stone-400">Total</p>
-            <p class="mt-1 text-2xl font-bold text-stone-800 tabular-nums">{{ number_format($hojeTotal) }}</p>
+            <p class="mt-1 text-2xl font-bold text-stone-800 tabular-nums">{{ number_format($statsTotal) }}</p>
             <p class="text-xs text-stone-400 mt-0.5">{{ $filtroData ? \Carbon\Carbon::parse($filtroData)->translatedFormat('d \d\e F') : 'filtro atual' }}</p>
         </div>
         <div class="rounded-2xl border border-stone-100 bg-white p-5 shadow-sm">
             <p class="text-xs font-semibold uppercase tracking-widest text-stone-400">Confirmados</p>
-            <p class="mt-1 text-2xl font-bold text-emerald-600 tabular-nums">{{ $hojeConfirmado }}</p>
+            <p class="mt-1 text-2xl font-bold text-emerald-600 tabular-nums">{{ $statsConfirmado }}</p>
         </div>
         <div class="rounded-2xl border border-stone-100 bg-white p-5 shadow-sm">
             <p class="text-xs font-semibold uppercase tracking-widest text-stone-400">Pendentes</p>
-            <p class="mt-1 text-2xl font-bold text-violet-600 tabular-nums">{{ $hojePendente }}</p>
+            <p class="mt-1 text-2xl font-bold text-violet-600 tabular-nums">{{ $statsPendente }}</p>
         </div>
     </div>
 
@@ -267,33 +262,75 @@
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
-            <div class="space-y-5 p-6">
-                {{-- Paciente (autocomplete) --}}
-                <div>
+            <div class="space-y-5 p-6 max-h-[75vh] overflow-y-auto">
+
+                {{-- ── Paciente: combobox com busca client-side ── --}}
+                <div x-data="{
+                        open: false,
+                        search: '',
+                        patients: @json($this->pacientes->map(fn($p) => ['id' => $p->id, 'nome' => $p->nome])->values()),
+                        get filtered() {
+                            if (!this.search) return this.patients;
+                            const q = this.search.toLowerCase();
+                            return this.patients.filter(p => p.nome.toLowerCase().includes(q));
+                        }
+                    }"
+                     x-on:click.outside="open = false">
                     <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-stone-500">Paciente <span class="text-red-400">*</span></label>
-                    <div class="relative" x-data x-on:click.outside="$wire.mostrarSugestoes = false">
-                        <input type="text" wire:model.live.debounce.300ms="criarPacienteBusca"
-                               placeholder="Digite o nome do paciente..."
-                               autocomplete="off"
-                               class="w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-100 @error('criarPacienteId') border-red-300 @enderror">
-                        @if ($criarPacienteId)
-                            <button wire:click="limparPaciente" class="absolute inset-y-0 right-3 flex items-center text-stone-400 hover:text-stone-600">
-                                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                            </button>
-                        @endif
-                        @if ($mostrarSugestoes && count($sugestoesPaciente) > 0)
-                            <ul class="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-xl border border-stone-200 bg-white shadow-xl">
-                                @foreach ($sugestoesPaciente as $sug)
+                    <div class="relative">
+                        {{-- Botão trigger --}}
+                        <button type="button"
+                                @click="open = !open"
+                                class="w-full flex items-center justify-between rounded-xl border px-3 py-2.5 text-sm text-left transition-colors
+                                    {{ $criarPacienteId ? 'border-violet-300 bg-violet-50 text-violet-800' : 'border-stone-200 bg-white text-stone-400' }}
+                                    @error('criarPacienteId') !border-red-300 @enderror
+                                    focus:outline-none focus:ring-2 focus:ring-violet-100">
+                            <span class="{{ $criarPacienteId ? 'font-semibold' : '' }}">
+                                {{ $criarPacienteNome ?: 'Selecione um paciente...' }}
+                            </span>
+                            <div class="flex items-center gap-1.5 shrink-0 ml-2">
+                                @if ($criarPacienteId)
+                                    <button type="button"
+                                            wire:click.stop="limparPaciente"
+                                            class="rounded-full p-0.5 text-violet-400 hover:bg-violet-100 hover:text-violet-700 transition-colors">
+                                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    </button>
+                                @endif
+                                <svg class="h-4 w-4 text-stone-400 transition-transform" :class="open && 'rotate-180'" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </div>
+                        </button>
+                        {{-- Dropdown --}}
+                        <div x-show="open" x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="opacity-0 -translate-y-1"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             class="absolute z-20 mt-1 w-full rounded-xl border border-stone-200 bg-white shadow-xl overflow-hidden">
+                            <div class="p-2 border-b border-stone-100">
+                                <input x-model="search"
+                                       x-ref="searchInput"
+                                       x-init="$watch('open', v => v && $nextTick(() => $refs.searchInput.focus()))"
+                                       type="text"
+                                       placeholder="Buscar paciente..."
+                                       class="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm text-stone-800 placeholder:text-stone-400 focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-100">
+                            </div>
+                            <ul class="max-h-52 overflow-auto py-1">
+                                <template x-for="p in filtered" :key="p.id">
                                     <li>
                                         <button type="button"
-                                                wire:click="selecionarPaciente('{{ $sug['id'] }}', '{{ addslashes($sug['nome']) }}')"
-                                                class="w-full px-4 py-2.5 text-left text-sm text-stone-700 hover:bg-violet-50 hover:text-violet-800 transition-colors">
-                                            {{ $sug['nome'] }}
+                                                @click="$wire.selecionarPaciente(p.id, p.nome); open = false; search = ''"
+                                                :class="$wire.criarPacienteId === p.id ? 'bg-violet-50 text-violet-800 font-semibold' : 'text-stone-700 hover:bg-stone-50'"
+                                                class="w-full px-4 py-2.5 text-left text-sm transition-colors">
+                                            <span x-text="p.nome"></span>
                                         </button>
                                     </li>
-                                @endforeach
+                                </template>
+                                <li x-show="filtered.length === 0"
+                                    class="px-4 py-3 text-sm text-stone-400 text-center">
+                                    Nenhum paciente encontrado
+                                </li>
                             </ul>
-                        @endif
+                        </div>
                     </div>
                     @error('criarPacienteId') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                 </div>
@@ -320,23 +357,46 @@
                     </div>
                 </div>
 
-                {{-- Procedimento --}}
+                {{-- ── Procedimentos: multi-seleção via checkboxes ── --}}
                 <div>
-                    <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-stone-500">Procedimento <span class="text-red-400">*</span></label>
-                    <select wire:model.live="criarProcedimentoId"
-                            class="w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm text-stone-800 focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-100 @error('criarProcedimentoId') border-red-300 @enderror">
-                        <option value="">Selecione...</option>
-                        @foreach ($this->procedimentos as $proc)
-                            <option value="{{ $proc->id }}">{{ $proc->nome }} — {{ $proc->duracao_minutos }}min (R$ {{ number_format($proc->valor, 2, ',', '.') }})</option>
-                        @endforeach
-                    </select>
-                    @error('criarProcedimentoId') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                    <div class="mb-1.5 flex items-center justify-between">
+                        <label class="text-xs font-semibold uppercase tracking-wide text-stone-500">
+                            Procedimentos <span class="text-red-400">*</span>
+                        </label>
+                        @if ($this->duracaoTotal > 0)
+                            <span class="text-xs font-semibold text-violet-600">
+                                Duração total: {{ $this->duracaoTotal }} min
+                            </span>
+                        @endif
+                    </div>
+                    <div class="rounded-xl border border-stone-200 divide-y divide-stone-100 overflow-hidden
+                        @error('criarProcedimentoIds') border-red-300 @enderror">
+                        @forelse ($this->procedimentos as $proc)
+                            @php $checked = in_array($proc->id, $this->criarProcedimentoIds, false); @endphp
+                            <label class="flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors
+                                {{ $checked ? 'bg-violet-50' : 'bg-white hover:bg-stone-50' }}">
+                                <input type="checkbox"
+                                       wire:model.live="criarProcedimentoIds"
+                                       value="{{ $proc->id }}"
+                                       class="h-4 w-4 rounded border-stone-300 text-violet-600 focus:ring-violet-100">
+                                <span class="flex-1 text-sm {{ $checked ? 'font-semibold text-violet-800' : 'text-stone-700' }}">
+                                    {{ $proc->nome }}
+                                </span>
+                                <span class="text-xs text-stone-400 tabular-nums shrink-0">
+                                    {{ $proc->duracao_minutos }}min · R$ {{ number_format($proc->valor, 2, ',', '.') }}
+                                </span>
+                            </label>
+                        @empty
+                            <p class="px-4 py-3 text-sm text-stone-400">Nenhum procedimento ativo. Cadastre em Configurações.</p>
+                        @endforelse
+                    </div>
+                    @error('criarProcedimentoIds') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                 </div>
 
-                {{-- Horários disponíveis --}}
+                {{-- ── Horários disponíveis ── --}}
                 <div>
                     <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-stone-500">Horário <span class="text-red-400">*</span></label>
-                    @if ($criarProfissionalId && $criarProcedimentoId && $criarData)
+                    @if ($criarProfissionalId && count($criarProcedimentoIds) > 0 && $criarData)
                         @if (count($this->slots) > 0)
                             <div class="flex flex-wrap gap-2">
                                 @foreach ($this->slots as $slot)
@@ -356,7 +416,7 @@
                             </div>
                         @endif
                     @else
-                        <p class="text-sm text-stone-400">Selecione profissional, procedimento e data.</p>
+                        <p class="text-sm text-stone-400">Selecione profissional, procedimento(s) e data.</p>
                     @endif
                     @error('criarSlot') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                 </div>
