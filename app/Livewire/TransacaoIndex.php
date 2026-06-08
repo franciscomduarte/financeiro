@@ -6,6 +6,7 @@ namespace App\Livewire;
 
 use App\Actions\CalcularValoresTransacaoAction;
 use App\Actions\CreateTransacaoAction;
+use App\Actions\EnviarAnexoAction;
 use App\Actions\UpdateTransacaoAction;
 use App\Actions\UploadAnexoAction;
 use App\Enums\FaseTransacao;
@@ -16,6 +17,8 @@ use App\Enums\TipoAnexo;
 use App\Enums\TipoTransacao;
 use App\Models\Paciente;
 use App\Models\Transacao;
+use App\Models\TransacaoAnexo;
+use RuntimeException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -40,12 +43,19 @@ class TransacaoIndex extends Component
     public string $periodoFim       = '';
 
     // ─── Estado dos modais ──────────────────────────────────────
-    public bool $modalCriar   = false;
-    public bool $modalEditar  = false;
-    public bool $modalDetalhe = false;
+    public bool $modalCriar        = false;
+    public bool $modalEditar       = false;
+    public bool $modalDetalhe      = false;
+    public bool $modalEnviarAnexo  = false;
 
     public ?string $transacaoEditandoId  = null;
     public ?string $transacaoDetalheId   = null;
+
+    // ─── Envio de anexo ─────────────────────────────────────────
+    public ?string $anexoEnviarId   = null;
+    public ?string $anexoEnviarNome = null;
+    public bool    $enviarEmail     = true;
+    public bool    $enviarWhatsapp  = true;
 
     // ─── Formulário ─────────────────────────────────────────────
     public string $tipo             = 'entrada';
@@ -265,6 +275,59 @@ class TransacaoIndex extends Component
         $this->transacaoDetalheId = null;
         $this->arquivoBoleto      = null;
         $this->arquivoComprovante = null;
+        $this->modalEnviarAnexo   = false;
+        $this->anexoEnviarId      = null;
+        $this->anexoEnviarNome    = null;
+    }
+
+    public function abrirModalEnviarAnexo(string $anexoId): void
+    {
+        $this->anexoEnviarId    = $anexoId;
+        $this->enviarEmail      = true;
+        $this->enviarWhatsapp   = true;
+        $this->anexoEnviarNome  = $this->transacaoDetalhe?->anexos->firstWhere('id', $anexoId)?->nome_arquivo ?? 'Documento';
+        $this->modalEnviarAnexo = true;
+    }
+
+    public function confirmarEnviarAnexo(EnviarAnexoAction $action): void
+    {
+        $anexo    = TransacaoAnexo::with('transacao.paciente')->findOrFail($this->anexoEnviarId);
+        $paciente = $anexo->transacao?->paciente;
+
+        $this->modalEnviarAnexo = false;
+
+        if (! $paciente) {
+            $this->flashErro = 'Esta transação não tem paciente vinculado.';
+            return;
+        }
+
+        try {
+            $result = $action->execute($anexo, $paciente, $this->enviarEmail, $this->enviarWhatsapp);
+
+            $sucessos = array_filter([
+                $result['email']     === true ? 'e-mail'    : null,
+                $result['whatsapp']  === true ? 'WhatsApp'  : null,
+            ]);
+            $falhas = array_filter([
+                $result['email']     === false ? 'e-mail'   : null,
+                $result['whatsapp']  === false ? 'WhatsApp' : null,
+            ]);
+
+            if (! empty($sucessos)) {
+                $msg = 'Documento enviado via ' . implode(' e ', $sucessos) . '.';
+                if (! empty($falhas)) {
+                    $msg .= ' Falha em: ' . implode(' e ', $falhas) . '.';
+                }
+                $this->flashSucesso = $msg;
+            } else {
+                $this->flashErro = 'Nenhum envio foi concluído. Verifique os dados do paciente.';
+            }
+        } catch (RuntimeException $e) {
+            $this->flashErro = $e->getMessage();
+        } catch (\Throwable $e) {
+            Log::error('Erro ao enviar anexo', ['error' => $e->getMessage()]);
+            $this->flashErro = 'Erro ao enviar documento. Tente novamente.';
+        }
     }
 
     // ─── Criação ────────────────────────────────────────────────
@@ -480,7 +543,7 @@ class TransacaoIndex extends Component
             return null;
         }
 
-        return Transacao::with(['anexos', 'paciente:id,nome'])->find($this->transacaoDetalheId);
+        return Transacao::with(['anexos', 'paciente:id,nome,email,telefone'])->find($this->transacaoDetalheId);
     }
 
     // ─── Render ──────────────────────────────────────────────────

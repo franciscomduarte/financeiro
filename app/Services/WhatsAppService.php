@@ -84,7 +84,7 @@ class WhatsAppService
         return $msg;
     }
 
-    private function enviarTexto(string $numero, string $mensagem): bool
+    public function enviarTexto(string $numero, string $mensagem): bool
     {
         $resposta = Http::withHeaders(['apikey' => $this->apiKey])
             ->post("{$this->baseUrl}/message/sendText/{$this->instance}", [
@@ -101,6 +101,110 @@ class WhatsAppService
         }
 
         return true;
+    }
+
+    public function enviarConfirmacaoAgendamento(\App\Models\Agendamento $agendamento): bool
+    {
+        $numero    = $this->formatarTelefone($agendamento->paciente->telefone);
+        $data      = $agendamento->inicio_em->translatedFormat('l, d \d\e F');
+        $hora      = $agendamento->inicio_em->format('H:i');
+        $nome      = $agendamento->paciente->nome;
+        $proc      = $agendamento->procedimento->nome;
+        $prof      = $agendamento->profissional->nome;
+
+        $mensagem = "📅 *Agendamento Confirmado — LC Estética*\n\n"
+            . "Olá, *{$nome}*!\n\n"
+            . "Seu agendamento foi confirmado:\n"
+            . "✂️ Procedimento: *{$proc}*\n"
+            . "👩‍⚕️ Profissional: *{$prof}*\n"
+            . "📆 Data: *{$data}*\n"
+            . "🕐 Horário: *{$hora}*\n\n"
+            . "Em caso de dúvidas, entre em contato. 🙏";
+
+        return $this->enviarTexto($numero, $mensagem);
+    }
+
+    public function enviarCancelamentoAgendamento(\App\Models\Agendamento $agendamento): bool
+    {
+        $numero  = $this->formatarTelefone($agendamento->paciente->telefone);
+        $nome    = $agendamento->paciente->nome;
+        $proc    = $agendamento->procedimento->nome;
+        $data    = $agendamento->inicio_em->translatedFormat('d \d\e F');
+        $hora    = $agendamento->inicio_em->format('H:i');
+        $motivo  = $agendamento->motivo_cancelamento;
+
+        $mensagem = "❌ *Agendamento Cancelado — LC Estética*\n\n"
+            . "Olá, *{$nome}*!\n\n"
+            . "Seu agendamento de *{$proc}* do dia *{$data}* às *{$hora}* foi cancelado."
+            . ($motivo ? "\n\n📝 Motivo: {$motivo}" : '')
+            . "\n\nPara reagendar, entre em contato conosco. 🙏";
+
+        return $this->enviarTexto($numero, $mensagem);
+    }
+
+    public function enviarReagendamentoAgendamento(\App\Models\Agendamento $agendamento): bool
+    {
+        $numero = $this->formatarTelefone($agendamento->paciente->telefone);
+        $nome   = $agendamento->paciente->nome;
+        $proc   = $agendamento->procedimento->nome;
+        $prof   = $agendamento->profissional->nome;
+        $data   = $agendamento->inicio_em->translatedFormat('l, d \d\e F');
+        $hora   = $agendamento->inicio_em->format('H:i');
+
+        $mensagem = "🔄 *Reagendamento Confirmado — LC Estética*\n\n"
+            . "Olá, *{$nome}*!\n\n"
+            . "Seu agendamento foi reagendado:\n"
+            . "✂️ Procedimento: *{$proc}*\n"
+            . "👩‍⚕️ Profissional: *{$prof}*\n"
+            . "📆 Nova data: *{$data}*\n"
+            . "🕐 Novo horário: *{$hora}*\n\n"
+            . "Em caso de dúvidas, entre em contato. 🙏";
+
+        return $this->enviarTexto($numero, $mensagem);
+    }
+
+    public function enviarLembreteAgendamento(\App\Models\Agendamento $agendamento, string $quando): bool
+    {
+        $numero = $this->formatarTelefone($agendamento->paciente->telefone);
+        $nome   = $agendamento->paciente->nome;
+        $proc   = $agendamento->procedimento->nome;
+        $prof   = $agendamento->profissional->nome;
+        $hora   = $agendamento->inicio_em->format('H:i');
+        $data   = $agendamento->inicio_em->translatedFormat('d \d\e F');
+
+        $quando === 'amanhã'
+            ? $preambulo = "sua consulta é *amanhã*!"
+            : $preambulo = "sua consulta é *hoje daqui a pouco*!";
+
+        $mensagem = "⏰ *Lembrete — LC Estética*\n\n"
+            . "Olá, *{$nome}*, {$preambulo}\n\n"
+            . "✂️ Procedimento: *{$proc}*\n"
+            . "👩‍⚕️ Profissional: *{$prof}*\n"
+            . "📆 Data: *{$data}*\n"
+            . "🕐 Horário: *{$hora}*\n\n"
+            . "Se precisar cancelar, nos avise com antecedência. 🙏";
+
+        return $this->enviarTexto($numero, $mensagem);
+    }
+
+    public function enviarDocumento(
+        string $numero,
+        string $base64,
+        string $mimeType,
+        string $nomeArquivo,
+        string $caption = '',
+    ): bool {
+        $resposta = Http::withHeaders(['apikey' => $this->apiKey])
+            ->post("{$this->baseUrl}/message/sendMedia/{$this->instance}", [
+                'number'    => $this->formatarTelefone($numero),
+                'mediatype' => 'document',
+                'mimetype'  => $mimeType,
+                'caption'   => $caption,
+                'media'     => $base64,
+                'fileName'  => $nomeArquivo,
+            ]);
+
+        return $resposta->successful();
     }
 
     private function enviarImagem(string $numero, string $base64, string $caption = ''): bool

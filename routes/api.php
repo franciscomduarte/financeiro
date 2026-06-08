@@ -2,9 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\V1\AgendamentoController;
 use App\Http\Controllers\Api\V1\AnexoController;
+use App\Http\Controllers\Api\V1\BloqueioAgendaController;
 use App\Http\Controllers\Api\V1\ContratoController;
 use App\Http\Controllers\Api\V1\FornecedorController;
+use App\Http\Controllers\Api\V1\ProcedimentoController;
+use App\Http\Controllers\Api\V1\ProfissionalController;
 use App\Http\Controllers\Api\V1\TaxaCartaoController;
 use App\Http\Controllers\Api\V1\TransacaoController;
 use App\Http\Controllers\CobrancaController;
@@ -59,4 +63,34 @@ Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function
         Route::post('/reenviar/{cobrancaId}', [CobrancaController::class, 'reenviar'])->name('reenviar');
         Route::post('/sincronizar-status', [CobrancaController::class, 'sincronizarStatus'])->name('sincronizar');
     });
+
+    // ─── Agendamentos ─────────────────────────────────────────────────────────────
+    Route::prefix('agendamentos')->name('agendamentos.')->group(function (): void {
+        Route::get('/', [AgendamentoController::class, 'index'])->name('index');
+        Route::post('/', [AgendamentoController::class, 'store'])->name('store');
+        Route::get('/slots', [AgendamentoController::class, 'slots'])->name('slots');
+        Route::get('/{agendamento}', [AgendamentoController::class, 'show'])->name('show');
+        Route::post('/{agendamento}/cancelar', [AgendamentoController::class, 'cancelar'])->name('cancelar');
+        Route::post('/{agendamento}/reagendar', [AgendamentoController::class, 'reagendar'])->name('reagendar');
+        Route::post('/{agendamento}/realizado', [AgendamentoController::class, 'realizado'])->name('realizado');
+        Route::post('/{agendamento}/falta', [AgendamentoController::class, 'falta'])->name('falta');
+    });
+
+    // ─── Profissionais ────────────────────────────────────────────────────────────
+    Route::prefix('profissionais')->name('profissionais.')->group(function (): void {
+        Route::get('/', [ProfissionalController::class, 'index'])->name('index');
+        Route::post('/', [ProfissionalController::class, 'store'])->name('store');
+        Route::get('/{profissional}', [ProfissionalController::class, 'show'])->name('show');
+        Route::put('/{profissional}', [ProfissionalController::class, 'update'])->name('update');
+        Route::delete('/{profissional}', [ProfissionalController::class, 'destroy'])->name('destroy');
+        Route::get('/{profissional}/grade', [ProfissionalController::class, 'grade'])->name('grade');
+        Route::put('/{profissional}/grade', [ProfissionalController::class, 'atualizarGrade'])->name('grade.update');
+        Route::get('/{profissional}/bloqueios', [BloqueioAgendaController::class, 'index'])->name('bloqueios.index');
+        Route::post('/{profissional}/bloqueios', [BloqueioAgendaController::class, 'store'])->name('bloqueios.store');
+        Route::delete('/bloqueios/{bloqueio}', [BloqueioAgendaController::class, 'destroy'])->name('bloqueios.destroy');
+    });
+
+    // ─── Procedimentos ────────────────────────────────────────────────────────────
+    Route::apiResource('procedimentos', ProcedimentoController::class)
+        ->parameters(['procedimentos' => 'procedimento']);
 });

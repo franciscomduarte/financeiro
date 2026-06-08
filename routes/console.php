@@ -56,3 +56,11 @@ Schedule::call(function () {
     ->dailyAt('09:05')
     ->name('parcelamentos-diario')
     ->withoutOverlapping();
+
+// ─── Agendamentos — lembretes ─────────────────────────────────────────────────
+
+// Verifica e envia lembretes de consulta a cada 15 minutos
+Schedule::job(new \App\Jobs\EnviarLembretesAgendamentosJob())
+    ->everyFifteenMinutes()
+    ->name('lembretes-agendamentos')
+    ->withoutOverlapping();

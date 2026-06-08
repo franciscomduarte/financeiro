@@ -511,6 +511,17 @@
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                                 </svg>
                                             </a>
+                                            @if ($t->paciente_id)
+                                                <button
+                                                    wire:click="abrirModalEnviarAnexo('{{ $anexo->id }}')"
+                                                    class="p-1.5 text-stone-300 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                                    title="Enviar para paciente"
+                                                >
+                                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                                                    </svg>
+                                                </button>
+                                            @endif
                                             <button
                                                 wire:click="removerAnexo('{{ $anexo->id }}')"
                                                 wire:confirm="Remover este anexo?"
@@ -567,6 +578,122 @@
                 <div class="flex justify-end px-6 py-4 border-t border-stone-100 bg-stone-50/50">
                     <button wire:click="fecharModalDetalhe" class="px-4 py-2 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 rounded-lg text-sm font-medium transition-colors">
                         Fechar
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- ══════════════════════════════════════════════════
+         Modal: Enviar Anexo para Paciente
+         ══════════════════════════════════════════════════ --}}
+    @if ($modalEnviarAnexo && $this->transacaoDetalhe?->paciente)
+        @php $paciente = $this->transacaoDetalhe->paciente; @endphp
+        <div
+            class="fixed inset-0 z-[60] flex items-center justify-center p-4"
+            x-data
+            x-on:keydown.escape.window="$wire.modalEnviarAnexo = false"
+        >
+            <div class="absolute inset-0 bg-stone-900/40 backdrop-blur-sm" wire:click="$set('modalEnviarAnexo', false)"></div>
+
+            <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-sm">
+                <div class="flex items-center justify-between px-6 py-4 border-b border-stone-100">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                            </svg>
+                        </div>
+                        <h3 class="text-base font-semibold text-stone-800">Enviar Documento</h3>
+                    </div>
+                    <button wire:click="$set('modalEnviarAnexo', false)" class="text-stone-400 hover:text-stone-600 transition-colors">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="px-6 py-5 space-y-4">
+                    {{-- Arquivo --}}
+                    <div class="flex items-center gap-3 bg-stone-50 rounded-xl px-4 py-3">
+                        <div class="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center shrink-0">
+                            <svg class="w-4 h-4 text-rose-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
+                            </svg>
+                        </div>
+                        <p class="text-sm text-stone-700 font-medium truncate">{{ $anexoEnviarNome }}</p>
+                    </div>
+
+                    {{-- Destinatário --}}
+                    <div>
+                        <p class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-2">Destinatário</p>
+                        <p class="text-sm text-stone-800 font-medium">{{ $paciente->nome }}</p>
+                    </div>
+
+                    {{-- Canais --}}
+                    <div>
+                        <p class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-3">Enviar via</p>
+                        <div class="space-y-2.5">
+                            {{-- Email --}}
+                            <label class="flex items-center gap-3 cursor-pointer {{ $paciente->email ? '' : 'opacity-50 cursor-not-allowed' }}">
+                                <input
+                                    type="checkbox"
+                                    wire:model="enviarEmail"
+                                    {{ $paciente->email ? '' : 'disabled' }}
+                                    class="w-4 h-4 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500"
+                                >
+                                <div>
+                                    <p class="text-sm text-stone-700 font-medium">E-mail</p>
+                                    @if ($paciente->email)
+                                        <p class="text-xs text-stone-400">{{ $paciente->email }}</p>
+                                    @else
+                                        <p class="text-xs text-red-400">Paciente sem e-mail cadastrado</p>
+                                    @endif
+                                </div>
+                            </label>
+
+                            {{-- WhatsApp --}}
+                            <label class="flex items-center gap-3 cursor-pointer {{ $paciente->telefone ? '' : 'opacity-50 cursor-not-allowed' }}">
+                                <input
+                                    type="checkbox"
+                                    wire:model="enviarWhatsapp"
+                                    {{ $paciente->telefone ? '' : 'disabled' }}
+                                    class="w-4 h-4 rounded border-stone-300 text-emerald-600 focus:ring-emerald-500"
+                                >
+                                <div>
+                                    <p class="text-sm text-stone-700 font-medium">WhatsApp</p>
+                                    @if ($paciente->telefone)
+                                        <p class="text-xs text-stone-400">{{ $paciente->telefone }}</p>
+                                    @else
+                                        <p class="text-xs text-red-400">Paciente sem telefone cadastrado</p>
+                                    @endif
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-stone-100 bg-stone-50/50">
+                    <button
+                        wire:click="$set('modalEnviarAnexo', false)"
+                        class="px-4 py-2 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 rounded-lg text-sm font-medium transition-colors"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        wire:click="confirmarEnviarAnexo"
+                        wire:loading.attr="disabled"
+                        wire:target="confirmarEnviarAnexo"
+                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition-colors disabled:opacity-60 flex items-center gap-2"
+                    >
+                        <span wire:loading.remove wire:target="confirmarEnviarAnexo">Enviar</span>
+                        <span wire:loading wire:target="confirmarEnviarAnexo" class="flex items-center gap-1.5">
+                            <svg class="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                            </svg>
+                            Enviando...
+                        </span>
                     </button>
                 </div>
             </div>
