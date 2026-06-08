@@ -358,37 +358,61 @@
                     </div>
                 </div>
 
-                {{-- ── Procedimentos: multi-seleção via checkboxes ── --}}
-                <div>
-                    <div class="mb-1.5 flex items-center justify-between">
+                {{-- ── Procedimentos: pill multi-select com busca ── --}}
+                <div x-data="{ busca: '' }">
+                    <div class="mb-2 flex items-center justify-between gap-3">
                         <label class="text-xs font-semibold uppercase tracking-wide text-stone-500">
                             Procedimentos <span class="text-red-400">*</span>
                         </label>
-                        @if ($this->duracaoTotal > 0)
-                            <span class="text-xs font-semibold text-violet-600">
-                                Duração total: {{ $this->duracaoTotal }} min
+                        @if (count($this->criarProcedimentoIds) > 0)
+                            <span class="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-bold text-violet-700 tabular-nums">
+                                <svg class="h-3 w-3 shrink-0" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+                                </svg>
+                                {{ count($this->criarProcedimentoIds) }} selecionado{{ count($this->criarProcedimentoIds) > 1 ? 's' : '' }} · {{ $this->duracaoTotal }}min
                             </span>
                         @endif
                     </div>
-                    <div class="rounded-xl border border-stone-200 divide-y divide-stone-100 overflow-hidden
-                        @error('criarProcedimentoIds') border-red-300 @enderror">
+
+                    {{-- Busca inline --}}
+                    <div class="relative mb-2">
+                        <svg class="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-stone-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
+                        </svg>
+                        <input x-model.debounce.150ms="busca"
+                               type="search"
+                               placeholder="Filtrar procedimentos..."
+                               autocomplete="off"
+                               class="w-full rounded-lg border border-stone-200 py-2 pl-8 pr-3 text-sm text-stone-700 placeholder:text-stone-400 focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-100">
+                    </div>
+
+                    {{-- Grid de pills --}}
+                    <div class="rounded-xl border p-2.5 min-h-[52px]
+                        @error('criarProcedimentoIds') border-red-300 bg-red-50/30 @enderror
+                        @if (!$errors->has('criarProcedimentoIds')) border-stone-200 bg-stone-50/60 @endif">
                         @forelse ($this->procedimentos as $proc)
-                            @php $checked = in_array($proc->id, $this->criarProcedimentoIds, false); @endphp
-                            <label class="flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors
-                                {{ $checked ? 'bg-violet-50' : 'bg-white hover:bg-stone-50' }}">
+                            @php $sel = in_array($proc->id, $this->criarProcedimentoIds, false); @endphp
+                            <label
+                                data-nome="{{ strtolower($proc->nome) }}"
+                                x-show="!busca || $el.dataset.nome.includes(busca.toLowerCase())"
+                                class="m-0.5 inline-flex cursor-pointer select-none items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-150
+                                    {{ $sel
+                                        ? 'bg-violet-600 text-white shadow-sm shadow-violet-200 ring-1 ring-violet-500'
+                                        : 'bg-white text-stone-600 ring-1 ring-inset ring-stone-200 hover:ring-violet-300 hover:text-violet-700' }}">
                                 <input type="checkbox"
                                        wire:model.live="criarProcedimentoIds"
                                        value="{{ $proc->id }}"
-                                       class="h-4 w-4 rounded border-stone-300 text-violet-600 focus:ring-violet-100">
-                                <span class="flex-1 text-sm {{ $checked ? 'font-semibold text-violet-800' : 'text-stone-700' }}">
-                                    {{ $proc->nome }}
-                                </span>
-                                <span class="text-xs text-stone-400 tabular-nums shrink-0">
-                                    {{ $proc->duracao_minutos }}min · R$ {{ number_format($proc->valor, 2, ',', '.') }}
-                                </span>
+                                       class="sr-only">
+                                @if ($sel)
+                                    <svg class="h-3 w-3 shrink-0" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+                                    </svg>
+                                @endif
+                                <span>{{ $proc->nome }}</span>
+                                <span class="tabular-nums text-xs {{ $sel ? 'text-violet-200' : 'text-stone-400' }}">{{ $proc->duracao_minutos }}m</span>
                             </label>
                         @empty
-                            <p class="px-4 py-3 text-sm text-stone-400">Nenhum procedimento ativo. Cadastre em Configurações.</p>
+                            <p class="px-2 py-1 text-sm text-stone-400">Nenhum procedimento ativo. Cadastre em Configurações.</p>
                         @endforelse
                     </div>
                     @error('criarProcedimentoIds') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
