@@ -279,29 +279,31 @@
                      x-on:click.outside="open = false">
                     <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-stone-500">Paciente <span class="text-red-400">*</span></label>
                     <div class="relative">
-                        {{-- Botão trigger --}}
-                        <button type="button"
-                                @click="open = !open"
-                                class="w-full flex items-center justify-between rounded-xl border px-3 py-2.5 text-sm text-left transition-colors
-                                    {{ $criarPacienteId ? 'border-violet-300 bg-violet-50 text-violet-800' : 'border-stone-200 bg-white text-stone-400' }}
-                                    @error('criarPacienteId') !border-red-300 @enderror
-                                    focus:outline-none focus:ring-2 focus:ring-violet-100">
-                            <span class="{{ $criarPacienteId ? 'font-semibold' : '' }}">
+                        {{-- Trigger: div evita button aninhado (HTML inválido) --}}
+                        <div role="button" tabindex="0"
+                             @click="open = !open"
+                             @keydown.enter.prevent="open = !open"
+                             @keydown.space.prevent="open = !open"
+                             class="w-full flex items-center justify-between rounded-xl border px-3 py-2.5 text-sm cursor-pointer transition-colors
+                                 {{ $criarPacienteId ? 'border-violet-300 bg-violet-50 text-violet-800' : 'border-stone-200 bg-white text-stone-400' }}
+                                 @error('criarPacienteId') !border-red-300 @enderror
+                                 focus:outline-none focus:ring-2 focus:ring-violet-100">
+                            <span class="{{ $criarPacienteId ? 'font-semibold text-violet-800' : '' }}">
                                 {{ $criarPacienteNome ?: 'Selecione um paciente...' }}
                             </span>
                             <div class="flex items-center gap-1.5 shrink-0 ml-2">
                                 @if ($criarPacienteId)
                                     <button type="button"
-                                            wire:click.stop="limparPaciente"
+                                            @click.stop="$wire.limparPaciente()"
                                             class="rounded-full p-0.5 text-violet-400 hover:bg-violet-100 hover:text-violet-700 transition-colors">
                                         <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                                     </button>
                                 @endif
-                                <svg class="h-4 w-4 text-stone-400 transition-transform" :class="open && 'rotate-180'" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <svg class="h-4 w-4 text-stone-400 transition-transform duration-150" :class="open && 'rotate-180'" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
                                 </svg>
                             </div>
-                        </button>
+                        </div>
                         {{-- Dropdown --}}
                         <div x-show="open" x-transition:enter="transition ease-out duration-100"
                              x-transition:enter-start="opacity-0 -translate-y-1"
