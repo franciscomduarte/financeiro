@@ -16,6 +16,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 use Throwable;
 
@@ -204,6 +205,14 @@ class AgendamentoIndex extends Component
 
     public function salvarAgendamento(AgendamentoService $service): void
     {
+        Log::info('[AgendamentoIndex] salvarAgendamento chamado', [
+            'pacienteId'       => $this->criarPacienteId,
+            'profissionalId'   => $this->criarProfissionalId,
+            'procedimentoIds'  => $this->criarProcedimentoIds,
+            'data'             => $this->criarData,
+            'slot'             => $this->criarSlot,
+        ]);
+
         // Garante inteiros antes do exists (PostgreSQL bigint vs string PDO binding)
         $this->criarProcedimentoIds = array_map('intval', $this->criarProcedimentoIds);
 
@@ -240,6 +249,10 @@ class AgendamentoIndex extends Component
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e; // deixa o Livewire tratar e popular o error bag
         } catch (Throwable $e) {
+            Log::error('[AgendamentoIndex] salvarAgendamento erro', [
+                'message' => $e->getMessage(),
+                'trace'   => $e->getTraceAsString(),
+            ]);
             $this->flashErro = 'Erro ao criar agendamento: ' . $e->getMessage();
         }
     }
