@@ -7,7 +7,7 @@
              x-transition:leave="transition duration-300"
              x-transition:leave-start="opacity-100 translate-y-0"
              x-transition:leave-end="opacity-0 -translate-y-2"
-             class="fixed top-4 right-4 z-50 max-w-sm">
+             class="fixed top-4 right-4 z-[9999] max-w-sm">
             <div class="bg-white border border-emerald-200 text-emerald-800 rounded-xl px-4 py-3 shadow-xl flex items-center gap-2.5 text-sm">
                 <div class="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
                     <svg class="w-3 h-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
@@ -20,11 +20,11 @@
     @endif
     @if ($flashErro)
         <div x-data="{ show: true }" x-show="show"
-             x-init="setTimeout(() => show = false, 6000)"
+             x-init="setTimeout(() => show = false, 8000)"
              x-transition:leave="transition duration-300"
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0"
-             class="fixed top-4 right-4 z-50 max-w-sm">
+             class="fixed top-4 right-4 z-[9999] max-w-sm">
             <div class="bg-white border border-red-200 text-red-800 rounded-xl px-4 py-3 shadow-xl flex items-center gap-2.5 text-sm">
                 <div class="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center shrink-0">
                     <svg class="w-3 h-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">

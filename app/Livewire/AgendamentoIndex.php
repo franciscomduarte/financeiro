@@ -204,36 +204,41 @@ class AgendamentoIndex extends Component
 
     public function salvarAgendamento(AgendamentoService $service): void
     {
-        $this->validate([
-            'criarPacienteId'      => 'required|uuid|exists:pacientes,id',
-            'criarProfissionalId'  => 'required|uuid|exists:profissionais,id',
-            'criarProcedimentoIds' => 'required|array|min:1',
-            'criarProcedimentoIds.*' => 'integer|exists:procedimentos,id',
-            'criarData'            => 'required|date_format:Y-m-d',
-            'criarSlot'            => 'required|date_format:H:i',
-        ], [
-            'criarPacienteId.required'      => 'Selecione um paciente.',
-            'criarProfissionalId.required'  => 'Selecione um profissional.',
-            'criarProcedimentoIds.required' => 'Selecione ao menos um procedimento.',
-            'criarProcedimentoIds.min'      => 'Selecione ao menos um procedimento.',
-            'criarData.required'            => 'Informe a data.',
-            'criarSlot.required'            => 'Selecione um horário disponível.',
-        ]);
+        // Garante inteiros antes do exists (PostgreSQL bigint vs string PDO binding)
+        $this->criarProcedimentoIds = array_map('intval', $this->criarProcedimentoIds);
 
         try {
+            $this->validate([
+                'criarPacienteId'        => 'required|uuid|exists:pacientes,id',
+                'criarProfissionalId'    => 'required|uuid|exists:profissionais,id',
+                'criarProcedimentoIds'   => 'required|array|min:1',
+                'criarProcedimentoIds.*' => 'integer|exists:procedimentos,id',
+                'criarData'              => 'required|date_format:Y-m-d',
+                'criarSlot'              => 'required|date_format:H:i',
+            ], [
+                'criarPacienteId.required'      => 'Selecione um paciente.',
+                'criarProfissionalId.required'  => 'Selecione um profissional.',
+                'criarProcedimentoIds.required' => 'Selecione ao menos um procedimento.',
+                'criarProcedimentoIds.min'      => 'Selecione ao menos um procedimento.',
+                'criarData.required'            => 'Informe a data.',
+                'criarSlot.required'            => 'Selecione um horário disponível.',
+            ]);
+
             $service->criar([
-                'paciente_id'      => $this->criarPacienteId,
-                'profissional_id'  => $this->criarProfissionalId,
-                'procedimentos_ids' => array_map('intval', $this->criarProcedimentoIds),
-                'procedimento_id'  => (int) $this->criarProcedimentoIds[0],
-                'inicio_em'        => "{$this->criarData} {$this->criarSlot}",
-                'observacoes'      => $this->criarObservacoes ?: null,
+                'paciente_id'       => $this->criarPacienteId,
+                'profissional_id'   => $this->criarProfissionalId,
+                'procedimentos_ids' => $this->criarProcedimentoIds,
+                'procedimento_id'   => $this->criarProcedimentoIds[0],
+                'inicio_em'         => "{$this->criarData} {$this->criarSlot}",
+                'observacoes'       => $this->criarObservacoes ?: null,
             ]);
 
             $this->flashSucesso = 'Agendamento criado com sucesso.';
             $this->modalCriar   = false;
             $this->resetCriarForm();
             $this->resetPage();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e; // deixa o Livewire tratar e popular o error bag
         } catch (Throwable $e) {
             $this->flashErro = 'Erro ao criar agendamento: ' . $e->getMessage();
         }
