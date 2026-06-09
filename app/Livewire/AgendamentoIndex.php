@@ -110,7 +110,7 @@ class AgendamentoIndex extends Component
     }
 
     #[Computed]
-    public function slots(): array
+    public function horariosDisponiveis(): array
     {
         if (! $this->criarProfissionalId || empty($this->criarProcedimentoIds) || ! $this->criarData) {
             return [];
@@ -127,7 +127,7 @@ class AgendamentoIndex extends Component
     }
 
     #[Computed]
-    public function slotsReagendar(): array
+    public function horariosReagendar(): array
     {
         if (! $this->reagendarId || ! $this->reagendarData) {
             return [];
@@ -168,25 +168,25 @@ class AgendamentoIndex extends Component
     public function updatedCriarProfissionalId(): void
     {
         $this->criarSlot = '';
-        unset($this->slots);
+        unset($this->horariosDisponiveis);
     }
 
     public function updatedCriarProcedimentoIds(): void
     {
         $this->criarSlot = '';
-        unset($this->slots, $this->duracaoTotal);
+        unset($this->horariosDisponiveis, $this->duracaoTotal);
     }
 
     public function updatedCriarData(): void
     {
         $this->criarSlot = '';
-        unset($this->slots);
+        unset($this->horariosDisponiveis);
     }
 
     public function updatedReagendarData(): void
     {
         $this->reagendarSlot = '';
-        unset($this->slotsReagendar);
+        unset($this->horariosReagendar);
     }
 
     // ─── Modal Criar ──────────────────────────────────────────────
@@ -249,7 +249,7 @@ class AgendamentoIndex extends Component
         $this->criarSlot            = '';
         $this->criarObservacoes     = '';
         $this->resetErrorBag();
-        unset($this->slots, $this->duracaoTotal);
+        unset($this->horariosDisponiveis, $this->duracaoTotal);
     }
 
     // ─── Cancelar ─────────────────────────────────────────────────
@@ -296,7 +296,7 @@ class AgendamentoIndex extends Component
         $this->reagendarData  = now()->addDay()->toDateString();
         $this->reagendarSlot  = '';
         $this->modalReagendar = true;
-        unset($this->slotsReagendar);
+        unset($this->horariosReagendar);
     }
 
     public function fecharModalReagendar(): void
@@ -306,7 +306,7 @@ class AgendamentoIndex extends Component
         $this->reagendarData  = '';
         $this->reagendarSlot  = '';
         $this->resetErrorBag();
-        unset($this->slotsReagendar);
+        unset($this->horariosReagendar);
     }
 
     public function confirmarReagendamento(AgendamentoService $service): void

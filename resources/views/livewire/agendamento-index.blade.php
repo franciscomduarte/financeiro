@@ -429,9 +429,9 @@
                 <div>
                     <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-stone-500">Horário <span class="text-red-400">*</span></label>
                     @if ($criarProfissionalId && count($criarProcedimentoIds) > 0 && $criarData)
-                        @if (count($this->slots) > 0)
+                        @if (count($this->horariosDisponiveis) > 0)
                             <div class="flex flex-wrap gap-2">
-                                @foreach ($this->slots as $slot)
+                                @foreach ($this->horariosDisponiveis as $slot)
                                     <button type="button"
                                             wire:click="$set('criarSlot', '{{ $slot }}')"
                                             class="rounded-xl border px-3.5 py-1.5 text-sm font-semibold tabular-nums transition-colors
@@ -541,9 +541,9 @@
                 <div>
                     <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-stone-500">Novo horário <span class="text-red-400">*</span></label>
                     @if ($reagendarData && $reagendarId)
-                        @if (count($this->slotsReagendar) > 0)
+                        @if (count($this->horariosReagendar) > 0)
                             <div class="flex flex-wrap gap-2">
-                                @foreach ($this->slotsReagendar as $slot)
+                                @foreach ($this->horariosReagendar as $slot)
                                     <button type="button"
                                             wire:click="$set('reagendarSlot', '{{ $slot }}')"
                                             class="rounded-xl border px-3.5 py-1.5 text-sm font-semibold tabular-nums transition-colors
