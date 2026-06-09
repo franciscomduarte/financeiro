@@ -264,6 +264,11 @@
             </div>
             <div class="space-y-5 p-6 max-h-[75vh] overflow-y-auto">
 
+                {{-- JSON dos pacientes embutido com segurança fora do atributo HTML --}}
+                <script type="application/json" id="pac-combobox-data">
+                    @json($this->pacientes->map(fn($p) => ['id' => (string) $p->id, 'nome' => $p->nome])->values())
+                </script>
+
                 {{-- ── Paciente: combobox com busca client-side ── --}}
                 <div x-data="{
                         open: false,
@@ -275,7 +280,7 @@
                             return this.patients.filter(p => p.nome.toLowerCase().includes(q));
                         }
                     }"
-                     x-init="patients = $wire.pacientesLista"
+                     x-init="patients = JSON.parse(document.getElementById('pac-combobox-data').textContent)"
                      x-on:click.outside="open = false">
                     <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-stone-500">Paciente <span class="text-red-400">*</span></label>
                     <div class="relative">
