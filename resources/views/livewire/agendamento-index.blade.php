@@ -466,11 +466,16 @@
                         class="rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors">
                     Cancelar
                 </button>
-                <button wire:click="salvarAgendamento" wire:loading.attr="disabled"
-                        class="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-violet-200 hover:bg-violet-700 transition-colors disabled:opacity-60">
-                    <span wire:loading wire:target="salvarAgendamento">
-                        <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
-                    </span>
+                <button wire:click="salvarAgendamento"
+                        wire:loading.attr="disabled" wire:target="salvarAgendamento"
+                        wire:loading.class="opacity-60 cursor-not-allowed" wire:target="salvarAgendamento"
+                        type="button"
+                        class="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-violet-200 hover:bg-violet-700 transition-colors">
+                    <svg wire:loading wire:target="salvarAgendamento"
+                         class="h-4 w-4 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                    </svg>
                     Confirmar Agendamento
                 </button>
             </div>
