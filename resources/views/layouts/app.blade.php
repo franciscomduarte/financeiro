@@ -48,49 +48,72 @@
         </div>
 
         {{-- Nav --}}
+        @php
+            $zonaClinica  = request()->routeIs('dashboard', 'pacientes.*', 'cobrancas.*', 'transacoes.*');
+            $zonaAgenda   = request()->routeIs('agenda.*');
+            $zonaEstoque  = request()->routeIs('estoque.*');
+            $zonaGestao   = request()->routeIs('web.*', 'taxas-cartao.*');
+        @endphp
         <nav class="flex-1 px-3 py-4 overflow-y-auto">
 
             {{-- ══════════════════════════════════════
                  ZONA CLÍNICA — operação diária
             ══════════════════════════════════════ --}}
-            <div class="space-y-0.5 mb-1">
-                <p class="px-2 mb-2 text-rose-400" style="font-family: 'Playfair Display', serif; font-style: italic; font-size: 10px; letter-spacing: 0.14em;">Clínica</p>
-
-                <a href="{{ route('dashboard') }}"
-                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
-                          {{ request()->routeIs('dashboard') ? 'bg-rose-50 text-rose-800' : 'text-stone-600 hover:bg-rose-50/50 hover:text-rose-700' }}">
-                    <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('dashboard') ? 'text-rose-500' : 'text-stone-400 group-hover:text-rose-400' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+            <div x-data="{ open: {{ $zonaClinica ? 'true' : 'false' }} }" class="mb-1">
+                <button @click="open = !open"
+                        class="w-full flex items-center justify-between px-2 py-1 mb-1 rounded-md hover:bg-rose-50/60 transition-colors group">
+                    <span class="text-rose-400 group-hover:text-rose-500 transition-colors"
+                          style="font-family: 'Playfair Display', serif; font-style: italic; font-size: 10px; letter-spacing: 0.14em;">Clínica</span>
+                    <svg class="w-2.5 h-2.5 text-rose-300 transition-transform duration-200" :class="open && 'rotate-180'"
+                         fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                     </svg>
-                    Dashboard
-                </a>
+                </button>
+                <div x-show="open"
+                     x-transition:enter="transition ease-out duration-150"
+                     x-transition:enter-start="opacity-0 -translate-y-1"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     x-transition:leave="transition ease-in duration-100"
+                     x-transition:leave-start="opacity-100 translate-y-0"
+                     x-transition:leave-end="opacity-0 -translate-y-1"
+                     class="space-y-0.5">
 
-                <a href="{{ route('pacientes.index') }}"
-                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
-                          {{ request()->routeIs('pacientes.*') ? 'bg-rose-50 text-rose-800' : 'text-stone-600 hover:bg-rose-50/50 hover:text-rose-700' }}">
-                    <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('pacientes.*') ? 'text-rose-500' : 'text-stone-400 group-hover:text-rose-400' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                    </svg>
-                    Pacientes
-                </a>
+                    <a href="{{ route('dashboard') }}"
+                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
+                              {{ request()->routeIs('dashboard') ? 'bg-rose-50 text-rose-800' : 'text-stone-600 hover:bg-rose-50/50 hover:text-rose-700' }}">
+                        <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('dashboard') ? 'text-rose-500' : 'text-stone-400 group-hover:text-rose-400' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                        </svg>
+                        Dashboard
+                    </a>
 
-                <a href="{{ route('cobrancas.index') }}"
-                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
-                          {{ request()->routeIs('cobrancas.*') ? 'bg-rose-50 text-rose-800' : 'text-stone-600 hover:bg-rose-50/50 hover:text-rose-700' }}">
-                    <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('cobrancas.*') ? 'text-rose-500' : 'text-stone-400 group-hover:text-rose-400' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
-                    </svg>
-                    Cobranças
-                </a>
+                    <a href="{{ route('pacientes.index') }}"
+                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
+                              {{ request()->routeIs('pacientes.*') ? 'bg-rose-50 text-rose-800' : 'text-stone-600 hover:bg-rose-50/50 hover:text-rose-700' }}">
+                        <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('pacientes.*') ? 'text-rose-500' : 'text-stone-400 group-hover:text-rose-400' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                        </svg>
+                        Pacientes
+                    </a>
 
-                <a href="{{ route('transacoes.index') }}"
-                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
-                          {{ request()->routeIs('transacoes.*') ? 'bg-rose-50 text-rose-800' : 'text-stone-600 hover:bg-rose-50/50 hover:text-rose-700' }}">
-                    <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('transacoes.*') ? 'text-rose-500' : 'text-stone-400 group-hover:text-rose-400' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
-                    </svg>
-                    Transações
-                </a>
+                    <a href="{{ route('cobrancas.index') }}"
+                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
+                              {{ request()->routeIs('cobrancas.*') ? 'bg-rose-50 text-rose-800' : 'text-stone-600 hover:bg-rose-50/50 hover:text-rose-700' }}">
+                        <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('cobrancas.*') ? 'text-rose-500' : 'text-stone-400 group-hover:text-rose-400' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+                        </svg>
+                        Cobranças
+                    </a>
+
+                    <a href="{{ route('transacoes.index') }}"
+                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
+                              {{ request()->routeIs('transacoes.*') ? 'bg-rose-50 text-rose-800' : 'text-stone-600 hover:bg-rose-50/50 hover:text-rose-700' }}">
+                        <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('transacoes.*') ? 'text-rose-500' : 'text-stone-400 group-hover:text-rose-400' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                        </svg>
+                        Transações
+                    </a>
+                </div>
             </div>
 
             {{-- ── Separador gradiente entre zonas ── --}}
@@ -99,27 +122,44 @@
             {{-- ══════════════════════════════════════
                  ZONA AGENDA
             ══════════════════════════════════════ --}}
-            <div class="space-y-0.5 mb-1">
-                <p class="px-2 mb-2 text-violet-400" style="font-family: 'Playfair Display', serif; font-style: italic; font-size: 10px; letter-spacing: 0.14em;">Agenda</p>
-
-                <a href="{{ route('agenda.index') }}"
-                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
-                          {{ request()->routeIs('agenda.index') ? 'bg-violet-50 text-violet-800' : 'text-stone-600 hover:bg-violet-50/50 hover:text-violet-700' }}">
-                    <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('agenda.index') ? 'text-violet-500' : 'text-stone-400 group-hover:text-violet-400' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+            <div x-data="{ open: {{ $zonaAgenda ? 'true' : 'false' }} }" class="mb-1">
+                <button @click="open = !open"
+                        class="w-full flex items-center justify-between px-2 py-1 mb-1 rounded-md hover:bg-violet-50/60 transition-colors group">
+                    <span class="text-violet-400 group-hover:text-violet-500 transition-colors"
+                          style="font-family: 'Playfair Display', serif; font-style: italic; font-size: 10px; letter-spacing: 0.14em;">Agenda</span>
+                    <svg class="w-2.5 h-2.5 text-violet-300 transition-transform duration-200" :class="open && 'rotate-180'"
+                         fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                     </svg>
-                    Agendamentos
-                </a>
+                </button>
+                <div x-show="open"
+                     x-transition:enter="transition ease-out duration-150"
+                     x-transition:enter-start="opacity-0 -translate-y-1"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     x-transition:leave="transition ease-in duration-100"
+                     x-transition:leave-start="opacity-100 translate-y-0"
+                     x-transition:leave-end="opacity-0 -translate-y-1"
+                     class="space-y-0.5">
 
-                <a href="{{ route('agenda.configuracao') }}"
-                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
-                          {{ request()->routeIs('agenda.configuracao') ? 'bg-violet-50 text-violet-800' : 'text-stone-600 hover:bg-violet-50/50 hover:text-violet-700' }}">
-                    <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('agenda.configuracao') ? 'text-violet-500' : 'text-stone-400 group-hover:text-violet-400' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    Configurações
-                </a>
+                    <a href="{{ route('agenda.index') }}"
+                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
+                              {{ request()->routeIs('agenda.index') ? 'bg-violet-50 text-violet-800' : 'text-stone-600 hover:bg-violet-50/50 hover:text-violet-700' }}">
+                        <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('agenda.index') ? 'text-violet-500' : 'text-stone-400 group-hover:text-violet-400' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                        </svg>
+                        Agendamentos
+                    </a>
+
+                    <a href="{{ route('agenda.configuracao') }}"
+                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
+                              {{ request()->routeIs('agenda.configuracao') ? 'bg-violet-50 text-violet-800' : 'text-stone-600 hover:bg-violet-50/50 hover:text-violet-700' }}">
+                        <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('agenda.configuracao') ? 'text-violet-500' : 'text-stone-400 group-hover:text-violet-400' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Configurações
+                    </a>
+                </div>
             </div>
 
             {{-- ── Separador gradiente entre zonas ── --}}
@@ -128,35 +168,52 @@
             {{-- ══════════════════════════════════════
                  ZONA ESTOQUE
             ══════════════════════════════════════ --}}
-            <div class="space-y-0.5 mb-1">
-                <p class="px-2 mb-2 text-emerald-400" style="font-family: 'Playfair Display', serif; font-style: italic; font-size: 10px; letter-spacing: 0.14em;">Estoque</p>
-
-                <a href="{{ route('estoque.index') }}"
-                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
-                          {{ request()->routeIs('estoque.index') ? 'bg-emerald-50 text-emerald-800' : 'text-stone-600 hover:bg-emerald-50/50 hover:text-emerald-700' }}">
-                    <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('estoque.index') ? 'text-emerald-500' : 'text-stone-400 group-hover:text-emerald-400' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+            <div x-data="{ open: {{ $zonaEstoque ? 'true' : 'false' }} }" class="mb-1">
+                <button @click="open = !open"
+                        class="w-full flex items-center justify-between px-2 py-1 mb-1 rounded-md hover:bg-emerald-50/60 transition-colors group">
+                    <span class="text-emerald-400 group-hover:text-emerald-500 transition-colors"
+                          style="font-family: 'Playfair Display', serif; font-style: italic; font-size: 10px; letter-spacing: 0.14em;">Estoque</span>
+                    <svg class="w-2.5 h-2.5 text-emerald-300 transition-transform duration-200" :class="open && 'rotate-180'"
+                         fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                     </svg>
-                    Dashboard
-                </a>
+                </button>
+                <div x-show="open"
+                     x-transition:enter="transition ease-out duration-150"
+                     x-transition:enter-start="opacity-0 -translate-y-1"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     x-transition:leave="transition ease-in duration-100"
+                     x-transition:leave-start="opacity-100 translate-y-0"
+                     x-transition:leave-end="opacity-0 -translate-y-1"
+                     class="space-y-0.5">
 
-                <a href="{{ route('estoque.produtos') }}"
-                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
-                          {{ request()->routeIs('estoque.produtos') ? 'bg-emerald-50 text-emerald-800' : 'text-stone-600 hover:bg-emerald-50/50 hover:text-emerald-700' }}">
-                    <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('estoque.produtos') ? 'text-emerald-500' : 'text-stone-400 group-hover:text-emerald-400' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                    </svg>
-                    Produtos
-                </a>
+                    <a href="{{ route('estoque.index') }}"
+                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
+                              {{ request()->routeIs('estoque.index') ? 'bg-emerald-50 text-emerald-800' : 'text-stone-600 hover:bg-emerald-50/50 hover:text-emerald-700' }}">
+                        <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('estoque.index') ? 'text-emerald-500' : 'text-stone-400 group-hover:text-emerald-400' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                        </svg>
+                        Dashboard
+                    </a>
 
-                <a href="{{ route('estoque.movimentacoes') }}"
-                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
-                          {{ request()->routeIs('estoque.movimentacoes') ? 'bg-emerald-50 text-emerald-800' : 'text-stone-600 hover:bg-emerald-50/50 hover:text-emerald-700' }}">
-                    <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('estoque.movimentacoes') ? 'text-emerald-500' : 'text-stone-400 group-hover:text-emerald-400' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
-                    </svg>
-                    Movimentações
-                </a>
+                    <a href="{{ route('estoque.produtos') }}"
+                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
+                              {{ request()->routeIs('estoque.produtos') ? 'bg-emerald-50 text-emerald-800' : 'text-stone-600 hover:bg-emerald-50/50 hover:text-emerald-700' }}">
+                        <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('estoque.produtos') ? 'text-emerald-500' : 'text-stone-400 group-hover:text-emerald-400' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                        Produtos
+                    </a>
+
+                    <a href="{{ route('estoque.movimentacoes') }}"
+                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
+                              {{ request()->routeIs('estoque.movimentacoes') ? 'bg-emerald-50 text-emerald-800' : 'text-stone-600 hover:bg-emerald-50/50 hover:text-emerald-700' }}">
+                        <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('estoque.movimentacoes') ? 'text-emerald-500' : 'text-stone-400 group-hover:text-emerald-400' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                        </svg>
+                        Movimentações
+                    </a>
+                </div>
             </div>
 
             {{-- ── Separador gradiente entre zonas ── --}}
@@ -165,71 +222,88 @@
             {{-- ══════════════════════════════════════
                  ZONA GESTÃO — back-office
             ══════════════════════════════════════ --}}
-            <div class="space-y-0.5 mb-1">
-                <p class="px-2 mb-2 text-slate-400 font-semibold" style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.18em;">Gestão</p>
-
-                <a href="{{ route('web.fornecedores') }}"
-                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
-                          {{ request()->routeIs('web.fornecedores') ? 'bg-slate-100 text-slate-800' : 'text-stone-500 hover:bg-slate-50 hover:text-slate-700' }}">
-                    <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('web.fornecedores') ? 'text-slate-500' : 'text-stone-400 group-hover:text-slate-500' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            <div x-data="{ open: {{ $zonaGestao ? 'true' : 'false' }} }" class="mb-1">
+                <button @click="open = !open"
+                        class="w-full flex items-center justify-between px-2 py-1 mb-1 rounded-md hover:bg-slate-50 transition-colors group">
+                    <span class="text-slate-400 font-semibold group-hover:text-slate-500 transition-colors"
+                          style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.18em;">Gestão</span>
+                    <svg class="w-2.5 h-2.5 text-slate-300 transition-transform duration-200" :class="open && 'rotate-180'"
+                         fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                     </svg>
-                    Fornecedores
-                </a>
+                </button>
+                <div x-show="open"
+                     x-transition:enter="transition ease-out duration-150"
+                     x-transition:enter-start="opacity-0 -translate-y-1"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     x-transition:leave="transition ease-in duration-100"
+                     x-transition:leave-start="opacity-100 translate-y-0"
+                     x-transition:leave-end="opacity-0 -translate-y-1"
+                     class="space-y-0.5">
 
-                <a href="{{ route('web.contratos') }}"
-                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
-                          {{ request()->routeIs('web.contratos') ? 'bg-slate-100 text-slate-800' : 'text-stone-500 hover:bg-slate-50 hover:text-slate-700' }}">
-                    <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('web.contratos') ? 'text-slate-500' : 'text-stone-400 group-hover:text-slate-500' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                    </svg>
-                    Contratos
-                </a>
+                    <a href="{{ route('web.fornecedores') }}"
+                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
+                              {{ request()->routeIs('web.fornecedores') ? 'bg-slate-100 text-slate-800' : 'text-stone-500 hover:bg-slate-50 hover:text-slate-700' }}">
+                        <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('web.fornecedores') ? 'text-slate-500' : 'text-stone-400 group-hover:text-slate-500' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        Fornecedores
+                    </a>
 
-                <a href="{{ route('web.contas-consumo') }}"
-                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
-                          {{ request()->routeIs('web.contas-consumo') ? 'bg-slate-100 text-slate-800' : 'text-stone-500 hover:bg-slate-50 hover:text-slate-700' }}">
-                    <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('web.contas-consumo') ? 'text-slate-500' : 'text-stone-400 group-hover:text-slate-500' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-                    </svg>
-                    Contas de Consumo
-                </a>
+                    <a href="{{ route('web.contratos') }}"
+                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
+                              {{ request()->routeIs('web.contratos') ? 'bg-slate-100 text-slate-800' : 'text-stone-500 hover:bg-slate-50 hover:text-slate-700' }}">
+                        <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('web.contratos') ? 'text-slate-500' : 'text-stone-400 group-hover:text-slate-500' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                        </svg>
+                        Contratos
+                    </a>
 
-                <a href="{{ route('web.obrigacoes-fiscais') }}"
-                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
-                          {{ request()->routeIs('web.obrigacoes-fiscais') ? 'bg-slate-100 text-slate-800' : 'text-stone-500 hover:bg-slate-50 hover:text-slate-700' }}">
-                    <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('web.obrigacoes-fiscais') ? 'text-slate-500' : 'text-stone-400 group-hover:text-slate-500' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 14.25l6-6m4.5-3.493V21.75l-3.75-1.5-3.75 1.5-3.75-1.5-3.75 1.5V4.757c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0c1.1.128 1.907 1.077 1.907 2.185z" />
-                    </svg>
-                    Obrigações Fiscais
-                </a>
+                    <a href="{{ route('web.contas-consumo') }}"
+                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
+                              {{ request()->routeIs('web.contas-consumo') ? 'bg-slate-100 text-slate-800' : 'text-stone-500 hover:bg-slate-50 hover:text-slate-700' }}">
+                        <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('web.contas-consumo') ? 'text-slate-500' : 'text-stone-400 group-hover:text-slate-500' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                        </svg>
+                        Contas de Consumo
+                    </a>
 
-                <a href="{{ route('web.documentos') }}"
-                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
-                          {{ request()->routeIs('web.documentos') ? 'bg-slate-100 text-slate-800' : 'text-stone-500 hover:bg-slate-50 hover:text-slate-700' }}">
-                    <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('web.documentos') ? 'text-slate-500' : 'text-stone-400 group-hover:text-slate-500' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12l-3-3m0 0l-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                    </svg>
-                    Documentos
-                </a>
+                    <a href="{{ route('web.obrigacoes-fiscais') }}"
+                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
+                              {{ request()->routeIs('web.obrigacoes-fiscais') ? 'bg-slate-100 text-slate-800' : 'text-stone-500 hover:bg-slate-50 hover:text-slate-700' }}">
+                        <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('web.obrigacoes-fiscais') ? 'text-slate-500' : 'text-stone-400 group-hover:text-slate-500' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 14.25l6-6m4.5-3.493V21.75l-3.75-1.5-3.75 1.5-3.75-1.5-3.75 1.5V4.757c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0c1.1.128 1.907 1.077 1.907 2.185z" />
+                        </svg>
+                        Obrigações Fiscais
+                    </a>
 
-                <a href="{{ route('web.relatorio') }}"
-                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
-                          {{ request()->routeIs('web.relatorio') ? 'bg-slate-100 text-slate-800' : 'text-stone-500 hover:bg-slate-50 hover:text-slate-700' }}">
-                    <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('web.relatorio') ? 'text-slate-500' : 'text-stone-400 group-hover:text-slate-500' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25M9 16.5v.75m3-3v3M15 12v5.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                    </svg>
-                    Relatório
-                </a>
+                    <a href="{{ route('web.documentos') }}"
+                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
+                              {{ request()->routeIs('web.documentos') ? 'bg-slate-100 text-slate-800' : 'text-stone-500 hover:bg-slate-50 hover:text-slate-700' }}">
+                        <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('web.documentos') ? 'text-slate-500' : 'text-stone-400 group-hover:text-slate-500' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12l-3-3m0 0l-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                        </svg>
+                        Documentos
+                    </a>
 
-                <a href="{{ route('taxas-cartao.index') }}"
-                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
-                          {{ request()->routeIs('taxas-cartao.*') ? 'bg-slate-100 text-slate-800' : 'text-stone-500 hover:bg-slate-50 hover:text-slate-700' }}">
-                    <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('taxas-cartao.*') ? 'text-slate-500' : 'text-stone-400 group-hover:text-slate-500' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
-                    </svg>
-                    Taxas de Cartão
-                </a>
+                    <a href="{{ route('web.relatorio') }}"
+                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
+                              {{ request()->routeIs('web.relatorio') ? 'bg-slate-100 text-slate-800' : 'text-stone-500 hover:bg-slate-50 hover:text-slate-700' }}">
+                        <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('web.relatorio') ? 'text-slate-500' : 'text-stone-400 group-hover:text-slate-500' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25M9 16.5v.75m3-3v3M15 12v5.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                        </svg>
+                        Relatório
+                    </a>
+
+                    <a href="{{ route('taxas-cartao.index') }}"
+                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors group
+                              {{ request()->routeIs('taxas-cartao.*') ? 'bg-slate-100 text-slate-800' : 'text-stone-500 hover:bg-slate-50 hover:text-slate-700' }}">
+                        <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('taxas-cartao.*') ? 'text-slate-500' : 'text-stone-400 group-hover:text-slate-500' }}" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+                        </svg>
+                        Taxas de Cartão
+                    </a>
+                </div>
             </div>
 
             {{-- ── Conta (bottom) ── --}}
