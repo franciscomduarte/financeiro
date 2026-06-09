@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ArquivoDownloadController;
+use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DocumentoDownloadController;
 use App\Http\Controllers\EsqueciSenhaController;
@@ -69,6 +70,9 @@ Route::middleware('auth')->group(function (): void {
 
     Route::get('/agenda', AgendamentoIndex::class)->name('agenda.index');
     Route::get('/agenda/configuracao', AgendamentoConfiguracaoIndex::class)->name('agenda.configuracao');
+    Route::get('/agenda/google/auth/{profissional}', [GoogleCalendarController::class, 'authorize'])->name('agenda.google.auth');
+    Route::get('/agenda/google/callback', [GoogleCalendarController::class, 'callback'])->name('agenda.google.callback');
+    Route::post('/agenda/google/desconectar/{profissional}', [GoogleCalendarController::class, 'desconectar'])->name('agenda.google.desconectar');
 
     Route::get('/estoque', EstoqueIndex::class)->name('estoque.index');
     Route::get('/estoque/produtos', EstoqueProdutoIndex::class)->name('estoque.produtos');

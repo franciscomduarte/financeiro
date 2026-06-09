@@ -212,7 +212,7 @@ class AgendamentoService
         $cursor = $inicio->copy();
         while ($cursor->copy()->addMinutes($duracaoMinutos)->lte($fim)) {
             $slots[] = $cursor->copy();
-            $cursor->addMinutes($duracaoMinutos);
+            $cursor->addMinutes(30);
         }
 
         if (empty($slots)) {

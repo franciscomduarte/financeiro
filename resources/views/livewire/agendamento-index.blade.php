@@ -442,9 +442,13 @@
                                     </button>
                                 @endforeach
                             </div>
+                            @if (empty($criarSlot))
+                                <p class="mt-2 text-xs text-violet-500 font-medium">↑ Selecione um horário para continuar</p>
+                            @endif
                         @else
-                            <div class="rounded-xl bg-amber-50 border border-amber-100 px-4 py-3 text-sm text-amber-700">
-                                Nenhum horário disponível. Verifique a grade do profissional ou escolha outra data.
+                            <div class="rounded-xl bg-amber-50 border border-amber-100 px-4 py-3 text-sm text-amber-700 space-y-1">
+                                <p class="font-semibold">Nenhum horário disponível para esta data.</p>
+                                <p class="text-xs text-amber-600">O profissional não tem grade cadastrada para este dia da semana, ou todos os horários estão ocupados. <a href="{{ route('agenda.configuracao') }}" class="underline font-medium">Configurar grade →</a></p>
                             </div>
                         @endif
                     @else
@@ -461,23 +465,32 @@
                               class="w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-100"></textarea>
                 </div>
             </div>
-            <div class="flex justify-end gap-3 border-t border-stone-100 px-6 py-4 bg-stone-50/50">
-                <button wire:click="fecharModalCriar"
-                        class="rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors">
-                    Cancelar
-                </button>
-                <button wire:click="salvarAgendamento"
-                        wire:loading.attr="disabled" wire:target="salvarAgendamento"
-                        wire:loading.class="opacity-60 cursor-not-allowed" wire:target="salvarAgendamento"
-                        type="button"
-                        class="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-violet-200 hover:bg-violet-700 transition-colors">
-                    <svg wire:loading wire:target="salvarAgendamento"
-                         class="h-4 w-4 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-                    </svg>
-                    Confirmar Agendamento
-                </button>
+            <div class="border-t border-stone-100 px-6 py-4 bg-stone-50/50">
+                @if ($errors->any())
+                    <div class="mb-3 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-700">
+                        @foreach ($errors->all() as $error)
+                            <p>{{ $error }}</p>
+                        @endforeach
+                    </div>
+                @endif
+                <div class="flex justify-end gap-3">
+                    <button wire:click="fecharModalCriar" type="button"
+                            class="rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors">
+                        Cancelar
+                    </button>
+                    <button wire:click="salvarAgendamento"
+                            wire:loading.attr="disabled" wire:target="salvarAgendamento"
+                            type="button"
+                            {{ empty($criarSlot) ? 'disabled' : '' }}
+                            class="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-violet-200 hover:bg-violet-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                        <svg wire:loading wire:target="salvarAgendamento"
+                             class="h-4 w-4 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                        </svg>
+                        Confirmar Agendamento
+                    </button>
+                </div>
             </div>
         </div>
     </div>

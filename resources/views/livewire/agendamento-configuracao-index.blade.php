@@ -1,6 +1,42 @@
 <div class="space-y-6">
 
-    {{-- ─── Flash Messages ─────────────────────────────────────────────── --}}
+    {{-- ─── Flash Messages (session — OAuth redirect) ─────────────────── --}}
+    @if (session('sucesso'))
+        <div x-data="{ show: true }" x-show="show"
+             x-init="setTimeout(() => show = false, 5000)"
+             x-transition:leave="transition duration-300"
+             x-transition:leave-start="opacity-100 translate-y-0"
+             x-transition:leave-end="opacity-0 -translate-y-2"
+             class="fixed top-4 right-4 z-[9999] max-w-sm">
+            <div class="bg-white border border-emerald-200 text-emerald-800 rounded-xl px-4 py-3 shadow-xl flex items-center gap-2.5 text-sm">
+                <div class="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                    <svg class="w-3 h-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+                    </svg>
+                </div>
+                {{ session('sucesso') }}
+            </div>
+        </div>
+    @endif
+    @if (session('erro'))
+        <div x-data="{ show: true }" x-show="show"
+             x-init="setTimeout(() => show = false, 8000)"
+             x-transition:leave="transition duration-300"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed top-4 right-4 z-[9999] max-w-sm">
+            <div class="bg-white border border-red-200 text-red-800 rounded-xl px-4 py-3 shadow-xl flex items-center gap-2.5 text-sm">
+                <div class="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                    <svg class="w-3 h-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
+                    </svg>
+                </div>
+                {{ session('erro') }}
+            </div>
+        </div>
+    @endif
+
+    {{-- ─── Flash Messages (Livewire) ─────────────────────────────────── --}}
     @if ($flashSucesso)
         <div x-data="{ show: true }" x-show="show"
              x-init="setTimeout(() => show = false, 4000)"
@@ -106,6 +142,22 @@
                                             class="rounded-lg p-1.5 text-violet-600 hover:bg-violet-50 transition-colors">
                                         <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
                                     </button>
+                                    @if ($p->google_refresh_token)
+                                        <form method="POST" action="{{ route('agenda.google.desconectar', $p->id) }}" class="inline">
+                                            @csrf
+                                            <button type="submit"
+                                                    title="Desconectar Google Calendar"
+                                                    class="rounded-lg p-1.5 text-emerald-600 hover:bg-red-50 hover:text-red-500 transition-colors">
+                                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/></svg>
+                                            </button>
+                                        </form>
+                                    @else
+                                        <a href="{{ route('agenda.google.auth', $p->id) }}"
+                                           title="Conectar Google Calendar"
+                                           class="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100 transition-colors">
+                                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/></svg>
+                                        </a>
+                                    @endif
                                     <button wire:click="abrirModalEditarProfissional('{{ $p->id }}')"
                                             title="Editar"
                                             class="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100 transition-colors">
