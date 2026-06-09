@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Profissional;
-use Google\Client as GoogleClient;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -49,12 +48,9 @@ class GoogleCalendarController extends Controller
 
             $refreshToken = $tokenData['refresh_token'] ?? null;
             if (! $refreshToken) {
-                // Token de refresh só é retornado na primeira autorização;
-                // se já existia um, mantém o anterior.
                 $refreshToken = $profissional->google_refresh_token;
             }
 
-            // Descobre o calendarId primário do usuário autenticado
             $client->setAccessToken($tokenData);
             $calendarService = new \Google\Service\Calendar($client);
             $calendarId      = $calendarService->calendarList->get('primary')->getId();
@@ -94,9 +90,9 @@ class GoogleCalendarController extends Controller
             ->with('sucesso', "Google Calendar de {$profissional->nome} desconectado.");
     }
 
-    private function buildClient(): GoogleClient
+    private function buildClient(): \Google\Client
     {
-        $client = new GoogleClient();
+        $client = new \Google\Client();
         $client->setClientId(config('google.client_id'));
         $client->setClientSecret(config('google.client_secret'));
         $client->setRedirectUri(config('google.redirect_uri'));
