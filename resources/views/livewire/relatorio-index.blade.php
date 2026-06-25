@@ -812,9 +812,75 @@
 @push('head')
 <style>
 @media print {
-    aside, header, nav, button { display: none !important; }
-    body { background: white !important; }
-    main { overflow: visible !important; }
+    *, *::before, *::after {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    @page {
+        size: A4;
+        margin: 1.5cm;
+    }
+
+    html, body {
+        height: auto !important;
+        overflow: visible !important;
+        background: white !important;
+    }
+
+    /* Ocultar navegação e controles interativos */
+    aside, header, nav, button, .fixed,
+    input[type="month"], input[type="date"],
+    input[type="number"], input[type="text"],
+    select, textarea {
+        display: none !important;
+    }
+
+    /* Desbloquear os containers flex que limitam a altura da viewport */
+    body > div,
+    .flex.h-screen,
+    .flex-1.flex.flex-col.min-w-0.overflow-hidden {
+        display: block !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    main {
+        overflow: visible !important;
+        height: auto !important;
+        max-height: none !important;
+        flex: none !important;
+    }
+
+    /* Desbloquear wrappers com scroll horizontal */
+    .overflow-x-auto {
+        overflow: visible !important;
+    }
+
+    /* Corrigir texto truncado — causa das descrições cortadas com "..." */
+    .truncate {
+        overflow: visible !important;
+        text-overflow: clip !important;
+        white-space: normal !important;
+        max-width: none !important;
+    }
+
+    /* Células da tabela: exibir conteúdo completo */
+    td, th {
+        white-space: normal !important;
+        overflow: visible !important;
+        max-width: none !important;
+    }
+
+    table {
+        width: 100% !important;
+    }
+
+    /* Evitar quebra de página no meio de cards */
+    .rounded-xl {
+        break-inside: avoid;
+    }
 }
 </style>
 @endpush
