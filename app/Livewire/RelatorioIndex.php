@@ -326,9 +326,12 @@ class RelatorioIndex extends Component
             ->get();
 
         // Contratos pendentes = ativos sem ContratoPagamento registrado na competência
+        // e cujo período de vigência inclui o mês consultado (evita listar contratos futuros)
         $contratosPagosIds  = ContratoPagamento::where('competencia', $comp)->pluck('contrato_id');
         $contratosPendentes = Contrato::where('status', StatusContrato::Ativo->value)
             ->whereNotIn('id', $contratosPagosIds)
+            ->where(fn ($q) => $q->whereNull('data_inicio')->orWhere('data_inicio', '<=', $fim))
+            ->where(fn ($q) => $q->whereNull('data_fim')->orWhere('data_fim', '>=', $inicio))
             ->with('fornecedor:id,nome_fantasia')
             ->get();
 
