@@ -516,15 +516,24 @@
                             <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Histórico de Pagamentos</p>
                             <div class="space-y-2">
                                 @foreach ($c->pagamentos->take(6) as $pgto)
-                                    <div class="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm">
+                                    <div class="group flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm">
                                         <div>
                                             <span class="font-medium text-slate-700">{{ $pgto->competenciaFormatada() }}</span>
                                             <span class="mx-1.5 text-slate-300">·</span>
                                             <span class="text-xs text-slate-500">{{ $pgto->data_pagamento->format('d/m/Y') }}</span>
                                         </div>
-                                        <span class="font-semibold tabular-nums text-slate-800">
-                                            R$ {{ number_format((float) $pgto->getRawOriginal('valor'), 2, ',', '.') }}
-                                        </span>
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-semibold tabular-nums text-slate-800">
+                                                R$ {{ number_format((float) $pgto->getRawOriginal('valor'), 2, ',', '.') }}
+                                            </span>
+                                            <button
+                                                wire:click="deletarPagamento('{{ $pgto->id }}')"
+                                                wire:confirm="Remover o pagamento de {{ $pgto->competenciaFormatada() }}? A transação financeira vinculada também será excluída."
+                                                class="rounded p-1 text-slate-300 opacity-0 transition hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
+                                                title="Remover pagamento">
+                                                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                            </button>
+                                        </div>
                                     </div>
                                 @endforeach
                             </div>

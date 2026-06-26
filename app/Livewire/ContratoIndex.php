@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Livewire;
 
 use App\Actions\CreateContratoAction;
+use App\Actions\DeleteContratoPagamentoAction;
 use App\Actions\PagarContratoAction;
 use App\Actions\RegistrarReajusteAction;
 use App\Actions\UpdateContratoAction;
 use App\Actions\UploadArquivoContratoAction;
 use App\Models\Contrato;
+use App\Models\ContratoPagamento;
 use App\Models\Fornecedor;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
@@ -233,6 +235,19 @@ class ContratoIndex extends Component
             $this->flashSucesso       = 'Pagamento registrado com sucesso!';
         } catch (Throwable $e) {
             $this->flashErro = 'Erro ao registrar pagamento: ' . $e->getMessage();
+        }
+    }
+
+    // ─── Excluir Pagamento ──────────────────────────────────────
+    public function deletarPagamento(string $pagamentoId, DeleteContratoPagamentoAction $action): void
+    {
+        try {
+            $pagamento = ContratoPagamento::findOrFail($pagamentoId);
+            $action->execute($pagamento);
+            $this->contratoDetalheId = $this->contratoDetalheId; // força re-render do detalhe
+            $this->flashSucesso = 'Pagamento removido com sucesso.';
+        } catch (Throwable $e) {
+            $this->flashErro = 'Erro ao remover pagamento: ' . $e->getMessage();
         }
     }
 
