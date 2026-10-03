@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace App\Livewire;
 
+use App\Models\BloqueioAgenda;
 use App\Models\GradeHorario;
 use App\Models\Procedimento;
 use App\Models\Profissional;
+use App\Services\BloqueioAgendaService;
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 use Throwable;
 
@@ -45,6 +49,26 @@ class AgendamentoConfiguracaoIndex extends Component
     public string  $procDuracao   = '60';
     public string  $procValor     = '';
     public bool    $procAtivo     = true;
+
+    // ─── Modal: Bloqueio ──────────────────────────────────────────
+    public const BLOQUEIO_TODOS = 'todos';
+
+    public bool   $modalBloqueio       = false;
+    public string $bloqProfissionalId  = self::BLOQUEIO_TODOS;
+    public bool   $bloqDiaInteiro      = true;
+    public string $bloqDataInicio      = '';
+    public string $bloqDataFim         = '';
+    public string $bloqHoraInicio      = '08:00';
+    public string $bloqHoraFim         = '12:00';
+    public string $bloqMotivo          = '';
+
+    /**
+     * Agendamentos pendentes dentro do último bloqueio criado (aviso para reagendar/cancelar).
+     *
+     * @var list<array{data: string, horario: string, paciente: string, profissional: string, profissional_id: string}>
+     */
+    public array  $bloqConflitos       = [];
+    public string $bloqConflitosResumo = '';
 
     // ─── Profissional: modais ─────────────────────────────────────
     public function abrirModalNovoProfissional(): void
@@ -230,12 +254,133 @@ class AgendamentoConfiguracaoIndex extends Component
         $this->resetErrorBag();
     }
 
+    // ─── Bloqueio: modais ─────────────────────────────────────────
+    public function abrirModalNovoBloqueio(): void
+    {
+        $this->resetBloqueioForm();
+        $this->modalBloqueio = true;
+    }
+
+    public function fecharModalBloqueio(): void
+    {
+        $this->modalBloqueio = false;
+        $this->resetBloqueioForm();
+    }
+
+    public function salvarBloqueio(BloqueioAgendaService $service): void
+    {
+        $regras = [
+            'bloqProfissionalId' => ['required', function (string $attr, mixed $valor, \Closure $falha): void {
+                if ($valor !== self::BLOQUEIO_TODOS && ! Profissional::whereKey($valor)->exists()) {
+                    $falha('Selecione um profissional válido.');
+                }
+            }],
+            'bloqDataInicio' => 'required|date_format:Y-m-d',
+            'bloqMotivo'     => 'nullable|string|max:500',
+        ];
+        $regras += $this->bloqDiaInteiro
+            ? ['bloqDataFim' => 'required|date_format:Y-m-d|after_or_equal:bloqDataInicio']
+            : ['bloqHoraInicio' => 'required|date_format:H:i', 'bloqHoraFim' => 'required|date_format:H:i|after:bloqHoraInicio'];
+
+        $this->validate($regras, [
+            'bloqDataInicio.required'    => 'Informe a data.',
+            'bloqDataFim.required'       => 'Informe a data final.',
+            'bloqDataFim.after_or_equal' => 'A data final deve ser igual ou posterior à inicial.',
+            'bloqHoraFim.after'          => 'O horário final deve ser depois do inicial.',
+        ]);
+
+        $profissionalIds = $this->bloqProfissionalId === self::BLOQUEIO_TODOS
+            ? Profissional::where('ativo', true)->pluck('id')->all()
+            : [$this->bloqProfissionalId];
+
+        if ($profissionalIds === []) {
+            $this->addError('bloqProfissionalId', 'Não há profissionais ativos para bloquear.');
+            return;
+        }
+
+        [$inicio, $fim] = $this->bloqDiaInteiro
+            ? [CarbonImmutable::parse($this->bloqDataInicio)->startOfDay(), CarbonImmutable::parse($this->bloqDataFim)->startOfDay()->addDay()]
+            : [CarbonImmutable::parse("{$this->bloqDataInicio} {$this->bloqHoraInicio}"), CarbonImmutable::parse("{$this->bloqDataInicio} {$this->bloqHoraFim}")];
+
+        try {
+            $resultado = $service->criar($profissionalIds, $inicio, $fim, $this->bloqDiaInteiro, $this->bloqMotivo ?: null);
+        } catch (Throwable $e) {
+            Log::error('[AgendamentoConfiguracao] salvarBloqueio erro', ['message' => $e->getMessage()]);
+            $this->flashErro = 'Erro ao salvar bloqueio: ' . $e->getMessage();
+            return;
+        }
+
+        $conflitos = $resultado['conflitos'];
+        $this->bloqConflitos = $conflitos->map(fn ($ag) => [
+            'data'            => $ag->inicio_em->toDateString(),
+            'horario'         => $ag->inicio_em->format('d/m H:i'),
+            'paciente'        => $ag->paciente?->nome ?? '—',
+            'profissional'    => $ag->profissional?->nome ?? '—',
+            'profissional_id' => (string) $ag->profissional_id,
+        ])->all();
+        $this->bloqConflitosResumo = BloqueioAgendaService::descreverPeriodo($inicio, $fim, $this->bloqDiaInteiro);
+
+        $this->flashSucesso = $conflitos->isEmpty()
+            ? 'Bloqueio criado.'
+            : 'Bloqueio criado. Há agendamentos no período — veja a lista.';
+        $this->modalBloqueio = false;
+        $this->resetBloqueioForm();
+    }
+
+    public function removerBloqueio(int $id, BloqueioAgendaService $service): void
+    {
+        try {
+            $service->remover(BloqueioAgenda::findOrFail($id));
+            $this->flashSucesso = 'Bloqueio removido.';
+        } catch (Throwable $e) {
+            Log::error('[AgendamentoConfiguracao] removerBloqueio erro', ['id' => $id, 'message' => $e->getMessage()]);
+            $this->flashErro = 'Erro ao remover bloqueio: ' . $e->getMessage();
+        }
+    }
+
+    public function fecharConflitos(): void
+    {
+        $this->bloqConflitos       = [];
+        $this->bloqConflitosResumo = '';
+    }
+
+    private function resetBloqueioForm(): void
+    {
+        $this->bloqProfissionalId = self::BLOQUEIO_TODOS;
+        $this->bloqDiaInteiro     = true;
+        $this->bloqDataInicio     = now()->toDateString();
+        $this->bloqDataFim        = now()->toDateString();
+        $this->bloqHoraInicio     = '08:00';
+        $this->bloqHoraFim        = '12:00';
+        $this->bloqMotivo         = '';
+        $this->resetErrorBag();
+    }
+
+    public function updatedBloqDataInicio(): void
+    {
+        if ($this->bloqDataFim < $this->bloqDataInicio) {
+            $this->bloqDataFim = $this->bloqDataInicio;
+        }
+    }
+
     public function render(): View
     {
+        $bloqueioService = app(BloqueioAgendaService::class);
         $profissionais = Profissional::orderBy('nome')->get(['id', 'nome', 'email', 'telefone', 'cor_agenda', 'ativo']);
         $procedimentos = Procedimento::orderBy('nome')->get(['id', 'nome', 'duracao_minutos', 'valor', 'ativo']);
 
-        return view('livewire.agendamento-configuracao-index', compact('profissionais', 'procedimentos'))
+        $bloqueios = $this->aba === 'bloqueios'
+            ? $bloqueioService->agrupar(
+                BloqueioAgenda::with('profissional:id,nome,cor_agenda')
+                    ->select(['id', 'profissional_id', 'grupo_id', 'inicio_em', 'fim_em', 'dia_inteiro', 'motivo'])
+                    ->where('fim_em', '>', now())
+                    ->orderBy('inicio_em')
+                    ->limit(300)
+                    ->get(),
+            )
+            : collect();
+
+        return view('livewire.agendamento-configuracao-index', compact('profissionais', 'procedimentos', 'bloqueios'))
             ->layout('layouts.app', ['title' => 'Configuração — Agenda']);
     }
 }

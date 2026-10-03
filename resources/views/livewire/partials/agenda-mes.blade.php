@@ -26,6 +26,16 @@
                     {{ $dia->day }}
                 </span>
 
+                @foreach ($calBloqueios[$dia->toDateString()] ?? [] as $seg)
+                    @php $b = $seg['bloqueio']; @endphp
+                    <span class="truncate rounded px-1.5 py-0.5 text-center text-[10px] font-semibold text-stone-600 md:text-left md:text-[11px]"
+                          title="Bloqueado · {{ $b['rotulo'] }}{{ $b['motivo'] ? ' · ' . $b['motivo'] : '' }}"
+                          style="background-image: repeating-linear-gradient(135deg, rgb(214 211 209 / 0.6) 0 4px, rgb(245 245 244) 4px 8px);">
+                        <span class="md:hidden">Bloq.</span>
+                        <span class="hidden md:inline">{{ $b['dia_inteiro'] ? '' : sprintf('%02d:%02d ', intdiv($seg['inicio'], 60), $seg['inicio'] % 60) }}Bloqueado{{ $filtroProfissionalId ? '' : ' · ' . $b['rotulo'] }}</span>
+                    </span>
+                @endforeach
+
                 @if ($doDia->isNotEmpty())
                     {{-- Celular: bolinhas coloridas + total --}}
                     <span class="flex flex-wrap items-center justify-center gap-0.5 md:hidden">

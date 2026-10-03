@@ -8,6 +8,7 @@ use App\Enums\StatusAgendamento;
 use App\Enums\VisaoAgenda;
 use App\Models\Agendamento;
 use App\Services\AgendaCalendarioService;
+use App\Services\BloqueioAgendaService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Tests\TestCase;
@@ -119,6 +120,46 @@ class AgendaCalendarioServiceTest extends TestCase
         $this->assertSame([[0, 2], [1, 2], [1, 2]], $layout);
     }
 
+    // ─── bloqueiosPorDia() ───────────────────────────────────────
+
+    public function test_bloqueio_de_varios_dias_e_recortado_por_dia(): void
+    {
+        $bloqueio = $this->bloqueio('2026-10-05 00:00', '2026-10-07 00:00'); // dias 5 e 6 inteiros
+        $dias     = [CarbonImmutable::parse('2026-10-04'), CarbonImmutable::parse('2026-10-05'),
+                     CarbonImmutable::parse('2026-10-06'), CarbonImmutable::parse('2026-10-07')];
+
+        $porDia = $this->service->bloqueiosPorDia(collect([$bloqueio]), $dias);
+
+        $this->assertSame(['2026-10-05', '2026-10-06'], array_keys($porDia));
+        $this->assertSame(0, $porDia['2026-10-05'][0]['inicio']);
+        $this->assertSame(24 * 60, $porDia['2026-10-06'][0]['fim']);
+    }
+
+    public function test_bloqueio_de_horas_vira_minutos_do_dia(): void
+    {
+        $bloqueio = $this->bloqueio('2026-10-05 14:00', '2026-10-05 16:30');
+
+        $porDia = $this->service->bloqueiosPorDia(collect([$bloqueio]), [CarbonImmutable::parse('2026-10-05')]);
+
+        $this->assertSame(14 * 60, $porDia['2026-10-05'][0]['inicio']);
+        $this->assertSame(16 * 60 + 30, $porDia['2026-10-05'][0]['fim']);
+    }
+
+    // ─── BloqueioAgendaService::descreverPeriodo() ───────────────
+
+    public function test_descricao_do_periodo_do_bloqueio(): void
+    {
+        $this->assertSame('05/10/2026 (dia inteiro)', BloqueioAgendaService::descreverPeriodo(
+            CarbonImmutable::parse('2026-10-05'), CarbonImmutable::parse('2026-10-06'), true,
+        ));
+        $this->assertSame('10/12 a 20/12/2026 (dias inteiros)', BloqueioAgendaService::descreverPeriodo(
+            CarbonImmutable::parse('2026-12-10'), CarbonImmutable::parse('2026-12-21'), true,
+        ));
+        $this->assertSame('05/10/2026, 14:00–16:00', BloqueioAgendaService::descreverPeriodo(
+            CarbonImmutable::parse('2026-10-05 14:00'), CarbonImmutable::parse('2026-10-05 16:00'), false,
+        ));
+    }
+
     // ─── corSegura() ─────────────────────────────────────────────
 
     public function test_cor_segura_rejeita_valores_invalidos(): void
@@ -137,6 +178,21 @@ class AgendaCalendarioServiceTest extends TestCase
             'fim_em'    => $fim,
             'status'    => StatusAgendamento::Agendado->value,
         ]);
+    }
+
+    /** @return array<string, mixed> no formato de BloqueioAgendaService::agrupar() */
+    private function bloqueio(string $inicio, string $fim): array
+    {
+        return [
+            'id'            => 1,
+            'inicio_em'     => CarbonImmutable::parse($inicio),
+            'fim_em'        => CarbonImmutable::parse($fim),
+            'dia_inteiro'   => false,
+            'motivo'        => null,
+            'profissionais' => ['Ana'],
+            'cor'           => '#be123c',
+            'rotulo'        => 'Ana',
+        ];
     }
 
     /**

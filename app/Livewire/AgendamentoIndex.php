@@ -515,7 +515,10 @@ class AgendamentoIndex extends Component
             }
         }
 
+        $bloqueios = $calendario->bloqueiosDoPeriodo($inicio, $fim, $this->filtroProfissionalId);
+
         return [
+            'calBloqueios'    => $calendario->bloqueiosPorDia($bloqueios, $dias),
             'calReferencia'   => $this->dataReferencia(),
             'calInicio'       => $inicio,
             'calFim'          => $fim,

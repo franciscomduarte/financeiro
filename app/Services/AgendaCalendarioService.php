@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Enums\StatusAgendamento;
 use App\Enums\VisaoAgenda;
 use App\Models\Agendamento;
+use App\Models\BloqueioAgenda;
 use App\Models\GradeHorario;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
@@ -103,6 +104,59 @@ class AgendaCalendarioService
         }
 
         return $agendamentos;
+    }
+
+    /**
+     * Bloqueios que tocam o período, agrupados (um "todos os profissionais" vira uma entrada só).
+     *
+     * @return Collection<int, array<string, mixed>>
+     */
+    public function bloqueiosDoPeriodo(CarbonImmutable $inicio, CarbonImmutable $fim, string $profissionalId = ''): Collection
+    {
+        $bloqueios = BloqueioAgenda::with('profissional:id,nome,cor_agenda')
+            ->select(['id', 'profissional_id', 'grupo_id', 'inicio_em', 'fim_em', 'dia_inteiro', 'motivo'])
+            ->where('inicio_em', '<', $fim)
+            ->where('fim_em', '>', $inicio)
+            ->when($profissionalId, fn ($q) => $q->where('profissional_id', $profissionalId))
+            ->orderBy('inicio_em')
+            ->limit(self::LIMITE_POR_PERIODO)
+            ->get();
+
+        return app(BloqueioAgendaService::class)->agrupar($bloqueios);
+    }
+
+    /**
+     * Recorta cada bloqueio nos dias informados, em minutos desde 00:00 do dia.
+     *
+     * @param  Collection<int, array<string, mixed>>  $bloqueios  saída de bloqueiosDoPeriodo()
+     * @param  list<CarbonImmutable>  $dias
+     * @return array<string, list<array{inicio: int, fim: int, bloqueio: array<string, mixed>}>>
+     */
+    public function bloqueiosPorDia(Collection $bloqueios, array $dias): array
+    {
+        $porDia = [];
+
+        foreach ($dias as $dia) {
+            $inicioDia = $dia->startOfDay();
+            $fimDia    = $inicioDia->addDay();
+
+            foreach ($bloqueios as $bloqueio) {
+                if ($bloqueio['inicio_em'] >= $fimDia || $bloqueio['fim_em'] <= $inicioDia) {
+                    continue;
+                }
+
+                $inicio = max($bloqueio['inicio_em'], $inicioDia);
+                $fim    = min($bloqueio['fim_em'], $fimDia);
+
+                $porDia[$inicioDia->toDateString()][] = [
+                    'inicio'   => (int) $inicioDia->diffInMinutes($inicio),
+                    'fim'      => (int) $inicioDia->diffInMinutes($fim),
+                    'bloqueio' => $bloqueio,
+                ];
+            }
+        }
+
+        return $porDia;
     }
 
     /**
