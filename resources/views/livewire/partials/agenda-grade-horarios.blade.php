@@ -51,9 +51,12 @@
                     @php
                         $chave         = $dia->toDateString();
                         $bloqueiosDia  = $calBloqueios[$chave] ?? [];
-                        // Com um profissional filtrado, horários bloqueados não abrem "Novo agendamento".
-                        $estaBloqueado = fn (int $m) => $filtroProfissionalId !== '' && collect($bloqueiosDia)
-                            ->contains(fn ($b) => $m < $b['fim'] && $m + $minSlot > $b['inicio']);
+                        $intervaloDia  = $calIntervalos[$dia->dayOfWeek] ?? null;
+                        // Com um profissional filtrado, horários bloqueados ou no intervalo não abrem "Novo agendamento".
+                        $estaBloqueado = fn (int $m) => $filtroProfissionalId !== '' && (
+                            collect($bloqueiosDia)->contains(fn ($b) => $m < $b['fim'] && $m + $minSlot > $b['inicio'])
+                            || ($intervaloDia && $m < $intervaloDia[1] && $m + $minSlot > $intervaloDia[0])
+                        );
                     @endphp
                     <div class="relative border-l border-stone-100 {{ $dia->isToday() ? 'bg-violet-50/30' : '' }}"
                          style="height: {{ $alturaPx }}px" wire:key="cal-dia-{{ $chave }}">
@@ -76,6 +79,15 @@
                                 </button>
                             @endif
                         @endfor
+
+                        {{-- Intervalo da grade (ex.: almoço) --}}
+                        @if ($intervaloDia && min($intervaloDia[1], $faixaFim) > max($intervaloDia[0], $faixaIni))
+                            @php [$intIni, $intFim] = [max($intervaloDia[0], $faixaIni), min($intervaloDia[1], $faixaFim)]; @endphp
+                            <div class="pointer-events-none absolute inset-x-0 z-[4] flex items-center justify-center border-y border-dashed border-stone-200 bg-stone-100/70"
+                                 style="top: {{ ($intIni - $faixaIni) * $pxPorMin }}px; height: {{ ($intFim - $intIni) * $pxPorMin }}px;">
+                                <span class="text-[11px] font-semibold uppercase tracking-wide text-stone-400">Intervalo</span>
+                            </div>
+                        @endif
 
                         {{-- Bloqueios (férias, folgas, compromissos) --}}
                         @foreach ($bloqueiosDia as $i => $seg)

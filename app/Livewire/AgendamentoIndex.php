@@ -519,6 +519,10 @@ class AgendamentoIndex extends Component
 
         return [
             'calBloqueios'    => $calendario->bloqueiosPorDia($bloqueios, $dias),
+            // Só faz sentido mostrar a pausa da grade quando um profissional está filtrado
+            'calIntervalos'   => $this->filtroProfissionalId && $visao !== VisaoAgenda::Mes
+                ? $calendario->intervalosGrade($this->filtroProfissionalId)
+                : [],
             'calReferencia'   => $this->dataReferencia(),
             'calInicio'       => $inicio,
             'calFim'          => $fim,

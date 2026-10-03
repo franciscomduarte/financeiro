@@ -54,7 +54,7 @@ class ProfissionalController extends Controller
     {
         $grade = $profissional->gradeHorarios()
             ->orderBy('dia_semana')
-            ->get(['id', 'dia_semana', 'hora_inicio', 'hora_fim', 'ativo']);
+            ->get(['id', 'dia_semana', 'hora_inicio', 'hora_fim', 'intervalo_inicio', 'intervalo_fim', 'ativo']);
 
         return response()->json(['data' => $grade]);
     }
@@ -66,6 +66,8 @@ class ProfissionalController extends Controller
             'grade.*.dia_semana'     => ['required', 'integer', 'between:0,6'],
             'grade.*.hora_inicio'    => ['required', 'date_format:H:i'],
             'grade.*.hora_fim'       => ['required', 'date_format:H:i', 'after:grade.*.hora_inicio'],
+            'grade.*.intervalo_inicio' => ['nullable', 'date_format:H:i', 'required_with:grade.*.intervalo_fim', 'after:grade.*.hora_inicio'],
+            'grade.*.intervalo_fim'    => ['nullable', 'date_format:H:i', 'required_with:grade.*.intervalo_inicio', 'after:grade.*.intervalo_inicio', 'before:grade.*.hora_fim'],
             'grade.*.ativo'          => ['nullable', 'boolean'],
         ]);
 
@@ -73,7 +75,13 @@ class ProfissionalController extends Controller
             foreach ($request->input('grade') as $item) {
                 GradeHorario::updateOrCreate(
                     ['profissional_id' => $profissional->id, 'dia_semana' => $item['dia_semana']],
-                    ['hora_inicio' => $item['hora_inicio'], 'hora_fim' => $item['hora_fim'], 'ativo' => $item['ativo'] ?? true],
+                    [
+                        'hora_inicio'      => $item['hora_inicio'],
+                        'hora_fim'         => $item['hora_fim'],
+                        'intervalo_inicio' => $item['intervalo_inicio'] ?? null,
+                        'intervalo_fim'    => $item['intervalo_fim'] ?? null,
+                        'ativo'            => $item['ativo'] ?? true,
+                    ],
                 );
             }
         });

@@ -160,6 +160,25 @@ class AgendaCalendarioService
     }
 
     /**
+     * Intervalo (pausa) da grade do profissional por dia da semana (0=dom … 6=sáb), em minutos desde 00:00.
+     *
+     * @return array<int, array{0: int, 1: int}>
+     */
+    public function intervalosGrade(string $profissionalId): array
+    {
+        return GradeHorario::query()
+            ->where('profissional_id', $profissionalId)
+            ->where('ativo', true)
+            ->whereNotNull('intervalo_inicio')
+            ->whereNotNull('intervalo_fim')
+            ->get(['dia_semana', 'intervalo_inicio', 'intervalo_fim'])
+            ->mapWithKeys(fn (GradeHorario $g) => [
+                $g->dia_semana => [self::paraMinutos((string) $g->intervalo_inicio), self::paraMinutos((string) $g->intervalo_fim)],
+            ])
+            ->all();
+    }
+
+    /**
      * Menor início e maior fim das grades ativas, em minutos desde 00:00.
      *
      * @return array{0: int, 1: int}|null

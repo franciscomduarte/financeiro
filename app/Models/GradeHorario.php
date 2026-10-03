@@ -16,6 +16,8 @@ class GradeHorario extends Model
         'dia_semana',
         'hora_inicio',
         'hora_fim',
+        'intervalo_inicio',
+        'intervalo_fim',
         'ativo',
     ];
 
@@ -23,6 +25,16 @@ class GradeHorario extends Model
         'dia_semana' => 'integer',
         'ativo'      => 'boolean',
     ];
+
+    /** Intervalo (pausa) do dia em "H:i", ou null se não houver. */
+    public function intervalo(): ?array
+    {
+        if (! $this->intervalo_inicio || ! $this->intervalo_fim) {
+            return null;
+        }
+
+        return [substr((string) $this->intervalo_inicio, 0, 5), substr((string) $this->intervalo_fim, 0, 5)];
+    }
 
     public function profissional(): BelongsTo
     {

@@ -401,27 +401,61 @@
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
-            <div class="p-6">
+            <div class="max-h-[70vh] overflow-y-auto p-4 sm:p-6">
                 <div class="space-y-2.5">
                     @foreach ($grade as $dia => $config)
-                        <div class="flex items-center gap-4 rounded-xl border border-stone-100 px-4 py-3
-                            {{ $config['ativo'] ? 'bg-white' : 'bg-stone-50' }}">
-                            <input type="checkbox"
-                                   wire:model.live="grade.{{ $dia }}.ativo"
-                                   id="grade_{{ $dia }}"
-                                   class="h-4 w-4 rounded border-stone-300 text-violet-600 focus:ring-violet-100">
-                            <label for="grade_{{ $dia }}"
-                                   class="w-8 text-sm font-semibold {{ $config['ativo'] ? 'text-stone-800' : 'text-stone-400' }}">
-                                {{ $diasNomes[$dia] }}
-                            </label>
+                        <div wire:key="grade-dia-{{ $dia }}"
+                             class="space-y-2 rounded-xl border border-stone-100 px-3 py-3 sm:px-4 {{ $config['ativo'] ? 'bg-white' : 'bg-stone-50' }}">
+                            <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+                                <input type="checkbox"
+                                       wire:model.live="grade.{{ $dia }}.ativo"
+                                       id="grade_{{ $dia }}"
+                                       class="h-5 w-5 rounded border-stone-300 text-violet-600 focus:ring-violet-100">
+                                <label for="grade_{{ $dia }}"
+                                       class="w-8 text-sm font-semibold {{ $config['ativo'] ? 'text-stone-800' : 'text-stone-400' }}">
+                                    {{ $diasNomes[$dia] }}
+                                </label>
+                                @if ($config['ativo'])
+                                    <button type="button" wire:click="copiarGradeParaTodos({{ $dia }})"
+                                            title="Copiar horário e intervalo deste dia para todos os dias ativos"
+                                            class="ml-auto flex min-h-[36px] items-center gap-1 rounded-lg px-2 text-xs font-semibold text-violet-600 hover:bg-violet-50 transition-colors">
+                                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75"/></svg>
+                                        Copiar p/ todos
+                                    </button>
+                                @else
+                                    <span class="text-sm text-stone-400">Sem atendimento</span>
+                                @endif
+                            </div>
+
                             @if ($config['ativo'])
-                                <input type="time" wire:model="grade.{{ $dia }}.hora_inicio"
-                                       class="rounded-lg border border-stone-200 px-3 py-1.5 text-sm text-stone-700 focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-100">
-                                <span class="text-xs font-medium text-stone-400">até</span>
-                                <input type="time" wire:model="grade.{{ $dia }}.hora_fim"
-                                       class="rounded-lg border border-stone-200 px-3 py-1.5 text-sm text-stone-700 focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-100">
-                            @else
-                                <span class="text-sm text-stone-400">Sem atendimento</span>
+                                <div class="flex items-center gap-2 pl-8">
+                                    <input type="time" wire:model="grade.{{ $dia }}.hora_inicio" step="900" aria-label="Início"
+                                           class="min-w-0 flex-1 rounded-lg border border-stone-200 px-2.5 py-1.5 text-sm text-stone-700 focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-100 sm:flex-none @error('grade.'.$dia.'.hora_inicio') border-red-300 @enderror">
+                                    <span class="text-xs font-medium text-stone-400">até</span>
+                                    <input type="time" wire:model="grade.{{ $dia }}.hora_fim" step="900" aria-label="Fim"
+                                           class="min-w-0 flex-1 rounded-lg border border-stone-200 px-2.5 py-1.5 text-sm text-stone-700 focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-100 sm:flex-none @error('grade.'.$dia.'.hora_fim') border-red-300 @enderror">
+                                </div>
+                                <div class="flex flex-wrap items-center gap-x-3 gap-y-2 pl-8">
+                                    <label class="flex min-h-[36px] items-center gap-2 text-xs font-medium text-stone-600">
+                                        <input type="checkbox" wire:model.live="grade.{{ $dia }}.tem_intervalo"
+                                               class="h-4 w-4 rounded border-stone-300 text-violet-600 focus:ring-violet-100">
+                                        Intervalo
+                                    </label>
+                                    @if ($config['tem_intervalo'])
+                                        <div class="flex w-full items-center gap-2 sm:w-auto">
+                                        <input type="time" wire:model="grade.{{ $dia }}.intervalo_inicio" step="900" aria-label="Início do intervalo"
+                                               class="min-w-0 flex-1 rounded-lg border border-stone-200 px-2.5 py-1.5 text-sm text-stone-700 focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-100 sm:flex-none @error('grade.'.$dia.'.intervalo_inicio') border-red-300 @enderror">
+                                        <span class="text-xs font-medium text-stone-400">até</span>
+                                        <input type="time" wire:model="grade.{{ $dia }}.intervalo_fim" step="900" aria-label="Fim do intervalo"
+                                               class="min-w-0 flex-1 rounded-lg border border-stone-200 px-2.5 py-1.5 text-sm text-stone-700 focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-100 sm:flex-none @error('grade.'.$dia.'.intervalo_fim') border-red-300 @enderror">
+                                        </div>
+                                    @else
+                                        <span class="text-xs text-stone-400">sem pausa</span>
+                                    @endif
+                                </div>
+                                @foreach (['hora_inicio', 'hora_fim', 'intervalo_inicio', 'intervalo_fim'] as $campo)
+                                    @error('grade.'.$dia.'.'.$campo) <p class="pl-8 text-xs text-red-500">{{ $message }}</p> @enderror
+                                @endforeach
                             @endif
                         </div>
                     @endforeach

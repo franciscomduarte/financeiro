@@ -38,7 +38,7 @@ class AgendamentoConfiguracaoIndex extends Component
     public bool    $modalGrade              = false;
     public ?string $gradeEditandoId         = null;
     public string  $gradeEditandoNome       = '';
-    /** @var array<int, array{hora_inicio: string, hora_fim: string, ativo: bool}> */
+    /** @var array<int, array{hora_inicio: string, hora_fim: string, ativo: bool, tem_intervalo: bool, intervalo_inicio: string, intervalo_fim: string}> */
     public array $grade = [];
 
     // ─── Modal: Procedimento ──────────────────────────────────────
@@ -150,11 +150,19 @@ class AgendamentoConfiguracaoIndex extends Component
             ->keyBy('dia_semana');
 
         $this->grade = [];
+        $hora = fn (?string $valor, string $padrao) => $valor ? substr($valor, 0, 5) : $padrao;
+
         for ($dia = 0; $dia <= 6; $dia++) {
+            $item      = $existente[$dia] ?? null;
+            $intervalo = $item?->intervalo();
+
             $this->grade[$dia] = [
-                'hora_inicio' => $existente[$dia]?->hora_inicio ?? '09:00',
-                'hora_fim'    => $existente[$dia]?->hora_fim    ?? '18:00',
-                'ativo'       => $existente[$dia]?->ativo       ?? ($dia >= 1 && $dia <= 5),
+                'hora_inicio'      => $hora($item?->hora_inicio, '09:00'),
+                'hora_fim'         => $hora($item?->hora_fim, '18:00'),
+                'ativo'            => $item?->ativo ?? ($dia >= 1 && $dia <= 5),
+                'tem_intervalo'    => $intervalo !== null,
+                'intervalo_inicio' => $intervalo[0] ?? '12:00',
+                'intervalo_fim'    => $intervalo[1] ?? '13:00',
             ];
         }
 
@@ -167,16 +175,70 @@ class AgendamentoConfiguracaoIndex extends Component
         $this->gradeEditandoId    = null;
         $this->gradeEditandoNome  = '';
         $this->grade              = [];
+        $this->resetErrorBag();
+    }
+
+    /** Copia horário e intervalo de um dia para todos os outros dias ativos. */
+    public function copiarGradeParaTodos(int $origem): void
+    {
+        if (! isset($this->grade[$origem])) {
+            return;
+        }
+
+        $campos = ['hora_inicio', 'hora_fim', 'tem_intervalo', 'intervalo_inicio', 'intervalo_fim'];
+        foreach ($this->grade as $dia => $item) {
+            if ($dia !== $origem && $item['ativo']) {
+                foreach ($campos as $campo) {
+                    $this->grade[$dia][$campo] = $this->grade[$origem][$campo];
+                }
+            }
+        }
+        $this->resetErrorBag();
     }
 
     public function salvarGrade(): void
     {
+        $diasNomes = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+        $regras    = [];
+        $atributos = [];
+
+        foreach ($this->grade as $dia => $item) {
+            if (! $item['ativo']) {
+                continue;
+            }
+            $regras["grade.{$dia}.hora_inicio"] = 'required|date_format:H:i';
+            $regras["grade.{$dia}.hora_fim"]    = "required|date_format:H:i|after:grade.{$dia}.hora_inicio";
+            $atributos["grade.{$dia}.hora_inicio"] = "início ({$diasNomes[$dia]})";
+            $atributos["grade.{$dia}.hora_fim"]    = "fim ({$diasNomes[$dia]})";
+
+            if ($item['tem_intervalo']) {
+                $regras["grade.{$dia}.intervalo_inicio"] = "required|date_format:H:i|after:grade.{$dia}.hora_inicio";
+                $regras["grade.{$dia}.intervalo_fim"]    = "required|date_format:H:i|after:grade.{$dia}.intervalo_inicio|before:grade.{$dia}.hora_fim";
+                $atributos["grade.{$dia}.intervalo_inicio"] = "início do intervalo ({$diasNomes[$dia]})";
+                $atributos["grade.{$dia}.intervalo_fim"]    = "fim do intervalo ({$diasNomes[$dia]})";
+            }
+        }
+
+        $this->validate($regras, [
+            'required'    => 'Informe o :attribute.',
+            'date_format' => 'Horário inválido em :attribute.',
+            'after'       => 'O :attribute deve ser depois de :date.',
+            'before'      => 'O :attribute deve ser antes de :date.',
+        ], $atributos);
+
         try {
             DB::transaction(function (): void {
                 foreach ($this->grade as $dia => $item) {
+                    $comIntervalo = $item['ativo'] && $item['tem_intervalo'];
                     GradeHorario::updateOrCreate(
                         ['profissional_id' => $this->gradeEditandoId, 'dia_semana' => $dia],
-                        ['hora_inicio' => $item['hora_inicio'], 'hora_fim' => $item['hora_fim'], 'ativo' => $item['ativo']],
+                        [
+                            'hora_inicio'      => $item['hora_inicio'],
+                            'hora_fim'         => $item['hora_fim'],
+                            'intervalo_inicio' => $comIntervalo ? $item['intervalo_inicio'] : null,
+                            'intervalo_fim'    => $comIntervalo ? $item['intervalo_fim'] : null,
+                            'ativo'            => $item['ativo'],
+                        ],
                     );
                 }
             });
