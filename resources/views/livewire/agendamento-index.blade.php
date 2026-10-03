@@ -1,4 +1,6 @@
-<div class="space-y-6">
+<div class="space-y-6"
+     x-data
+     x-init="if (window.innerWidth < 768 && ! new URLSearchParams(location.search).has('visao') && $wire.visao === 'semana') $wire.mudarVisao('dia')">
 
     {{-- ─── Flash Messages ─────────────────────────────────────────────── --}}
     @if ($flashSucesso)
@@ -52,19 +54,49 @@
     </div>
 
     {{-- ─── Stats ───────────────────────────────────────────────────────── --}}
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div class="rounded-2xl border border-stone-100 bg-white p-5 shadow-sm">
-            <p class="text-xs font-semibold uppercase tracking-widest text-stone-400">Total</p>
-            <p class="mt-1 text-2xl font-bold text-stone-800 tabular-nums">{{ number_format($statsTotal) }}</p>
-            <p class="text-xs text-stone-400 mt-0.5">{{ $filtroData ? \Carbon\Carbon::parse($filtroData)->translatedFormat('d \d\e F') : 'filtro atual' }}</p>
+    <div class="grid grid-cols-3 gap-2 sm:gap-4">
+        <div class="rounded-2xl border border-stone-100 bg-white p-3 shadow-sm sm:p-5">
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-stone-400 sm:text-xs sm:tracking-widest">Total</p>
+            <p class="mt-1 text-xl font-bold text-stone-800 tabular-nums sm:text-2xl">{{ number_format($statsTotal) }}</p>
+            <p class="hidden text-xs text-stone-400 mt-0.5 sm:block">{{ $tituloPeriodo }}</p>
         </div>
-        <div class="rounded-2xl border border-stone-100 bg-white p-5 shadow-sm">
-            <p class="text-xs font-semibold uppercase tracking-widest text-stone-400">Confirmados</p>
-            <p class="mt-1 text-2xl font-bold text-emerald-600 tabular-nums">{{ $statsConfirmado }}</p>
+        <div class="rounded-2xl border border-stone-100 bg-white p-3 shadow-sm sm:p-5">
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-stone-400 sm:text-xs sm:tracking-widest">Confirmados</p>
+            <p class="mt-1 text-xl font-bold text-emerald-600 tabular-nums sm:text-2xl">{{ $statsConfirmado }}</p>
         </div>
-        <div class="rounded-2xl border border-stone-100 bg-white p-5 shadow-sm">
-            <p class="text-xs font-semibold uppercase tracking-widest text-stone-400">Pendentes</p>
-            <p class="mt-1 text-2xl font-bold text-violet-600 tabular-nums">{{ $statsPendente }}</p>
+        <div class="rounded-2xl border border-stone-100 bg-white p-3 shadow-sm sm:p-5">
+            <p class="text-[10px] font-semibold uppercase tracking-wide text-stone-400 sm:text-xs sm:tracking-widest">Pendentes</p>
+            <p class="mt-1 text-xl font-bold text-violet-600 tabular-nums sm:text-2xl">{{ $statsPendente }}</p>
+        </div>
+    </div>
+
+    {{-- ─── Navegação do período + troca de visão ──────────────────────── --}}
+    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div class="flex items-center gap-2">
+            <button type="button" wire:click="irParaHoje"
+                    class="min-h-[44px] rounded-xl border border-stone-200 bg-white px-4 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors">
+                Hoje
+            </button>
+            <div class="flex">
+                <button type="button" wire:click="navegar(-1)" title="Anterior"
+                        class="flex h-11 w-11 items-center justify-center rounded-l-xl border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 transition-colors">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+                </button>
+                <button type="button" wire:click="navegar(1)" title="Próximo"
+                        class="-ml-px flex h-11 w-11 items-center justify-center rounded-r-xl border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 transition-colors">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+                </button>
+            </div>
+            <h2 class="ml-1 text-base font-bold text-stone-800 first-letter:uppercase">{{ $tituloPeriodo }}</h2>
+        </div>
+        <div class="grid grid-cols-4 rounded-xl bg-stone-100 p-1">
+            @foreach (\App\Enums\VisaoAgenda::cases() as $opcao)
+                <button type="button" wire:click="mudarVisao('{{ $opcao->value }}')"
+                        class="min-h-[40px] rounded-lg px-4 text-sm font-semibold transition-colors
+                            {{ $visaoAtual === $opcao ? 'bg-white text-violet-700 shadow-sm' : 'text-stone-500 hover:text-stone-700' }}">
+                    {{ $opcao->label() }}
+                </button>
+            @endforeach
         </div>
     </div>
 
@@ -90,7 +122,7 @@
                 <label class="text-xs font-medium text-stone-500">Status</label>
                 <select wire:model.live="filtroStatus"
                         class="rounded-lg border border-stone-200 px-3 py-2 text-sm text-stone-700 focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-100">
-                    <option value="">Todos</option>
+                    <option value="">{{ $visaoAtual->isCalendario() ? 'Todos (exceto cancelados)' : 'Todos' }}</option>
                     @foreach ($this->statusOpcoes as $s)
                         <option value="{{ $s->value }}">{{ $s->label() }}</option>
                     @endforeach
@@ -105,6 +137,19 @@
         </div>
     </div>
 
+    @if ($visaoAtual->isCalendario())
+        {{-- ─── Calendário ──────────────────────────────────────────────────── --}}
+        @if ($calLimite)
+            <div class="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                Muitos agendamentos neste período — alguns podem não aparecer. Filtre por profissional ou use a visão Dia.
+            </div>
+        @endif
+        @if ($visaoAtual === \App\Enums\VisaoAgenda::Mes)
+            @include('livewire.partials.agenda-mes')
+        @else
+            @include('livewire.partials.agenda-grade-horarios')
+        @endif
+    @else
     {{-- ─── Tabela ──────────────────────────────────────────────────────── --}}
     <div class="rounded-2xl border border-stone-100 bg-white shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
@@ -245,6 +290,7 @@
             </div>
         @endif
     </div>
+    @endif
 
     {{-- ═══════════════════════════════════════════════════════════════════ --}}
     {{-- Modal: Criar Agendamento                                           --}}
@@ -443,7 +489,11 @@
                                 @endforeach
                             </div>
                             @if (empty($criarSlot))
-                                <p class="mt-2 text-xs text-violet-500 font-medium">↑ Selecione um horário para continuar</p>
+                                @if ($criarSlotSugerido && ! in_array($criarSlotSugerido, $this->horariosDisponiveis, true))
+                                    <p class="mt-2 text-xs text-amber-600 font-medium">O horário {{ $criarSlotSugerido }} escolhido no calendário não está disponível para este profissional/procedimento. Escolha outro.</p>
+                                @else
+                                    <p class="mt-2 text-xs text-violet-500 font-medium">↑ Selecione um horário para continuar</p>
+                                @endif
                             @endif
                         @else
                             <div class="rounded-xl bg-amber-50 border border-amber-100 px-4 py-3 text-sm text-amber-700 space-y-1">
@@ -451,6 +501,8 @@
                                 <p class="text-xs text-amber-600">O profissional não tem grade cadastrada para este dia da semana, ou todos os horários estão ocupados. <a href="{{ route('agenda.configuracao') }}" class="underline font-medium">Configurar grade →</a></p>
                             </div>
                         @endif
+                    @elseif ($criarSlotSugerido)
+                        <p class="text-sm text-stone-500">Horário escolhido: <span class="font-semibold tabular-nums text-violet-700">{{ $criarSlotSugerido }}</span>. Selecione profissional e procedimento(s) para confirmar.</p>
                     @else
                         <p class="text-sm text-stone-400">Selecione profissional, procedimento(s) e data.</p>
                     @endif

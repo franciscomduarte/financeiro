@@ -1,0 +1,59 @@
+{{-- Visão Mês: grade mensal; tocar num dia abre a visão Dia daquela data --}}
+@use('App\Enums\StatusAgendamento')
+@use('App\Services\AgendaCalendarioService')
+@php
+    $maxItens = 3;
+@endphp
+
+<div class="rounded-2xl border border-stone-100 bg-white shadow-sm overflow-hidden">
+    <div class="grid grid-cols-7 border-b border-stone-100 bg-stone-50">
+        @foreach (['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'] as $nome)
+            <div class="py-2 text-center text-[11px] font-semibold uppercase tracking-wide text-stone-400">{{ $nome }}</div>
+        @endforeach
+    </div>
+
+    <div class="grid grid-cols-7">
+        @foreach ($calDias as $dia)
+            @php
+                $doDia     = $calPorDia[$dia->toDateString()] ?? collect();
+                $foraDoMes = $dia->month !== $calReferencia->month;
+            @endphp
+            <button type="button" wire:key="cal-mes-{{ $dia->toDateString() }}"
+                    wire:click="irParaDia('{{ $dia->toDateString() }}')"
+                    class="flex min-h-[64px] flex-col items-stretch justify-start gap-1 border-b border-r border-stone-100 p-1.5 text-left transition-colors hover:bg-violet-50/60 md:min-h-[112px] [&:nth-child(7n)]:border-r-0 {{ $foraDoMes ? 'bg-stone-50/70' : '' }}">
+                <span class="flex h-6 w-6 items-center justify-center self-center rounded-full text-xs font-bold tabular-nums md:self-start
+                             {{ $dia->isToday() ? 'bg-violet-600 text-white' : ($foraDoMes ? 'text-stone-300' : 'text-stone-700') }}">
+                    {{ $dia->day }}
+                </span>
+
+                @if ($doDia->isNotEmpty())
+                    {{-- Celular: bolinhas coloridas + total --}}
+                    <span class="flex flex-wrap items-center justify-center gap-0.5 md:hidden">
+                        @foreach ($doDia->take(4) as $ag)
+                            <span class="h-1.5 w-1.5 rounded-full"
+                                  style="background-color: {{ AgendaCalendarioService::corSegura($ag->profissional?->cor_agenda) }}"></span>
+                        @endforeach
+                        @if ($doDia->count() > 4)
+                            <span class="text-[10px] font-semibold text-stone-400">+{{ $doDia->count() - 4 }}</span>
+                        @endif
+                    </span>
+
+                    {{-- Desktop: primeiros horários do dia --}}
+                    <span class="hidden flex-col gap-0.5 md:flex">
+                        @foreach ($doDia->take($maxItens) as $ag)
+                            @php $cor = AgendaCalendarioService::corSegura($ag->profissional?->cor_agenda); @endphp
+                            <span class="truncate rounded px-1.5 py-0.5 text-[11px] text-stone-700 {{ $ag->status === StatusAgendamento::Cancelado ? 'line-through opacity-60' : '' }}"
+                                  style="background-color: color-mix(in srgb, {{ $cor }} 14%, white); border-left: 2px solid {{ $cor }};">
+                                <span class="font-semibold tabular-nums">{{ $ag->inicio_em->format('H:i') }}</span>
+                                {{ $ag->paciente?->nome ?? '—' }}
+                            </span>
+                        @endforeach
+                        @if ($doDia->count() > $maxItens)
+                            <span class="px-1.5 text-[11px] font-semibold text-violet-600">+{{ $doDia->count() - $maxItens }} mais</span>
+                        @endif
+                    </span>
+                @endif
+            </button>
+        @endforeach
+    </div>
+</div>
