@@ -39,6 +39,12 @@ class AppServiceProvider extends ServiceProvider
     {
         Model::preventLazyLoading(! app()->isProduction());
 
+        // Autocadastro: poucas tentativas por IP (evita criação de contas em massa)
+        \Illuminate\Support\Facades\RateLimiter::for('cadastro', fn (\Illuminate\Http\Request $request) => [
+            \Illuminate\Cache\RateLimiting\Limit::perMinute(5)->by($request->ip()),
+            \Illuminate\Cache\RateLimiting\Limit::perDay(20)->by($request->ip()),
+        ]);
+
         // Toda view (telas, e-mails na fila, PDFs) enxerga a clínica ativa como $clinicaAtual
         View::composer('*', fn ($view) => $view->with('clinicaAtual', app(ClinicaAtual::class)->get()));
 
@@ -49,6 +55,32 @@ class AppServiceProvider extends ServiceProvider
         });
         Queue::after(fn () => app(ClinicaAtual::class)->definir(null));
         Queue::failing(fn () => app(ClinicaAtual::class)->definir(null));
+
+        // Teste encerrado: ação do Livewire que tenta gravar não vira erro 500 e a tela mostra o motivo
+        // no lugar do "Erro ao salvar" genérico (os componentes usam $flashErro) ou num aviso do layout.
+        \Livewire\Livewire::listen('exception', function ($component, $e, callable $stopPropagation): void {
+            if ($e instanceof \App\Exceptions\ClinicaSomenteLeituraException) {
+                $stopPropagation();
+            }
+        });
+        \Livewire\Livewire::listen('call', function ($component) {
+            app(ClinicaAtual::class)->consumirEscritaBloqueada();
+
+            return function ($retorno) use ($component) {
+                if (app(ClinicaAtual::class)->consumirEscritaBloqueada()) {
+                    if (property_exists($component, 'flashErro')) {
+                        $component->flashErro = (new \App\Exceptions\ClinicaSomenteLeituraException())->getMessage();
+                        if (property_exists($component, 'flashSucesso')) {
+                            $component->flashSucesso = null;
+                        }
+                    } else {
+                        $component->dispatch('clinica-somente-leitura');
+                    }
+                }
+
+                return $retorno;
+            };
+        });
 
         if (app()->isProduction() || str_starts_with(config('app.url', ''), 'https://')) {
             \Illuminate\Support\Facades\URL::forceScheme('https');

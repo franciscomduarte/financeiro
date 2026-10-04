@@ -22,6 +22,9 @@ class DefinirClinicaAtual
     /** Rotas que funcionam sem clínica ativa (escolher/trocar/sair). */
     private const ROTAS_LIVRES = ['clinicas.escolher', 'clinicas.ativar', 'logout'];
 
+    /** Rotas liberadas com o teste encerrado e e-mail ainda não confirmado. */
+    private const ROTAS_CONFIRMACAO = ['verificacao.aviso', 'verificacao.reenviar', 'verificacao.confirmar'];
+
     public function __construct(private readonly ClinicaAtual $clinicaAtual) {}
 
     public function handle(Request $request, Closure $next): Response
@@ -53,6 +56,33 @@ class DefinirClinicaAtual
         $this->clinicaAtual->definir($clinica);
         if ($request->hasSession()) {
             $request->session()->put('clinica_id', $clinica->id);
+        }
+
+        if ($clinica->somenteLeitura()) {
+            return $this->testeEncerrado($request, $user, $next);
+        }
+
+        return $next($request);
+    }
+
+    /**
+     * Teste grátis encerrado: só leitura. Quem não confirmou o e-mail precisa confirmar antes de
+     * continuar vendo os dados. Gravações via HTTP (API, formulários) são recusadas aqui; as feitas
+     * pelo Livewire são barradas nos Models (BelongsToClinica).
+     */
+    private function testeEncerrado(Request $request, User $user, Closure $next): Response
+    {
+        $livre = $request->routeIs(...self::ROTAS_LIVRES, ...self::ROTAS_CONFIRMACAO);
+
+        if (! $user->hasVerifiedEmail() && ! $livre) {
+            return $request->expectsJson()
+                ? response()->json(['message' => 'Confirme seu e-mail para continuar acessando.'], 403)
+                : redirect()->route('verificacao.aviso');
+        }
+
+        $leitura = $request->isMethodSafe() || \Livewire\Livewire::isLivewireRequest() || $livre;
+        if (! $leitura) {
+            throw new \App\Exceptions\ClinicaSomenteLeituraException();
         }
 
         return $next($request);

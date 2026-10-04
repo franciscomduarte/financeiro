@@ -407,6 +407,17 @@
             </div>
         </header>
 
+        {{-- Teste grátis e confirmação de e-mail --}}
+        <x-avisos-clinica />
+
+        {{-- Teste encerrado: aviso quando uma ação tenta gravar (evento do Livewire) --}}
+        <div x-data="{ show: false }" x-on:clinica-somente-leitura.window="show = true; clearTimeout($el._t); $el._t = setTimeout(() => show = false, 6000)"
+             x-show="show" x-cloak x-transition.opacity class="fixed top-4 right-4 left-4 sm:left-auto z-50 sm:max-w-sm" role="alert">
+            <div class="bg-white border border-red-200 text-red-800 rounded-xl px-4 py-3 shadow-xl text-sm">
+                <strong>Modo somente leitura.</strong> O teste grátis terminou — fale conosco para assinar e voltar a cadastrar.
+            </div>
+        </div>
+
         {{-- Session flash messages --}}
         @if (session('success'))
             <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)"

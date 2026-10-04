@@ -75,6 +75,7 @@ class TaxasCartaoIndex extends Component
 
         try {
             DB::transaction(function (): void {
+                app(\App\Support\ClinicaAtual::class)->garantirEscrita(); // update em massa não dispara eventos do Model
                 foreach ($this->taxas as $id => $dados) {
                     TaxaCartao::where('id', $id)->update([
                         'percentual' => (float) $dados['percentual'],

@@ -50,3 +50,6 @@
     ::-webkit-scrollbar-thumb    { background: #d6d3d1; border-radius: 9999px; }
     ::-webkit-scrollbar-thumb:hover { background: #a8a29e; }
 }
+
+/* Alpine: esconde elementos até o Alpine iniciar */
+[x-cloak] { display: none !important; }

@@ -41,7 +41,7 @@
                 </div>
                 <div>
                     <p class="text-white font-semibold">{{ config('app.name') }}</p>
-                    <p class="text-rose-200 text-xs">Saúde Integrativa</p>
+                    <p class="text-rose-200 text-xs">Gestão para clínicas</p>
                 </div>
             </div>
 
@@ -69,7 +69,7 @@
                 @endforeach
             </div>
 
-            <p class="text-rose-200/60 text-xs mt-8">Sistema interno &copy; {{ date('Y') }}</p>
+            <p class="text-rose-200/60 text-xs mt-8">&copy; {{ date('Y') }} {{ config('app.name') }}</p>
         </div>
     </div>
 
@@ -154,6 +154,11 @@
                     Esqueci minha senha
                 </a>
             </p>
+
+            <div class="mt-8 pt-6 border-t border-stone-200 text-center text-sm text-stone-600">
+                Ainda não tem conta?
+                <a href="{{ route('cadastro') }}" class="text-rose-600 font-semibold hover:underline">Assine já — {{ config('clinica.dias_teste') }} dias grátis</a>
+            </div>
 
         </div>
     </div>

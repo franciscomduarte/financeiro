@@ -3,9 +3,11 @@
 use App\Http\Controllers\ArquivoDownloadController;
 use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CadastroController;
 use App\Http\Controllers\ClinicaController;
 use App\Http\Controllers\DocumentoDownloadController;
 use App\Http\Controllers\EsqueciSenhaController;
+use App\Http\Controllers\VerificacaoEmailController;
 use App\Http\Controllers\VozTransacaoController;
 use App\Livewire\AdminUsuarioIndex;
 use App\Livewire\ConfiguracaoClinica;
@@ -28,9 +30,16 @@ use App\Livewire\PacienteIndex;
 use App\Livewire\TransacaoIndex;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Página do produto (visitante) ou sistema (logado)
+Route::get('/', fn () => auth()->check() ? redirect()->route('dashboard') : view('welcome'))->name('home');
+
+// ─── "Assine já": autocadastro com teste grátis ─────────────────
+Route::get('/assine', [CadastroController::class, 'create'])->name('cadastro');
+Route::post('/assine', [CadastroController::class, 'store'])->name('cadastro.store')->middleware(['guest', 'throttle:cadastro']);
+
+// Confirmação de e-mail: o link do e-mail funciona mesmo sem login
+Route::get('/email/confirmar/{id}/{hash}', [VerificacaoEmailController::class, 'confirmar'])
+    ->name('verificacao.confirmar')->middleware(['signed', 'throttle:6,1']);
 
 // ─── Auth ───────────────────────────────────────────────────────
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -45,7 +54,9 @@ Route::post('/redefinir-senha', [EsqueciSenhaController::class, 'reset'])->name(
 
 // ─── Rotas protegidas ───────────────────────────────────────────
 Route::middleware('auth')->group(function (): void {
-    Route::redirect('/', '/dashboard');
+    Route::get('/email/confirmar', [VerificacaoEmailController::class, 'aviso'])->name('verificacao.aviso');
+    Route::post('/email/reenviar', [VerificacaoEmailController::class, 'reenviar'])
+        ->name('verificacao.reenviar')->middleware('throttle:3,1');
 
     // Multiclínica: escolha/troca da clínica ativa
     Route::get('/clinicas/escolher', [ClinicaController::class, 'escolher'])->name('clinicas.escolher');

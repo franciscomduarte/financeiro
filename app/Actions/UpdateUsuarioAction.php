@@ -17,6 +17,7 @@ class UpdateUsuarioAction
     {
         return DB::transaction(function () use ($user, $data, $clinica, $papel): User {
             if ($clinica && $papel) {
+                app(\App\Support\ClinicaAtual::class)->garantirEscrita(); // gestão de usuários da clínica
                 if ($papel !== RoleUsuario::Admin) {
                     self::garantirOutroAdmin($clinica, $user);
                 }
