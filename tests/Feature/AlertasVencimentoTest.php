@@ -38,7 +38,7 @@ class AlertasVencimentoTest extends TestCase
         parent::setUp();
         $this->hoje = CarbonImmutable::parse('2026-10-10');
         $this->travelTo($this->hoje->setTime(8, 0));
-        config(['services.whatsapp.allowed_number' => '+55 (61) 99999-0000']);
+        $this->clinica->update(['whatsapp_numero' => '+55 (61) 99999-0000']);
         Cache::flush();
     }
 

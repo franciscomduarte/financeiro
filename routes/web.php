@@ -3,6 +3,7 @@
 use App\Http\Controllers\ArquivoDownloadController;
 use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ClinicaController;
 use App\Http\Controllers\DocumentoDownloadController;
 use App\Http\Controllers\EsqueciSenhaController;
 use App\Http\Controllers\VozTransacaoController;
@@ -44,6 +45,10 @@ Route::post('/redefinir-senha', [EsqueciSenhaController::class, 'reset'])->name(
 // ─── Rotas protegidas ───────────────────────────────────────────
 Route::middleware('auth')->group(function (): void {
     Route::redirect('/', '/dashboard');
+
+    // Multiclínica: escolha/troca da clínica ativa
+    Route::get('/clinicas/escolher', [ClinicaController::class, 'escolher'])->name('clinicas.escolher');
+    Route::post('/clinicas/{clinica}/ativar', [ClinicaController::class, 'ativar'])->name('clinicas.ativar');
 
     Route::get('/dashboard', DashboardIndex::class)->name('dashboard');
     Route::get('/relatorio', RelatorioIndex::class)->name('web.relatorio');

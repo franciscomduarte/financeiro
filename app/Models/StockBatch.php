@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToClinica;
 use App\Enums\StockBatchStatusEnum;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -13,6 +14,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class StockBatch extends Model
 {
+    use BelongsToClinica;
+
     protected $table = 'stock_batches';
 
     protected $fillable = [

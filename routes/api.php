@@ -22,7 +22,7 @@ Route::post('/whatsapp/webhook', [WhatsAppWebhookController::class, 'handle'])
 Route::post('/webhook/asaas', [CobrancaController::class, 'webhook'])
     ->name('webhook.asaas');
 
-Route::middleware('auth:sanctum')->prefix('v1')->name('api.v1.')->group(function (): void {
+Route::middleware(['auth:sanctum', 'clinica'])->prefix('v1')->name('api.v1.')->group(function (): void {
 
     // Transações
     Route::apiResource('transacoes', TransacaoController::class)

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\Clinica;
+use App\Models\Scopes\ClinicaScope;
+use App\Support\ClinicaAtual;
 use App\Jobs\DisparadorCobrancaMensalJob;
 use App\Mail\CobrancaMensalMail;
 use App\Models\Cobranca;
@@ -122,17 +125,22 @@ class CobrancaController extends Controller
         ];
 
         if (isset($statusMap[$evento])) {
-            $cobranca = Cobranca::with('parcelamento')->where('asaas_id', $pagamentoId)->first();
+            // Webhook não tem usuário logado: a clínica vem da própria cobrança
+            $tenantId = Cobranca::withoutGlobalScope(ClinicaScope::class)->where('asaas_id', $pagamentoId)->value('tenant_id');
+            $clinica  = $tenantId ? Clinica::find($tenantId) : null;
 
-            if ($cobranca) {
-                $cobranca->update([
-                    'status'  => $statusMap[$evento],
-                    'pago_em' => in_array($evento, ['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED'], true) ? now() : null,
-                ]);
+            if ($clinica) {
+                app(ClinicaAtual::class)->executarComo($clinica, function () use ($pagamentoId, $evento, $statusMap): void {
+                    $cobranca = Cobranca::with('parcelamento')->where('asaas_id', $pagamentoId)->firstOrFail();
+                    $cobranca->update([
+                        'status'  => $statusMap[$evento],
+                        'pago_em' => in_array($evento, ['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED'], true) ? now() : null,
+                    ]);
 
-                if (in_array($evento, ['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED'], true)) {
-                    $cobranca->parcelamento?->verificarConclusao();
-                }
+                    if (in_array($evento, ['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED'], true)) {
+                        $cobranca->parcelamento?->verificarConclusao();
+                    }
+                });
             }
         }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToClinica;
 use App\Enums\PeriodicidadeFiscal;
 use App\Enums\TipoTributo;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ObrigacaoFiscal extends Model
 {
-    use HasFactory, HasUuids;
+    use BelongsToClinica, HasFactory, HasUuids;
 
     protected $table = 'obrigacoes_fiscais';
 

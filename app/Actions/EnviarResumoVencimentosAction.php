@@ -7,9 +7,9 @@ namespace App\Actions;
 use App\DTOs\AlertaVencimento;
 use App\Enums\RoleUsuario;
 use App\Mail\ResumoVencimentosMail;
-use App\Models\User;
 use App\Services\AlertasVencimentoService;
 use App\Services\WhatsAppService;
+use App\Support\ClinicaAtual;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -19,7 +19,8 @@ use RuntimeException;
 use Throwable;
 
 /**
- * Envia o resumo diário de vencimentos por e-mail (admins) e WhatsApp (número da gestão).
+ * Envia o resumo diário de vencimentos da clínica ativa por e-mail (admins da clínica)
+ * e WhatsApp (número da clínica).
  * Cada canal é marcado como enviado no dia, então uma nova tentativa só reenvia o que falhou.
  */
 class EnviarResumoVencimentosAction
@@ -30,6 +31,7 @@ class EnviarResumoVencimentosAction
     public function __construct(
         private readonly AlertasVencimentoService $alertas,
         private readonly WhatsAppService $whatsapp,
+        private readonly ClinicaAtual $clinicaAtual,
     ) {}
 
     /**
@@ -72,6 +74,9 @@ class EnviarResumoVencimentosAction
     public static function textoWhatsApp(Collection $vencidos, Collection $aVencer, CarbonImmutable $hoje): string
     {
         $linhas = ['📅 *Vencimentos — ' . $hoje->format('d/m') . '*'];
+        if ($nomeClinica = app(ClinicaAtual::class)->get()?->nome) {
+            $linhas[0] .= " · {$nomeClinica}";
+        }
         $restantes = self::MAX_ITENS_WHATSAPP;
 
         foreach ([['🔴 *Já venceram*', $vencidos], ['🟡 *A vencer*', $aVencer]] as [$titulo, $itens]) {
@@ -99,7 +104,7 @@ class EnviarResumoVencimentosAction
     /** Executa o envio no máximo uma vez por dia por canal; null se já enviado ou não aplicável. */
     private function umaVezPorDia(string $canal, CarbonImmutable $hoje, callable $enviar): ?bool
     {
-        $chave = "resumo-vencimentos:{$hoje->toDateString()}:{$canal}";
+        $chave = "resumo-vencimentos:{$this->clinicaAtual->id()}:{$hoje->toDateString()}:{$canal}";
         if (Cache::has($chave)) {
             return null;
         }
@@ -121,11 +126,11 @@ class EnviarResumoVencimentosAction
     /** @return bool|null null quando não há administradores ativos */
     private function enviarEmail(Collection $vencidos, Collection $aVencer, CarbonImmutable $hoje): ?bool
     {
-        $emails = User::query()
-            ->where('role', RoleUsuario::Admin->value)
-            ->where('active', true)
+        $emails = $this->clinicaAtual->get()->usuarios()
+            ->wherePivot('papel', RoleUsuario::Admin->value)
+            ->where('users.active', true)
             ->limit(20)
-            ->pluck('email')
+            ->pluck('users.email')
             ->filter()
             ->all();
 
@@ -134,7 +139,7 @@ class EnviarResumoVencimentosAction
             return null;
         }
 
-        Mail::to($emails)->send(new ResumoVencimentosMail($vencidos, $aVencer, $hoje));
+        Mail::to($emails)->send(new ResumoVencimentosMail($vencidos, $aVencer, $hoje, $this->clinicaAtual->get()->nome));
 
         return true;
     }
@@ -142,9 +147,9 @@ class EnviarResumoVencimentosAction
     /** @return bool|null null quando o número não está configurado */
     private function enviarWhatsApp(Collection $vencidos, Collection $aVencer, CarbonImmutable $hoje): ?bool
     {
-        $numero = preg_replace('/\D/', '', (string) config('services.whatsapp.allowed_number', ''));
+        $numero = preg_replace('/\D/', '', (string) $this->clinicaAtual->get()->whatsapp_numero);
         if ($numero === '') {
-            Log::warning('[ResumoVencimentos] WHATSAPP_ALLOWED_NUMBER não configurado; WhatsApp ignorado');
+            Log::warning('[ResumoVencimentos] clínica sem número de WhatsApp; WhatsApp ignorado');
             return null;
         }
 

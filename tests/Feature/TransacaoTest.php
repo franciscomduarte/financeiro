@@ -28,11 +28,11 @@ class TransacaoTest extends TestCase
 
         // Seed taxas de cartão necessárias para os testes
         TaxaCartao::insert([
-            ['id' => fake()->uuid(), 'modalidade' => 'pix', 'percentual' => 0.00, 'ativo' => true],
-            ['id' => fake()->uuid(), 'modalidade' => 'dinheiro', 'percentual' => 0.00, 'ativo' => true],
-            ['id' => fake()->uuid(), 'modalidade' => 'debito', 'percentual' => 1.50, 'ativo' => true],
-            ['id' => fake()->uuid(), 'modalidade' => 'credito_1x', 'percentual' => 2.50, 'ativo' => true],
-            ['id' => fake()->uuid(), 'modalidade' => 'credito_3x', 'percentual' => 3.50, 'ativo' => true],
+            ['id' => fake()->uuid(), 'tenant_id' => $this->clinica->id, 'modalidade' => 'pix', 'percentual' => 0.00, 'ativo' => true],
+            ['id' => fake()->uuid(), 'tenant_id' => $this->clinica->id, 'modalidade' => 'dinheiro', 'percentual' => 0.00, 'ativo' => true],
+            ['id' => fake()->uuid(), 'tenant_id' => $this->clinica->id, 'modalidade' => 'debito', 'percentual' => 1.50, 'ativo' => true],
+            ['id' => fake()->uuid(), 'tenant_id' => $this->clinica->id, 'modalidade' => 'credito_1x', 'percentual' => 2.50, 'ativo' => true],
+            ['id' => fake()->uuid(), 'tenant_id' => $this->clinica->id, 'modalidade' => 'credito_3x', 'percentual' => 3.50, 'ativo' => true],
         ]);
     }
 

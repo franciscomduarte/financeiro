@@ -13,7 +13,12 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
-        $middleware->alias(['admin' => \App\Http\Middleware\EnsureAdmin::class]);
+        $middleware->alias([
+            'admin'   => \App\Http\Middleware\EnsureAdmin::class,
+            'clinica' => \App\Http\Middleware\DefinirClinicaAtual::class,
+        ]);
+        // Multiclínica: toda requisição web autenticada (inclusive Livewire) tem clínica ativa
+        $middleware->web(append: [\App\Http\Middleware\DefinirClinicaAtual::class]);
         $middleware->api(prepend: [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         ]);

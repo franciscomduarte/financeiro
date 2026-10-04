@@ -118,8 +118,8 @@
                         <td class="px-4 py-3 text-sm text-slate-600">{{ $usuario->email }}</td>
                         <td class="px-4 py-3">
                             <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium
-                                {{ $usuario->role === \App\Enums\RoleUsuario::Admin ? 'bg-rose-50 text-rose-700' : 'bg-slate-100 text-slate-600' }}">
-                                {{ $usuario->role->label() }}
+                                {{ $usuario->pivot->papel === \App\Enums\RoleUsuario::Admin->value ? 'bg-rose-50 text-rose-700' : 'bg-slate-100 text-slate-600' }}">
+                                {{ \App\Enums\RoleUsuario::from($usuario->pivot->papel)->label() }}
                             </span>
                         </td>
                         <td class="px-4 py-3">
@@ -199,6 +199,7 @@
                             class="w-full rounded-lg border border-slate-300 text-sm px-3 py-2 focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100"
                             placeholder="Mínimo 8 caracteres">
                         @error('senha') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                        <p class="text-xs text-slate-400 mt-1">Se o e-mail já tiver conta em outra clínica, a pessoa só ganha acesso a esta e continua com a senha atual.</p>
                     </div>
                 @endif
                 <div>

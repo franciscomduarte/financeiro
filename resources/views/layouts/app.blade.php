@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title ?? 'LC Estética — Gestão' }}</title>
+    <title>{{ $title ?? 'Gestão' }} — {{ $clinicaAtual?->nome ?? config('app.name') }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital@0;1&display=swap" rel="stylesheet">
     @livewireStyles
@@ -41,9 +41,33 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" />
                 </svg>
             </div>
-            <div class="min-w-0">
-                <p class="text-sm font-semibold text-stone-800 leading-tight truncate" style="font-family: 'Playfair Display', serif">LC Estética</p>
-                <p class="text-xs text-stone-400 leading-tight truncate">Saúde Integrativa</p>
+            @php $outrasClinicas = Auth::user()?->clinicas()->where('clinicas.id', '!=', $clinicaAtual?->id)->get(['clinicas.id', 'nome']) ?? collect(); @endphp
+            <div class="relative min-w-0 flex-1" x-data="{ aberto: false }" @click.outside="aberto = false">
+                <button type="button" @click="aberto = !aberto" @disabled($outrasClinicas->isEmpty())
+                        class="flex w-full min-h-[40px] items-center gap-1 text-left {{ $outrasClinicas->isNotEmpty() ? 'cursor-pointer' : 'cursor-default' }}">
+                    <span class="min-w-0">
+                        <span class="block text-sm font-semibold text-stone-800 leading-tight truncate" style="font-family: 'Playfair Display', serif">{{ $clinicaAtual?->nome ?? config('app.name') }}</span>
+                        @if ($outrasClinicas->isNotEmpty())
+                            <span class="block text-xs text-stone-400 leading-tight truncate">Trocar de clínica</span>
+                        @endif
+                    </span>
+                    @if ($outrasClinicas->isNotEmpty())
+                        <svg class="ml-auto h-4 w-4 shrink-0 text-stone-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9"/></svg>
+                    @endif
+                </button>
+                @if ($outrasClinicas->isNotEmpty())
+                    <div x-show="aberto" x-cloak x-transition
+                         class="absolute left-0 right-0 top-full z-50 mt-1 rounded-xl border border-stone-100 bg-white p-1 shadow-lg">
+                        @foreach ($outrasClinicas as $outra)
+                            <form method="POST" action="{{ route('clinicas.ativar', $outra->id) }}">
+                                @csrf
+                                <button type="submit" class="flex min-h-[40px] w-full items-center rounded-lg px-3 text-left text-sm text-stone-700 hover:bg-rose-50 hover:text-rose-700">
+                                    {{ $outra->nome }}
+                                </button>
+                            </form>
+                        @endforeach
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -365,8 +389,8 @@
             </button>
             {{-- Breadcrumb/title --}}
             <div class="flex items-center gap-2 text-sm">
-                <span class="text-stone-400">LC Estética</span>
-                <svg class="w-3.5 h-3.5 text-stone-300" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <span class="text-stone-400 hidden sm:inline">{{ $clinicaAtual?->nome ?? config('app.name') }}</span>
+                <svg class="hidden sm:block w-3.5 h-3.5 text-stone-300" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                 </svg>
                 <span class="font-medium text-stone-700">{{ $title ?? 'Dashboard' }}</span>

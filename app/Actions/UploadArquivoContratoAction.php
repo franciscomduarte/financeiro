@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\Support\ClinicaAtual;
 use App\Models\Contrato;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -17,7 +18,7 @@ class UploadArquivoContratoAction
             Storage::delete($contrato->arquivo_contrato_path);
         }
 
-        $path = $file->store("contratos/{$contrato->id}", 'local');
+        $path = $file->store(app(ClinicaAtual::class)->pasta("contratos/{$contrato->id}"), 'local');
 
         $contrato->update([
             'arquivo_contrato_path' => $path,

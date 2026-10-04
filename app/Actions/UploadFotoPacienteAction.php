@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\Support\ClinicaAtual;
 use App\Models\Paciente;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -19,7 +20,7 @@ class UploadFotoPacienteAction
         $extension = $file->getClientOriginalExtension();
 
         $path = $file->storeAs(
-            "pacientes/fotos/{$paciente->id}",
+            app(ClinicaAtual::class)->pasta("pacientes/fotos/{$paciente->id}"),
             "avatar.{$extension}",
             'public'
         );
