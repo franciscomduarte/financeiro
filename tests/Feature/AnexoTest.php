@@ -97,9 +97,9 @@ class AnexoTest extends TestCase
             ->assertJsonPath('suggest_mark_paid', false);
     }
 
-    public function test_upload_rejeita_arquivo_maior_que_10mb(): void
+    public function test_upload_rejeita_arquivo_maior_que_100mb(): void
     {
-        $file = UploadedFile::fake()->create('grande.pdf', 11264, 'application/pdf'); // 11 MB
+        $file = UploadedFile::fake()->create('grande.pdf', 102401, 'application/pdf'); // 100 MB + 1 KB
 
         $this->actingAs($this->user)
             ->postJson("/api/v1/transacoes/{$this->transacao->id}/anexos", [

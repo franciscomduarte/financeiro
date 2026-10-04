@@ -31,7 +31,7 @@ class StoreAnexoRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'arquivo.max'   => 'O arquivo não pode ultrapassar 10MB.',
+            'arquivo.max'   => 'O arquivo não pode ultrapassar 100MB.',
             'arquivo.mimes' => 'Apenas arquivos PDF, JPG, PNG e DOCX são aceitos.',
         ];
     }
