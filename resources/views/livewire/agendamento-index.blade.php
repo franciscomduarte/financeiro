@@ -239,7 +239,7 @@
                                         </button>
                                     @endif
                                     @if ($isPendente)
-                                        <button wire:click="marcarRealizado('{{ $ag->id }}')"
+                                        <button wire:click="abrirModalConcluir('{{ $ag->id }}')"
                                                 title="Marcar como realizado"
                                                 class="rounded-lg p-1.5 text-sky-600 hover:bg-sky-50 transition-colors">
                                             <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -653,6 +653,104 @@
     @endif
 
     {{-- ═══════════════════════════════════════════════════════════════════ --}}
+    {{-- Modal: Concluir atendimento (Realizado + receita)                  --}}
+    {{-- ═══════════════════════════════════════════════════════════════════ --}}
+    @if ($modalConcluir && $agendamentoConcluir)
+    @php
+        $c           = $agendamentoConcluir;
+        $mensalidade = (float) ($c->paciente?->valor_mensalidade ?? 0);
+        $campo       = 'w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm text-stone-800 focus:border-violet-300 focus:outline-none focus:ring-2 focus:ring-violet-100';
+    @endphp
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModalConcluir"></div>
+        <div class="relative w-full max-w-md rounded-2xl bg-white shadow-2xl ring-1 ring-stone-100 overflow-hidden">
+            <div class="flex items-start justify-between border-b border-stone-100 px-6 py-4">
+                <div>
+                    <h2 class="text-base font-bold text-stone-900">Concluir atendimento</h2>
+                    <p class="text-xs text-stone-400 mt-0.5">
+                        {{ $c->paciente?->nome ?? '—' }} · {{ $c->inicio_em->format('d/m H:i') }} · {{ $c->procedimento?->nome ?? '—' }}
+                    </p>
+                </div>
+                <button wire:click="fecharModalConcluir" class="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100 transition-colors">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="space-y-5 p-6">
+                @if ($mensalidade > 0)
+                    <div class="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-xs text-amber-700">
+                        <p class="font-semibold">Paciente com mensalidade de R$ {{ number_format($mensalidade, 2, ',', '.') }}.</p>
+                        <p class="mt-0.5">Verifique se este atendimento já está incluso antes de lançar a receita.</p>
+                    </div>
+                @endif
+
+                <label class="flex min-h-[44px] items-center gap-3 rounded-xl border border-stone-200 px-4 py-2.5">
+                    <input type="checkbox" wire:model.live="concluirLancarReceita"
+                           class="h-5 w-5 rounded border-stone-300 text-violet-600 focus:ring-violet-100">
+                    <span class="text-sm font-semibold text-stone-800">Lançar receita no financeiro</span>
+                </label>
+
+                @if ($concluirLancarReceita)
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-stone-500">Valor (R$) <span class="text-red-400">*</span></label>
+                            <input type="number" inputmode="decimal" step="0.01" min="0" wire:model="concluirValor"
+                                   class="{{ $campo }} tabular-nums @error('concluirValor') border-red-300 @enderror">
+                            @error('concluirValor') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-stone-500">Pagamento <span class="text-red-400">*</span></label>
+                            <select wire:model="concluirFormaPagamento" class="{{ $campo }} @error('concluirFormaPagamento') border-red-300 @enderror">
+                                @foreach (\App\Enums\FormaPagamento::cases() as $fp)
+                                    @continue($fp === \App\Enums\FormaPagamento::AportePessoal)
+                                    <option value="{{ $fp->value }}">{{ $fp->label() }}</option>
+                                @endforeach
+                            </select>
+                            @error('concluirFormaPagamento') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-stone-500">Categoria <span class="text-red-400">*</span></label>
+                        <select wire:model="concluirCategoria" class="{{ $campo }} @error('concluirCategoria') border-red-300 @enderror">
+                            <option value="">Selecione...</option>
+                            @foreach (\App\Models\Transacao::CATEGORIAS_ENTRADA as $cat)
+                                <option value="{{ $cat }}">{{ $cat }}</option>
+                            @endforeach
+                        </select>
+                        @error('concluirCategoria') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                    </div>
+                    <div class="grid grid-cols-2 rounded-xl bg-stone-100 p-1">
+                        <button type="button" wire:click="$set('concluirPago', true)"
+                                class="min-h-[40px] rounded-lg text-sm font-semibold transition-colors {{ $concluirPago ? 'bg-white text-emerald-700 shadow-sm' : 'text-stone-500' }}">
+                            Pago agora
+                        </button>
+                        <button type="button" wire:click="$set('concluirPago', false)"
+                                class="min-h-[40px] rounded-lg text-sm font-semibold transition-colors {{ ! $concluirPago ? 'bg-white text-amber-700 shadow-sm' : 'text-stone-500' }}">
+                            A receber
+                        </button>
+                    </div>
+                    <p class="text-xs text-stone-400">Taxa do cartão e imposto são calculados automaticamente, como nos demais lançamentos.</p>
+                @else
+                    <p class="text-sm text-stone-500">O agendamento será marcado como realizado sem gerar receita.</p>
+                @endif
+            </div>
+            <div class="flex justify-end gap-3 border-t border-stone-100 px-6 py-4 bg-stone-50/50">
+                <button wire:click="fecharModalConcluir"
+                        class="rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors">
+                    Voltar
+                </button>
+                <button wire:click="confirmarConclusao" wire:loading.attr="disabled"
+                        class="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 transition-colors disabled:opacity-60">
+                    <span wire:loading wire:target="confirmarConclusao">
+                        <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
+                    </span>
+                    Concluir
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- ═══════════════════════════════════════════════════════════════════ --}}
     {{-- Modal: Detalhe                                                     --}}
     {{-- ═══════════════════════════════════════════════════════════════════ --}}
     @if ($modalDetalhe && $agendamentoDetalhe)
@@ -723,6 +821,15 @@
                             <p class="mt-1 text-sm text-stone-600">{{ $d->agendamentoOrigem->inicio_em->format('d/m/Y H:i') }}</p>
                         </div>
                     @endif
+                    @if ($d->receita)
+                        <div class="col-span-2">
+                            <p class="text-xs font-semibold uppercase tracking-wide text-stone-400">Financeiro</p>
+                            <p class="mt-1 text-sm text-stone-700">
+                                Receita de <span class="font-semibold tabular-nums">R$ {{ number_format((float) $d->receita->valor_bruto, 2, ',', '.') }}</span>
+                                · {{ $d->receita->status === \App\Enums\StatusTransacao::Pago ? 'paga' : 'a receber' }}
+                            </p>
+                        </div>
+                    @endif
                     @if ($d->google_event_id)
                         <div class="col-span-2">
                             <p class="mt-1 flex items-center gap-1.5 text-xs font-medium text-emerald-600">
@@ -744,7 +851,7 @@
                                 Confirmar presença
                             </button>
                         @endif
-                        <button wire:click="marcarRealizado('{{ $d->id }}')" wire:loading.attr="disabled"
+                        <button wire:click="abrirModalConcluir('{{ $d->id }}')" wire:loading.attr="disabled"
                                 class="flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-sky-200 bg-white px-3 text-sm font-semibold text-sky-700 hover:bg-sky-50 transition-colors disabled:opacity-60">
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             Realizado

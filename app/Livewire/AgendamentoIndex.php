@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Livewire;
 
+use App\Actions\ConcluirAtendimentoAction;
+use App\Enums\FormaPagamento;
 use App\Enums\StatusAgendamento;
 use App\Enums\VisaoAgenda;
 use App\Models\Agendamento;
 use App\Models\Paciente;
 use App\Models\Procedimento;
 use App\Models\Profissional;
+use App\Models\Transacao;
 use App\Services\AgendaCalendarioService;
 use App\Services\AgendamentoService;
 use Carbon\CarbonImmutable;
@@ -70,6 +73,15 @@ class AgendamentoIndex extends Component
     public string $reagendarId    = '';
     public string $reagendarData  = '';
     public string $reagendarSlot  = '';
+
+    // ─── Modal Concluir atendimento (Realizado + receita) ─────────
+    public bool   $modalConcluir           = false;
+    public string $concluirId              = '';
+    public bool   $concluirLancarReceita   = true;
+    public string $concluirValor           = '';
+    public string $concluirCategoria       = '';
+    public string $concluirFormaPagamento  = 'pix';
+    public bool   $concluirPago            = true;
 
     // ─── Detalhe ──────────────────────────────────────────────────
     public bool    $modalDetalhe = false;
@@ -390,13 +402,69 @@ class AgendamentoIndex extends Component
     }
 
     // ─── Ações rápidas ────────────────────────────────────────────
-    public function marcarRealizado(string $id, AgendamentoService $service): void
+    // ─── Concluir atendimento ─────────────────────────────────────
+    public function abrirModalConcluir(string $id): void
     {
+        $agendamento = Agendamento::with(['paciente:id,nome,forma_pagamento,valor_mensalidade'])
+            ->select(['id', 'paciente_id', 'procedimento_id', 'procedimentos_ids', 'status'])
+            ->findOrFail($id);
+
+        $temMensalidade = (float) ($agendamento->paciente?->valor_mensalidade ?? 0) > 0;
+        $forma          = FormaPagamento::tryFrom((string) $agendamento->paciente?->forma_pagamento);
+
+        $this->fecharDetalhe();
+        $this->resetErrorBag();
+        $this->concluirId             = $id;
+        $this->concluirLancarReceita  = ! $temMensalidade;
+        $this->concluirValor          = number_format(ConcluirAtendimentoAction::valorSugerido($agendamento), 2, '.', '');
+        $this->concluirCategoria      = '';
+        $this->concluirFormaPagamento = ($forma && $forma !== FormaPagamento::AportePessoal ? $forma : FormaPagamento::Pix)->value;
+        $this->concluirPago           = true;
+        $this->modalConcluir          = true;
+    }
+
+    public function fecharModalConcluir(): void
+    {
+        $this->modalConcluir = false;
+        $this->concluirId    = '';
+        $this->resetErrorBag();
+    }
+
+    public function confirmarConclusao(ConcluirAtendimentoAction $concluir): void
+    {
+        if ($this->concluirLancarReceita) {
+            $this->validate([
+                'concluirValor'          => 'required|numeric|min:0.01|max:999999.99',
+                'concluirCategoria'      => ['required', 'in:' . implode(',', Transacao::CATEGORIAS_ENTRADA)],
+                'concluirFormaPagamento' => ['required', 'in:' . implode(',', array_map(
+                    fn (FormaPagamento $f) => $f->value,
+                    array_filter(FormaPagamento::cases(), fn (FormaPagamento $f) => $f !== FormaPagamento::AportePessoal),
+                ))],
+            ], [
+                'concluirValor.required'     => 'Informe o valor.',
+                'concluirValor.min'          => 'O valor deve ser maior que zero.',
+                'concluirCategoria.required' => 'Escolha a categoria.',
+            ]);
+        }
+
         try {
-            $service->marcarRealizado(Agendamento::findOrFail($id));
-            $this->flashSucesso = 'Marcado como realizado.';
+            $concluir->execute($this->concluirId, $this->concluirLancarReceita ? [
+                'valor_bruto'     => (float) str_replace(',', '.', $this->concluirValor),
+                'categoria'       => $this->concluirCategoria,
+                'forma_pagamento' => $this->concluirFormaPagamento,
+                'pago'            => $this->concluirPago,
+            ] : null);
+
+            $this->flashSucesso = $this->concluirLancarReceita
+                ? 'Atendimento concluído e receita lançada no financeiro.'
+                : 'Atendimento concluído (sem lançamento no financeiro).';
+            $this->fecharModalConcluir();
+        } catch (RuntimeException $e) {
+            $this->flashErro = $e->getMessage();
+            $this->fecharModalConcluir();
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro: ' . $e->getMessage();
+            Log::error('[AgendamentoIndex] confirmarConclusao erro', ['id' => $this->concluirId, 'message' => $e->getMessage()]);
+            $this->flashErro = 'Erro ao concluir atendimento: ' . $e->getMessage();
         }
     }
 
@@ -594,7 +662,13 @@ class AgendamentoIndex extends Component
         ])->count();
 
         $agendamentoDetalhe = $this->detalheId
-            ? Agendamento::with(['paciente', 'profissional', 'procedimento', 'agendamentoOrigem'])->find($this->detalheId)
+            ? Agendamento::with(['paciente', 'profissional', 'procedimento', 'agendamentoOrigem', 'receita:id,agendamento_id,valor_bruto,status'])->find($this->detalheId)
+            : null;
+
+        $agendamentoConcluir = $this->modalConcluir && $this->concluirId
+            ? Agendamento::with(['paciente:id,nome,valor_mensalidade', 'procedimento:id,nome'])
+                ->select(['id', 'paciente_id', 'procedimento_id', 'procedimentos_ids', 'inicio_em', 'fim_em'])
+                ->find($this->concluirId)
             : null;
 
         return view('livewire.agendamento-index', [
@@ -603,6 +677,7 @@ class AgendamentoIndex extends Component
             'tituloPeriodo'      => $this->tituloPeriodo($visao),
             'agendamentos'       => $agendamentos,
             'agendamentoDetalhe' => $agendamentoDetalhe,
+            'agendamentoConcluir' => $agendamentoConcluir,
             'statsTotal'         => $statsTotal,
             'statsConfirmado'    => $statsConfirmado,
             'statsPendente'      => $statsPendente,

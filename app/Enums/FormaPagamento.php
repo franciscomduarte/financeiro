@@ -24,6 +24,18 @@ enum FormaPagamento: string
     case Credito12x = 'credito_12x';
     case AportePessoal = 'aporte_pessoal';
 
+    public function label(): string
+    {
+        return match ($this) {
+            self::Pix           => 'Pix',
+            self::Dinheiro      => 'Dinheiro',
+            self::Boleto        => 'Boleto',
+            self::Debito        => 'Débito',
+            self::AportePessoal => 'Aporte pessoal',
+            default             => 'Crédito ' . substr($this->value, strlen('credito_')),
+        };
+    }
+
     public function modalidade(): string
     {
         return $this->value;
