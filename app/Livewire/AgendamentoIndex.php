@@ -309,6 +309,7 @@ class AgendamentoIndex extends Component
     // ─── Cancelar ─────────────────────────────────────────────────
     public function abrirModalCancelar(string $id): void
     {
+        $this->fecharDetalhe();
         $this->cancelarId     = $id;
         $this->cancelarMotivo = '';
         $this->modalCancelar  = true;
@@ -346,6 +347,7 @@ class AgendamentoIndex extends Component
     // ─── Reagendar ────────────────────────────────────────────────
     public function abrirModalReagendar(string $id): void
     {
+        $this->fecharDetalhe();
         $this->reagendarId    = $id;
         $this->reagendarData  = now()->addDay()->toDateString();
         $this->reagendarSlot  = '';

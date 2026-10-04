@@ -733,11 +733,46 @@
                     @endif
                 </div>
             </div>
-            <div class="flex justify-end border-t border-stone-100 px-6 py-4 bg-stone-50/50">
-                <button wire:click="fecharDetalhe"
-                        class="rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors">
-                    Fechar
-                </button>
+            <div class="border-t border-stone-100 bg-stone-50/50 px-4 py-4 sm:px-6">
+                @if ($d->status->isPendente())
+                    {{-- Ações rápidas (mesmas da lista) --}}
+                    <div class="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                        @if ($d->status === \App\Enums\StatusAgendamento::Agendado)
+                            <button wire:click="confirmarAgendamento('{{ $d->id }}')" wire:loading.attr="disabled"
+                                    class="col-span-2 flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition-colors disabled:opacity-60 sm:col-span-4">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                Confirmar presença
+                            </button>
+                        @endif
+                        <button wire:click="marcarRealizado('{{ $d->id }}')" wire:loading.attr="disabled"
+                                class="flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-sky-200 bg-white px-3 text-sm font-semibold text-sky-700 hover:bg-sky-50 transition-colors disabled:opacity-60">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Realizado
+                        </button>
+                        <button wire:click="marcarFalta('{{ $d->id }}')" wire:loading.attr="disabled"
+                                wire:confirm="Registrar falta de {{ $d->paciente?->nome ?? 'paciente' }}?"
+                                class="flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-stone-200 bg-white px-3 text-sm font-semibold text-stone-600 hover:bg-stone-100 transition-colors disabled:opacity-60">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                            Falta
+                        </button>
+                        <button wire:click="abrirModalReagendar('{{ $d->id }}')"
+                                class="flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-amber-200 bg-white px-3 text-sm font-semibold text-amber-700 hover:bg-amber-50 transition-colors">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            Reagendar
+                        </button>
+                        <button wire:click="abrirModalCancelar('{{ $d->id }}')"
+                                class="flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-white px-3 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                            Cancelar
+                        </button>
+                    </div>
+                @endif
+                <div class="flex justify-end">
+                    <button wire:click="fecharDetalhe"
+                            class="min-h-[44px] rounded-xl border border-stone-200 bg-white px-4 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors">
+                        Fechar
+                    </button>
+                </div>
             </div>
         </div>
     </div>
