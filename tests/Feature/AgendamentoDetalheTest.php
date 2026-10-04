@@ -74,6 +74,22 @@ class AgendamentoDetalheTest extends TestCase
             ->assertSet('cancelarId', $this->agendamento->id);
     }
 
+    public function test_reagendar_sugere_a_data_do_agendamento(): void
+    {
+        Livewire::test(AgendamentoIndex::class)
+            ->call('abrirModalReagendar', $this->agendamento->id)
+            ->assertSet('reagendarData', $this->agendamento->inicio_em->toDateString());
+    }
+
+    public function test_reagendar_agendamento_passado_sugere_amanha(): void
+    {
+        $this->agendamento->update(['inicio_em' => now()->subDays(3), 'fim_em' => now()->subDays(3)->addHour()]);
+
+        Livewire::test(AgendamentoIndex::class)
+            ->call('abrirModalReagendar', $this->agendamento->id)
+            ->assertSet('reagendarData', now()->addDay()->toDateString());
+    }
+
     public function test_agendamento_realizado_nao_mostra_acoes(): void
     {
         $this->agendamento->update(['status' => StatusAgendamento::Realizado->value]);

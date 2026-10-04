@@ -360,8 +360,12 @@ class AgendamentoIndex extends Component
     public function abrirModalReagendar(string $id): void
     {
         $this->fecharDetalhe();
+        // Sugere a data do próprio agendamento; se já passou, amanhã.
+        $inicio = Agendamento::whereKey($id)->value('inicio_em');
+        $data   = $inicio ? CarbonImmutable::parse($inicio)->startOfDay() : null;
+
         $this->reagendarId    = $id;
-        $this->reagendarData  = now()->addDay()->toDateString();
+        $this->reagendarData  = ($data && $data->gte(CarbonImmutable::today()) ? $data : CarbonImmutable::tomorrow())->toDateString();
         $this->reagendarSlot  = '';
         $this->modalReagendar = true;
         unset($this->horariosReagendar);
