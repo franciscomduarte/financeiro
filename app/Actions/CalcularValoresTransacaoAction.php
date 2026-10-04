@@ -17,7 +17,10 @@ class CalcularValoresTransacaoAction
         FormaPagamento $formaPagamento,
         TipoTransacao $tipo,
     ): array {
-        $taxaOperacional  = $this->calcularTaxaOperacional($valorBruto, $formaPagamento);
+        // Taxa de maquininha só incide quando a clínica recebe
+        $taxaOperacional  = $tipo === TipoTransacao::Entrada
+            ? $this->calcularTaxaOperacional($valorBruto, $formaPagamento)
+            : 0.0;
         $impostoEstimado  = $this->calcularImposto($valorBruto, $tipo, $formaPagamento);
         $valorLiquido     = $valorBruto - $taxaOperacional - $impostoEstimado;
 

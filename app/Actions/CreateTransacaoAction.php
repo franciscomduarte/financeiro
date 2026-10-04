@@ -28,6 +28,8 @@ class CreateTransacaoAction
                 tipo:            $tipo,
             );
 
+            $status = StatusTransacao::from($data['status'] ?? StatusTransacao::Pendente->value);
+
             $transacao = Transacao::create([
                 'tipo'                    => $tipo,
                 'fase'                    => $data['fase'],
@@ -44,11 +46,13 @@ class CreateTransacaoAction
                 'imposto_estimado'        => $valores['imposto_estimado'],
                 'valor_liquido'           => $valores['valor_liquido'],
                 'data_competencia'        => $data['data_competencia'],
-                'data_pagamento'          => $data['data_pagamento'] ?? null,
+                // Pago sempre tem data de pagamento (o Dashboard soma por ela)
+                'data_pagamento'          => $data['data_pagamento']
+                    ?? ($status === StatusTransacao::Pago ? now()->toDateString() : null),
                 'forma_pagamento'         => $formaPagamento,
-                'num_parcelas'            => $data['num_parcelas'] ?? 1,
+                'num_parcelas'            => $formaPagamento->parcelas() > 1 ? $formaPagamento->parcelas() : ($data['num_parcelas'] ?? 1),
                 'parcela_atual'           => $data['parcela_atual'] ?? 1,
-                'status'                  => StatusTransacao::from($data['status'] ?? StatusTransacao::Pendente->value),
+                'status'                  => $status,
                 'recorrencia'             => $data['recorrencia'] ?? 'unica',
                 'data_inicio_recorrencia' => $data['data_inicio_recorrencia'] ?? null,
                 'transacao_pai_id'        => $data['transacao_pai_id'] ?? null,

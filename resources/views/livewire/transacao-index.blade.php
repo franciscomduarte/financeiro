@@ -138,7 +138,7 @@
                 <select wire:model.live="filtroTipo" class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 bg-white text-stone-700">
                     <option value="">Todos</option>
                     @foreach ($tiposEnum as $tipo)
-                        <option value="{{ $tipo->value }}">{{ ucfirst($tipo->value) }}</option>
+                        <option value="{{ $tipo->value }}">{{ $tipo === \App\Enums\TipoTransacao::Entrada ? 'Entrada' : 'Saída' }}</option>
                     @endforeach
                 </select>
             </div>
@@ -147,7 +147,7 @@
                 <select wire:model.live="filtroFase" class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 bg-white text-stone-700">
                     <option value="">Todas</option>
                     @foreach ($fasesEnum as $fase)
-                        <option value="{{ $fase->value }}">{{ ucfirst($fase->value) }}</option>
+                        <option value="{{ $fase->value }}">{{ $fase->label() }}</option>
                     @endforeach
                 </select>
             </div>
@@ -156,13 +156,18 @@
                 <select wire:model.live="filtroStatus" class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 bg-white text-stone-700">
                     <option value="">Todos</option>
                     @foreach ($statusEnum as $st)
-                        <option value="{{ $st->value }}">{{ ucfirst($st->value) }}</option>
+                        <option value="{{ $st->value }}">{{ $st->label() }}</option>
                     @endforeach
                 </select>
             </div>
             <div>
                 <label class="block text-xs font-medium text-stone-500 mb-1.5">Categoria</label>
-                <input type="text" wire:model.live.debounce.400ms="filtroCategoria" placeholder="Filtrar..." class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 text-stone-700 placeholder:text-stone-300">
+                <select wire:model.live="filtroCategoria" class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 bg-white text-stone-700">
+                    <option value="">Todas</option>
+                    @foreach ($todasCategorias as $cat)
+                        <option value="{{ $cat }}">{{ $cat }}</option>
+                    @endforeach
+                </select>
             </div>
             <div>
                 <label class="block text-xs font-medium text-stone-500 mb-1.5">De</label>
@@ -177,7 +182,38 @@
 
     {{-- ─── Table ────────────────────────────────────────── --}}
     <div class="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
+        {{-- Celular: cartões --}}
+        <ul class="divide-y divide-stone-100 md:hidden">
+            @forelse ($transacoes as $transacao)
+                @php $entrada = $transacao->tipo === \App\Enums\TipoTransacao::Entrada; @endphp
+                <li wire:key="tx-card-{{ $transacao->id }}">
+                    <button type="button" wire:click="abrirModalDetalhe('{{ $transacao->id }}')"
+                            class="flex w-full items-start gap-3 px-4 py-3 text-left active:bg-stone-50">
+                        <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full {{ $entrada ? 'bg-emerald-500' : 'bg-red-500' }}"></span>
+                        <span class="min-w-0 flex-1">
+                            <span class="block truncate text-sm font-medium text-stone-800">{{ $transacao->descricao }}</span>
+                            <span class="mt-0.5 block truncate text-xs text-stone-400">
+                                {{ $transacao->data_competencia?->format('d/m/Y') ?? '—' }} · {{ $transacao->categoria }}@if ($transacao->paciente) · {{ $transacao->paciente->nome }}@elseif ($transacao->cliente) · {{ $transacao->cliente }}@endif
+                            </span>
+                        </span>
+                        <span class="flex shrink-0 flex-col items-end gap-1">
+                            <span class="text-sm font-semibold tabular-nums {{ $entrada ? 'text-emerald-700' : 'text-red-600' }}">
+                                {{ $entrada ? '+' : '−' }}&nbsp;R$&nbsp;{{ number_format((float) $transacao->valor_bruto, 2, ',', '.') }}
+                            </span>
+                            <x-transacao.status-badge :status="$transacao->status" />
+                        </span>
+                    </button>
+                </li>
+            @empty
+                <li class="px-4 py-12 text-center">
+                    <p class="text-sm font-medium text-stone-600">Nenhuma transação encontrada</p>
+                    <p class="text-xs text-stone-400 mt-0.5">Tente ajustar os filtros ou crie uma nova transação</p>
+                </li>
+            @endforelse
+        </ul>
+
+        {{-- Desktop: tabela --}}
+        <div class="hidden overflow-x-auto md:block">
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-stone-100 bg-stone-50/80">
@@ -187,8 +223,8 @@
                         <th class="text-left px-4 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wider hidden sm:table-cell whitespace-nowrap">Categoria</th>
                         <th class="text-left px-4 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wider">Descrição</th>
                         <th class="text-right px-4 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wider whitespace-nowrap">Valor</th>
-                        <th class="text-left px-4 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wider hidden lg:table-cell whitespace-nowrap">Status</th>
-                        <th class="px-4 py-3 w-24"></th>
+                        <th class="text-left px-4 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wider whitespace-nowrap">Status</th>
+                        <th class="px-4 py-3 w-36"></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-stone-50">
@@ -212,7 +248,7 @@
                             </td>
                             <td class="px-4 py-3 hidden md:table-cell whitespace-nowrap">
                                 <span class="bg-stone-100 text-stone-600 px-2 py-0.5 rounded-md text-xs">
-                                    {{ ucfirst($transacao->fase->value) }}
+                                    {{ $transacao->fase->label() }}
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-stone-600 hidden sm:table-cell text-xs max-w-[120px]">
@@ -230,38 +266,37 @@
                                 {{ $transacao->tipo->value === 'entrada' ? 'text-emerald-700' : 'text-red-600' }}">
                                 {{ $transacao->tipo->value === 'saida' ? '−' : '+' }}&nbsp;R$&nbsp;{{ number_format((float)$transacao->valor_bruto, 2, ',', '.') }}
                             </td>
-                            <td class="px-4 py-3 hidden lg:table-cell whitespace-nowrap">
-                                @if ($transacao->status->value === 'pago')
-                                    <span class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded-full text-xs">
-                                        <span class="w-1 h-1 rounded-full bg-emerald-500"></span>Pago
-                                    </span>
-                                @elseif ($transacao->status->value === 'pendente')
-                                    <span class="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-100 px-2 py-0.5 rounded-full text-xs">
-                                        <span class="w-1 h-1 rounded-full bg-amber-400"></span>Pendente
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center gap-1 bg-stone-100 text-stone-500 border border-stone-200 px-2 py-0.5 rounded-full text-xs">
-                                        <span class="w-1 h-1 rounded-full bg-stone-400"></span>Cancelado
-                                    </span>
-                                @endif
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <x-transacao.status-badge :status="$transacao->status" />
                             </td>
                             <td class="px-4 py-3">
-                                <div class="flex items-center justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div class="flex items-center justify-end gap-0.5">
+                                    @if ($transacao->status === \App\Enums\StatusTransacao::Pendente)
+                                        <button
+                                            wire:click="marcarComoPago('{{ $transacao->id }}')"
+                                            class="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                            title="Marcar como pago"
+                                        >
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                            </svg>
+                                        </button>
+                                    @endif
                                     <button
                                         wire:click="abrirModalDetalhe('{{ $transacao->id }}')"
-                                        class="p-1.5 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-lg transition-colors"
+                                        class="p-2 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-lg transition-colors"
                                         title="Ver detalhes"
                                     >
-                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                         </svg>
                                     </button>
                                     <button
                                         wire:click="abrirModalEditar('{{ $transacao->id }}')"
-                                        class="p-1.5 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-lg transition-colors"
+                                        class="p-2 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-lg transition-colors"
                                         title="Editar"
                                     >
-                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
                                         </svg>
                                     </button>
@@ -269,10 +304,10 @@
                                         <button
                                             wire:click="cancelarTransacao('{{ $transacao->id }}')"
                                             wire:confirm="Cancelar esta transação?"
-                                            class="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                            class="p-2 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                             title="Cancelar"
                                         >
-                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                                             </svg>
                                         </button>
@@ -392,14 +427,8 @@
                             @else
                                 <span class="inline-flex items-center gap-1 bg-red-50 text-red-700 border border-red-100 px-2 py-0.5 rounded-full text-xs font-medium">Saída</span>
                             @endif
-                            @if ($t->status->value === 'pago')
-                                <span class="bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded-full text-xs">Pago</span>
-                            @elseif ($t->status->value === 'pendente')
-                                <span class="bg-amber-50 text-amber-700 border border-amber-100 px-2 py-0.5 rounded-full text-xs">Pendente</span>
-                            @else
-                                <span class="bg-stone-100 text-stone-500 border border-stone-200 px-2 py-0.5 rounded-full text-xs">Cancelado</span>
-                            @endif
-                            <span class="bg-stone-100 text-stone-600 px-2 py-0.5 rounded-full text-xs">{{ ucfirst($t->fase->value) }}</span>
+                            <x-transacao.status-badge :status="$t->status" />
+                            <span class="bg-stone-100 text-stone-600 px-2 py-0.5 rounded-full text-xs">{{ $t->fase->label() }}</span>
                         </div>
                     </div>
                     <button wire:click="fecharModalDetalhe" class="p-1.5 text-stone-400 hover:text-stone-600 rounded-lg hover:bg-stone-100 transition-colors shrink-0">
@@ -410,6 +439,19 @@
                 </div>
 
                 <div class="p-6 space-y-6">
+
+                    @if ($t->status === \App\Enums\StatusTransacao::Pendente)
+                        <div class="flex flex-col gap-3 rounded-xl border border-amber-100 bg-amber-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+                            <p class="text-sm text-amber-800">
+                                {{ $t->tipo === \App\Enums\TipoTransacao::Entrada ? 'Recebimento pendente.' : 'Pagamento pendente.' }}
+                                @if ($t->anexos->contains(fn ($a) => $a->tipo === \App\Enums\TipoAnexo::Comprovante)) Já há comprovante anexado. @endif
+                            </p>
+                            <button wire:click="marcarComoPago('{{ $t->id }}')" wire:loading.attr="disabled"
+                                    class="min-h-[44px] shrink-0 rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors disabled:opacity-60">
+                                Marcar como pago
+                            </button>
+                        </div>
+                    @endif
 
                     {{-- Valor highlight --}}
                     <div class="bg-stone-50 rounded-xl p-4">
@@ -465,12 +507,14 @@
                         </div>
                         <div>
                             <p class="text-xs font-medium text-stone-400 mb-1">Forma de Pagamento</p>
-                            <p class="text-sm text-stone-700">{{ str_replace('_', ' ', ucfirst($t->forma_pagamento->value)) }}</p>
+                            <p class="text-sm text-stone-700">{{ $t->forma_pagamento->label() }}</p>
                         </div>
+                        @if ($t->num_parcelas > 1)
                         <div>
-                            <p class="text-xs font-medium text-stone-400 mb-1">Recorrência</p>
-                            <p class="text-sm text-stone-700">{{ ucfirst($t->recorrencia->value) }}</p>
+                            <p class="text-xs font-medium text-stone-400 mb-1">Parcelas</p>
+                            <p class="text-sm text-stone-700">{{ $t->num_parcelas }}x</p>
                         </div>
+                        @endif
                     </div>
 
                     @if ($t->observacoes)

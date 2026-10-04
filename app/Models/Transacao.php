@@ -31,6 +31,19 @@ class Transacao extends Model
         'Outros',
     ];
 
+    /** Categorias de despesa (saída) disponíveis. */
+    public const CATEGORIAS_SAIDA = [
+        'Infraestrutura',
+        'Utilidades',
+        'Marketing',
+        'Burocracia',
+        'Reforma',
+        'Impostos',
+        'Pessoal',
+        'Insumos',
+        'Outros',
+    ];
+
     protected $fillable = [
         'tipo',
         'fase',
