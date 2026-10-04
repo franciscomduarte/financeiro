@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace App\Livewire;
 
+use App\Models\BloqueioAgenda;
 use App\Models\GradeHorario;
 use App\Models\Procedimento;
 use App\Models\Profissional;
+use App\Services\BloqueioAgendaService;
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 use Throwable;
 
@@ -34,7 +38,7 @@ class AgendamentoConfiguracaoIndex extends Component
     public bool    $modalGrade              = false;
     public ?string $gradeEditandoId         = null;
     public string  $gradeEditandoNome       = '';
-    /** @var array<int, array{hora_inicio: string, hora_fim: string, ativo: bool}> */
+    /** @var array<int, array{hora_inicio: string, hora_fim: string, ativo: bool, tem_intervalo: bool, intervalo_inicio: string, intervalo_fim: string}> */
     public array $grade = [];
 
     // ─── Modal: Procedimento ──────────────────────────────────────
@@ -45,6 +49,26 @@ class AgendamentoConfiguracaoIndex extends Component
     public string  $procDuracao   = '60';
     public string  $procValor     = '';
     public bool    $procAtivo     = true;
+
+    // ─── Modal: Bloqueio ──────────────────────────────────────────
+    public const BLOQUEIO_TODOS = 'todos';
+
+    public bool   $modalBloqueio       = false;
+    public string $bloqProfissionalId  = self::BLOQUEIO_TODOS;
+    public bool   $bloqDiaInteiro      = true;
+    public string $bloqDataInicio      = '';
+    public string $bloqDataFim         = '';
+    public string $bloqHoraInicio      = '08:00';
+    public string $bloqHoraFim         = '12:00';
+    public string $bloqMotivo          = '';
+
+    /**
+     * Agendamentos pendentes dentro do último bloqueio criado (aviso para reagendar/cancelar).
+     *
+     * @var list<array{data: string, horario: string, paciente: string, profissional: string, profissional_id: string}>
+     */
+    public array  $bloqConflitos       = [];
+    public string $bloqConflitosResumo = '';
 
     // ─── Profissional: modais ─────────────────────────────────────
     public function abrirModalNovoProfissional(): void
@@ -126,11 +150,19 @@ class AgendamentoConfiguracaoIndex extends Component
             ->keyBy('dia_semana');
 
         $this->grade = [];
+        $hora = fn (?string $valor, string $padrao) => $valor ? substr($valor, 0, 5) : $padrao;
+
         for ($dia = 0; $dia <= 6; $dia++) {
+            $item      = $existente[$dia] ?? null;
+            $intervalo = $item?->intervalo();
+
             $this->grade[$dia] = [
-                'hora_inicio' => $existente[$dia]?->hora_inicio ?? '09:00',
-                'hora_fim'    => $existente[$dia]?->hora_fim    ?? '18:00',
-                'ativo'       => $existente[$dia]?->ativo       ?? ($dia >= 1 && $dia <= 5),
+                'hora_inicio'      => $hora($item?->hora_inicio, '09:00'),
+                'hora_fim'         => $hora($item?->hora_fim, '18:00'),
+                'ativo'            => $item?->ativo ?? ($dia >= 1 && $dia <= 5),
+                'tem_intervalo'    => $intervalo !== null,
+                'intervalo_inicio' => $intervalo[0] ?? '12:00',
+                'intervalo_fim'    => $intervalo[1] ?? '13:00',
             ];
         }
 
@@ -143,16 +175,70 @@ class AgendamentoConfiguracaoIndex extends Component
         $this->gradeEditandoId    = null;
         $this->gradeEditandoNome  = '';
         $this->grade              = [];
+        $this->resetErrorBag();
+    }
+
+    /** Copia horário e intervalo de um dia para todos os outros dias ativos. */
+    public function copiarGradeParaTodos(int $origem): void
+    {
+        if (! isset($this->grade[$origem])) {
+            return;
+        }
+
+        $campos = ['hora_inicio', 'hora_fim', 'tem_intervalo', 'intervalo_inicio', 'intervalo_fim'];
+        foreach ($this->grade as $dia => $item) {
+            if ($dia !== $origem && $item['ativo']) {
+                foreach ($campos as $campo) {
+                    $this->grade[$dia][$campo] = $this->grade[$origem][$campo];
+                }
+            }
+        }
+        $this->resetErrorBag();
     }
 
     public function salvarGrade(): void
     {
+        $diasNomes = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+        $regras    = [];
+        $atributos = [];
+
+        foreach ($this->grade as $dia => $item) {
+            if (! $item['ativo']) {
+                continue;
+            }
+            $regras["grade.{$dia}.hora_inicio"] = 'required|date_format:H:i';
+            $regras["grade.{$dia}.hora_fim"]    = "required|date_format:H:i|after:grade.{$dia}.hora_inicio";
+            $atributos["grade.{$dia}.hora_inicio"] = "início ({$diasNomes[$dia]})";
+            $atributos["grade.{$dia}.hora_fim"]    = "fim ({$diasNomes[$dia]})";
+
+            if ($item['tem_intervalo']) {
+                $regras["grade.{$dia}.intervalo_inicio"] = "required|date_format:H:i|after:grade.{$dia}.hora_inicio";
+                $regras["grade.{$dia}.intervalo_fim"]    = "required|date_format:H:i|after:grade.{$dia}.intervalo_inicio|before:grade.{$dia}.hora_fim";
+                $atributos["grade.{$dia}.intervalo_inicio"] = "início do intervalo ({$diasNomes[$dia]})";
+                $atributos["grade.{$dia}.intervalo_fim"]    = "fim do intervalo ({$diasNomes[$dia]})";
+            }
+        }
+
+        $this->validate($regras, [
+            'required'    => 'Informe o :attribute.',
+            'date_format' => 'Horário inválido em :attribute.',
+            'after'       => 'O :attribute deve ser depois de :date.',
+            'before'      => 'O :attribute deve ser antes de :date.',
+        ], $atributos);
+
         try {
             DB::transaction(function (): void {
                 foreach ($this->grade as $dia => $item) {
+                    $comIntervalo = $item['ativo'] && $item['tem_intervalo'];
                     GradeHorario::updateOrCreate(
                         ['profissional_id' => $this->gradeEditandoId, 'dia_semana' => $dia],
-                        ['hora_inicio' => $item['hora_inicio'], 'hora_fim' => $item['hora_fim'], 'ativo' => $item['ativo']],
+                        [
+                            'hora_inicio'      => $item['hora_inicio'],
+                            'hora_fim'         => $item['hora_fim'],
+                            'intervalo_inicio' => $comIntervalo ? $item['intervalo_inicio'] : null,
+                            'intervalo_fim'    => $comIntervalo ? $item['intervalo_fim'] : null,
+                            'ativo'            => $item['ativo'],
+                        ],
                     );
                 }
             });
@@ -230,12 +316,133 @@ class AgendamentoConfiguracaoIndex extends Component
         $this->resetErrorBag();
     }
 
+    // ─── Bloqueio: modais ─────────────────────────────────────────
+    public function abrirModalNovoBloqueio(): void
+    {
+        $this->resetBloqueioForm();
+        $this->modalBloqueio = true;
+    }
+
+    public function fecharModalBloqueio(): void
+    {
+        $this->modalBloqueio = false;
+        $this->resetBloqueioForm();
+    }
+
+    public function salvarBloqueio(BloqueioAgendaService $service): void
+    {
+        $regras = [
+            'bloqProfissionalId' => ['required', function (string $attr, mixed $valor, \Closure $falha): void {
+                if ($valor !== self::BLOQUEIO_TODOS && ! Profissional::whereKey($valor)->exists()) {
+                    $falha('Selecione um profissional válido.');
+                }
+            }],
+            'bloqDataInicio' => 'required|date_format:Y-m-d',
+            'bloqMotivo'     => 'nullable|string|max:500',
+        ];
+        $regras += $this->bloqDiaInteiro
+            ? ['bloqDataFim' => 'required|date_format:Y-m-d|after_or_equal:bloqDataInicio']
+            : ['bloqHoraInicio' => 'required|date_format:H:i', 'bloqHoraFim' => 'required|date_format:H:i|after:bloqHoraInicio'];
+
+        $this->validate($regras, [
+            'bloqDataInicio.required'    => 'Informe a data.',
+            'bloqDataFim.required'       => 'Informe a data final.',
+            'bloqDataFim.after_or_equal' => 'A data final deve ser igual ou posterior à inicial.',
+            'bloqHoraFim.after'          => 'O horário final deve ser depois do inicial.',
+        ]);
+
+        $profissionalIds = $this->bloqProfissionalId === self::BLOQUEIO_TODOS
+            ? Profissional::where('ativo', true)->pluck('id')->all()
+            : [$this->bloqProfissionalId];
+
+        if ($profissionalIds === []) {
+            $this->addError('bloqProfissionalId', 'Não há profissionais ativos para bloquear.');
+            return;
+        }
+
+        [$inicio, $fim] = $this->bloqDiaInteiro
+            ? [CarbonImmutable::parse($this->bloqDataInicio)->startOfDay(), CarbonImmutable::parse($this->bloqDataFim)->startOfDay()->addDay()]
+            : [CarbonImmutable::parse("{$this->bloqDataInicio} {$this->bloqHoraInicio}"), CarbonImmutable::parse("{$this->bloqDataInicio} {$this->bloqHoraFim}")];
+
+        try {
+            $resultado = $service->criar($profissionalIds, $inicio, $fim, $this->bloqDiaInteiro, $this->bloqMotivo ?: null);
+        } catch (Throwable $e) {
+            Log::error('[AgendamentoConfiguracao] salvarBloqueio erro', ['message' => $e->getMessage()]);
+            $this->flashErro = 'Erro ao salvar bloqueio: ' . $e->getMessage();
+            return;
+        }
+
+        $conflitos = $resultado['conflitos'];
+        $this->bloqConflitos = $conflitos->map(fn ($ag) => [
+            'data'            => $ag->inicio_em->toDateString(),
+            'horario'         => $ag->inicio_em->format('d/m H:i'),
+            'paciente'        => $ag->paciente?->nome ?? '—',
+            'profissional'    => $ag->profissional?->nome ?? '—',
+            'profissional_id' => (string) $ag->profissional_id,
+        ])->all();
+        $this->bloqConflitosResumo = BloqueioAgendaService::descreverPeriodo($inicio, $fim, $this->bloqDiaInteiro);
+
+        $this->flashSucesso = $conflitos->isEmpty()
+            ? 'Bloqueio criado.'
+            : 'Bloqueio criado. Há agendamentos no período — veja a lista.';
+        $this->modalBloqueio = false;
+        $this->resetBloqueioForm();
+    }
+
+    public function removerBloqueio(int $id, BloqueioAgendaService $service): void
+    {
+        try {
+            $service->remover(BloqueioAgenda::findOrFail($id));
+            $this->flashSucesso = 'Bloqueio removido.';
+        } catch (Throwable $e) {
+            Log::error('[AgendamentoConfiguracao] removerBloqueio erro', ['id' => $id, 'message' => $e->getMessage()]);
+            $this->flashErro = 'Erro ao remover bloqueio: ' . $e->getMessage();
+        }
+    }
+
+    public function fecharConflitos(): void
+    {
+        $this->bloqConflitos       = [];
+        $this->bloqConflitosResumo = '';
+    }
+
+    private function resetBloqueioForm(): void
+    {
+        $this->bloqProfissionalId = self::BLOQUEIO_TODOS;
+        $this->bloqDiaInteiro     = true;
+        $this->bloqDataInicio     = now()->toDateString();
+        $this->bloqDataFim        = now()->toDateString();
+        $this->bloqHoraInicio     = '08:00';
+        $this->bloqHoraFim        = '12:00';
+        $this->bloqMotivo         = '';
+        $this->resetErrorBag();
+    }
+
+    public function updatedBloqDataInicio(): void
+    {
+        if ($this->bloqDataFim < $this->bloqDataInicio) {
+            $this->bloqDataFim = $this->bloqDataInicio;
+        }
+    }
+
     public function render(): View
     {
+        $bloqueioService = app(BloqueioAgendaService::class);
         $profissionais = Profissional::orderBy('nome')->get(['id', 'nome', 'email', 'telefone', 'cor_agenda', 'ativo']);
         $procedimentos = Procedimento::orderBy('nome')->get(['id', 'nome', 'duracao_minutos', 'valor', 'ativo']);
 
-        return view('livewire.agendamento-configuracao-index', compact('profissionais', 'procedimentos'))
+        $bloqueios = $this->aba === 'bloqueios'
+            ? $bloqueioService->agrupar(
+                BloqueioAgenda::with('profissional:id,nome,cor_agenda')
+                    ->select(['id', 'profissional_id', 'grupo_id', 'inicio_em', 'fim_em', 'dia_inteiro', 'motivo'])
+                    ->where('fim_em', '>', now())
+                    ->orderBy('inicio_em')
+                    ->limit(300)
+                    ->get(),
+            )
+            : collect();
+
+        return view('livewire.agendamento-configuracao-index', compact('profissionais', 'procedimentos', 'bloqueios'))
             ->layout('layouts.app', ['title' => 'Configuração — Agenda']);
     }
 }

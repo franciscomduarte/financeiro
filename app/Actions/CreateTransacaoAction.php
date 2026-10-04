@@ -36,6 +36,8 @@ class CreateTransacaoAction
                 'centro_custo'            => $data['centro_custo'] ?? null,
                 'descricao'               => $data['descricao'],
                 'cliente'                 => $data['cliente'] ?? null,
+                'paciente_id'             => $data['paciente_id'] ?? null,
+                'agendamento_id'          => $data['agendamento_id'] ?? null,
                 'fornecedor_id'           => $data['fornecedor_id'] ?? null,
                 'valor_bruto'             => $data['valor_bruto'],
                 'taxa_operacional'        => $valores['taxa_operacional'],

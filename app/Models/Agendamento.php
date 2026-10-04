@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Agendamento extends Model
 {
@@ -69,6 +70,11 @@ class Agendamento extends Model
     public function reagendamentos(): HasMany
     {
         return $this->hasMany(self::class, 'agendamento_origem_id');
+    }
+
+    public function receita(): HasOne
+    {
+        return $this->hasOne(Transacao::class, 'agendamento_id');
     }
 
     public function scopePendentes(Builder $query): Builder

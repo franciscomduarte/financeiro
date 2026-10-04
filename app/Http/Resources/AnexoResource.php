@@ -19,7 +19,7 @@ class AnexoResource extends JsonResource
             'mime_type'      => $this->mime_type,
             'tamanho_bytes'  => $this->tamanho_bytes,
             'created_at'     => $this->created_at?->toIso8601String(),
-            'download_url'   => route('anexos.download', ['anexo' => $this->id]),
+            'download_url'   => route('api.v1.anexos.download', ['anexo' => $this->id]),
         ];
     }
 }

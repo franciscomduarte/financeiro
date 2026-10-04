@@ -233,6 +233,14 @@ class AgendamentoService
 
         $ocupados = $agendamentosOcupados->concat($bloqueios);
 
+        // Intervalo da grade (ex.: almoço) também ocupa a agenda
+        if ($intervalo = $grade->intervalo()) {
+            $ocupados->push((object) [
+                'inicio_em' => Carbon::parse("{$data} {$intervalo[0]}"),
+                'fim_em'    => Carbon::parse("{$data} {$intervalo[1]}"),
+            ]);
+        }
+
         return array_values(
             array_map(
                 fn (Carbon $s) => $s->format('H:i'),

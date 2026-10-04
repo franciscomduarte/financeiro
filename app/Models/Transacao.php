@@ -21,6 +21,16 @@ class Transacao extends Model
 
     protected $table = 'transacoes';
 
+    /** Categorias de receita (entrada) disponíveis. */
+    public const CATEGORIAS_ENTRADA = [
+        'Procedimento Facial',
+        'Depilação',
+        'Massagem',
+        'Skincare',
+        'Produto Vendido',
+        'Outros',
+    ];
+
     protected $fillable = [
         'tipo',
         'fase',
@@ -30,6 +40,7 @@ class Transacao extends Model
         'descricao',
         'cliente',
         'paciente_id',
+        'agendamento_id',
         'fornecedor_id',
         'valor_bruto',
         'taxa_operacional',
@@ -67,6 +78,11 @@ class Transacao extends Model
     public function paciente(): BelongsTo
     {
         return $this->belongsTo(Paciente::class, 'paciente_id');
+    }
+
+    public function agendamento(): BelongsTo
+    {
+        return $this->belongsTo(Agendamento::class, 'agendamento_id');
     }
 
     public function fornecedor(): BelongsTo

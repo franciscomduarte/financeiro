@@ -4,14 +4,21 @@ declare(strict_types=1);
 
 namespace App\Livewire;
 
+use App\Actions\ConcluirAtendimentoAction;
+use App\Enums\FormaPagamento;
 use App\Enums\StatusAgendamento;
+use App\Enums\VisaoAgenda;
 use App\Models\Agendamento;
 use App\Models\Paciente;
 use App\Models\Procedimento;
 use App\Models\Profissional;
+use App\Models\Transacao;
+use App\Services\AgendaCalendarioService;
 use App\Services\AgendamentoService;
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -24,7 +31,12 @@ class AgendamentoIndex extends Component
 {
     use WithPagination;
 
+    // ─── Visão (calendário dia/semana/mês ou lista) ────────────────
+    #[Url(history: true)]
+    public string $visao = 'semana';
+
     // ─── Filtros ──────────────────────────────────────────────────
+    // Na lista filtra o dia; no calendário é a data de referência do período.
     #[Url(history: true)]
     public string $filtroData = '';
 
@@ -48,6 +60,8 @@ class AgendamentoIndex extends Component
     public string $criarData           = '';
     public string $criarSlot           = '';
     public string $criarObservacoes    = '';
+    // Horário clicado no calendário; aplicado assim que aparecer entre os disponíveis.
+    public string $criarSlotSugerido   = '';
 
     // ─── Modal Cancelar ───────────────────────────────────────────
     public bool   $modalCancelar  = false;
@@ -59,6 +73,15 @@ class AgendamentoIndex extends Component
     public string $reagendarId    = '';
     public string $reagendarData  = '';
     public string $reagendarSlot  = '';
+
+    // ─── Modal Concluir atendimento (Realizado + receita) ─────────
+    public bool   $modalConcluir           = false;
+    public string $concluirId              = '';
+    public bool   $concluirLancarReceita   = true;
+    public string $concluirValor           = '';
+    public string $concluirCategoria       = '';
+    public string $concluirFormaPagamento  = 'pix';
+    public bool   $concluirPago            = true;
 
     // ─── Detalhe ──────────────────────────────────────────────────
     public bool    $modalDetalhe = false;
@@ -84,7 +107,7 @@ class AgendamentoIndex extends Component
     #[Computed]
     public function profissionais(): Collection
     {
-        return Profissional::where('ativo', true)->orderBy('nome')->get(['id', 'nome']);
+        return Profissional::where('ativo', true)->orderBy('nome')->get(['id', 'nome', 'cor_agenda']);
     }
 
     #[Computed]
@@ -170,18 +193,28 @@ class AgendamentoIndex extends Component
     {
         $this->criarSlot = '';
         unset($this->horariosDisponiveis);
+        $this->aplicarSlotSugerido();
     }
 
     public function updatedCriarProcedimentoIds(): void
     {
         $this->criarSlot = '';
         unset($this->horariosDisponiveis, $this->duracaoTotal);
+        $this->aplicarSlotSugerido();
     }
 
     public function updatedCriarData(): void
     {
-        $this->criarSlot = '';
+        $this->criarSlot         = '';
+        $this->criarSlotSugerido = '';
         unset($this->horariosDisponiveis);
+    }
+
+    private function aplicarSlotSugerido(): void
+    {
+        if ($this->criarSlotSugerido !== '' && in_array($this->criarSlotSugerido, $this->horariosDisponiveis, true)) {
+            $this->criarSlot = $this->criarSlotSugerido;
+        }
     }
 
     public function updatedReagendarData(): void
@@ -195,6 +228,20 @@ class AgendamentoIndex extends Component
     {
         $this->resetCriarForm();
         $this->modalCriar = true;
+    }
+
+    public function novoNoHorario(string $data, string $hora): void
+    {
+        $inicio = CarbonImmutable::createFromFormat('!Y-m-d H:i', "{$data} {$hora}");
+        if ($inicio === false || $inicio->format('Y-m-d H:i') !== "{$data} {$hora}") {
+            return;
+        }
+
+        $this->resetCriarForm();
+        $this->criarData           = $data;
+        $this->criarSlotSugerido   = $hora;
+        $this->criarProfissionalId = $this->filtroProfissionalId;
+        $this->modalCriar          = true;
     }
 
     public function fecharModalCriar(): void
@@ -266,6 +313,7 @@ class AgendamentoIndex extends Component
         $this->criarData            = now()->toDateString();
         $this->criarSlot            = '';
         $this->criarObservacoes     = '';
+        $this->criarSlotSugerido    = '';
         $this->resetErrorBag();
         unset($this->horariosDisponiveis, $this->duracaoTotal);
     }
@@ -273,6 +321,7 @@ class AgendamentoIndex extends Component
     // ─── Cancelar ─────────────────────────────────────────────────
     public function abrirModalCancelar(string $id): void
     {
+        $this->fecharDetalhe();
         $this->cancelarId     = $id;
         $this->cancelarMotivo = '';
         $this->modalCancelar  = true;
@@ -310,8 +359,13 @@ class AgendamentoIndex extends Component
     // ─── Reagendar ────────────────────────────────────────────────
     public function abrirModalReagendar(string $id): void
     {
+        $this->fecharDetalhe();
+        // Sugere a data do próprio agendamento; se já passou, amanhã.
+        $inicio = Agendamento::whereKey($id)->value('inicio_em');
+        $data   = $inicio ? CarbonImmutable::parse($inicio)->startOfDay() : null;
+
         $this->reagendarId    = $id;
-        $this->reagendarData  = now()->addDay()->toDateString();
+        $this->reagendarData  = ($data && $data->gte(CarbonImmutable::today()) ? $data : CarbonImmutable::tomorrow())->toDateString();
         $this->reagendarSlot  = '';
         $this->modalReagendar = true;
         unset($this->horariosReagendar);
@@ -352,13 +406,69 @@ class AgendamentoIndex extends Component
     }
 
     // ─── Ações rápidas ────────────────────────────────────────────
-    public function marcarRealizado(string $id, AgendamentoService $service): void
+    // ─── Concluir atendimento ─────────────────────────────────────
+    public function abrirModalConcluir(string $id): void
     {
+        $agendamento = Agendamento::with(['paciente:id,nome,forma_pagamento,valor_mensalidade'])
+            ->select(['id', 'paciente_id', 'procedimento_id', 'procedimentos_ids', 'status'])
+            ->findOrFail($id);
+
+        $temMensalidade = (float) ($agendamento->paciente?->valor_mensalidade ?? 0) > 0;
+        $forma          = FormaPagamento::tryFrom((string) $agendamento->paciente?->forma_pagamento);
+
+        $this->fecharDetalhe();
+        $this->resetErrorBag();
+        $this->concluirId             = $id;
+        $this->concluirLancarReceita  = ! $temMensalidade;
+        $this->concluirValor          = number_format(ConcluirAtendimentoAction::valorSugerido($agendamento), 2, '.', '');
+        $this->concluirCategoria      = '';
+        $this->concluirFormaPagamento = ($forma && $forma !== FormaPagamento::AportePessoal ? $forma : FormaPagamento::Pix)->value;
+        $this->concluirPago           = true;
+        $this->modalConcluir          = true;
+    }
+
+    public function fecharModalConcluir(): void
+    {
+        $this->modalConcluir = false;
+        $this->concluirId    = '';
+        $this->resetErrorBag();
+    }
+
+    public function confirmarConclusao(ConcluirAtendimentoAction $concluir): void
+    {
+        if ($this->concluirLancarReceita) {
+            $this->validate([
+                'concluirValor'          => 'required|numeric|min:0.01|max:999999.99',
+                'concluirCategoria'      => ['required', 'in:' . implode(',', Transacao::CATEGORIAS_ENTRADA)],
+                'concluirFormaPagamento' => ['required', 'in:' . implode(',', array_map(
+                    fn (FormaPagamento $f) => $f->value,
+                    array_filter(FormaPagamento::cases(), fn (FormaPagamento $f) => $f !== FormaPagamento::AportePessoal),
+                ))],
+            ], [
+                'concluirValor.required'     => 'Informe o valor.',
+                'concluirValor.min'          => 'O valor deve ser maior que zero.',
+                'concluirCategoria.required' => 'Escolha a categoria.',
+            ]);
+        }
+
         try {
-            $service->marcarRealizado(Agendamento::findOrFail($id));
-            $this->flashSucesso = 'Marcado como realizado.';
+            $concluir->execute($this->concluirId, $this->concluirLancarReceita ? [
+                'valor_bruto'     => (float) str_replace(',', '.', $this->concluirValor),
+                'categoria'       => $this->concluirCategoria,
+                'forma_pagamento' => $this->concluirFormaPagamento,
+                'pago'            => $this->concluirPago,
+            ] : null);
+
+            $this->flashSucesso = $this->concluirLancarReceita
+                ? 'Atendimento concluído e receita lançada no financeiro.'
+                : 'Atendimento concluído (sem lançamento no financeiro).';
+            $this->fecharModalConcluir();
+        } catch (RuntimeException $e) {
+            $this->flashErro = $e->getMessage();
+            $this->fecharModalConcluir();
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro: ' . $e->getMessage();
+            Log::error('[AgendamentoIndex] confirmarConclusao erro', ['id' => $this->concluirId, 'message' => $e->getMessage()]);
+            $this->flashErro = 'Erro ao concluir atendimento: ' . $e->getMessage();
         }
     }
 
@@ -410,36 +520,143 @@ class AgendamentoIndex extends Component
     }
 
     public function updatedFiltroData(): void           { $this->resetPage(); }
+    public function updatedVisao(): void                { $this->visao = $this->visaoAtual()->value; }
     public function updatedFiltroProfissionalId(): void { $this->resetPage(); }
     public function updatedFiltroStatus(): void         { $this->resetPage(); }
+
+    // ─── Calendário: visão e navegação ────────────────────────────
+    public function mudarVisao(string $visao): void
+    {
+        $this->visao = (VisaoAgenda::tryFrom($visao) ?? VisaoAgenda::Semana)->value;
+        $this->resetPage();
+    }
+
+    public function navegar(int $direcao, AgendaCalendarioService $calendario): void
+    {
+        $this->filtroData = $calendario->navegar($this->visaoAtual(), $this->dataReferencia(), $direcao)->toDateString();
+        $this->resetPage();
+    }
+
+    public function irParaHoje(): void
+    {
+        $this->filtroData = now()->toDateString();
+        $this->resetPage();
+    }
+
+    public function irParaDia(string $data): void
+    {
+        $this->filtroData = $this->dataReferencia($data)->toDateString();
+        $this->visao      = VisaoAgenda::Dia->value;
+        $this->resetPage();
+    }
+
+    private function visaoAtual(): VisaoAgenda
+    {
+        return VisaoAgenda::tryFrom($this->visao) ?? VisaoAgenda::Semana;
+    }
+
+    private function dataReferencia(?string $data = null): CarbonImmutable
+    {
+        $data ??= $this->filtroData;
+        $ref = CarbonImmutable::createFromFormat('!Y-m-d', $data);
+
+        return $ref !== false && $ref->toDateString() === $data ? $ref : CarbonImmutable::today();
+    }
+
+    /** @return array<string, mixed> */
+    private function dadosCalendario(VisaoAgenda $visao, AgendaCalendarioService $calendario): array
+    {
+        [$inicio, $fim] = $calendario->periodo($visao, $this->dataReferencia());
+
+        $agendamentos = $calendario->agendamentosDoPeriodo(
+            $inicio, $fim, $this->filtroProfissionalId, $this->filtroStatus,
+        );
+        $porDia = $agendamentos->groupBy(fn (Agendamento $ag) => $ag->inicio_em->toDateString());
+
+        $dias = [];
+        for ($d = $inicio; $d->lt($fim); $d = $d->addDay()) {
+            $dias[] = $d;
+        }
+
+        $faixa = $visao === VisaoAgenda::Mes
+            ? [0, 0]
+            : $calendario->faixaHoraria($calendario->limitesGrade($this->filtroProfissionalId), $agendamentos);
+
+        $layout = [];
+        if ($visao !== VisaoAgenda::Mes) {
+            foreach ($porDia as $dia => $doDia) {
+                $layout[$dia] = $calendario->layoutDia($doDia);
+            }
+        }
+
+        $bloqueios = $calendario->bloqueiosDoPeriodo($inicio, $fim, $this->filtroProfissionalId);
+
+        return [
+            'calBloqueios'    => $calendario->bloqueiosPorDia($bloqueios, $dias),
+            // Só faz sentido mostrar a pausa da grade quando um profissional está filtrado
+            'calIntervalos'   => $this->filtroProfissionalId && $visao !== VisaoAgenda::Mes
+                ? $calendario->intervalosGrade($this->filtroProfissionalId)
+                : [],
+            'calReferencia'   => $this->dataReferencia(),
+            'calInicio'       => $inicio,
+            'calFim'          => $fim,
+            'calDias'         => $dias,
+            'calPorDia'       => $porDia,
+            'calLayout'       => $layout,
+            'calFaixa'        => $faixa,
+            'calLimite'       => $agendamentos->count() >= AgendaCalendarioService::LIMITE_POR_PERIODO,
+        ];
+    }
+
+    private function tituloPeriodo(VisaoAgenda $visao): string
+    {
+        $ref = $this->dataReferencia();
+
+        return match ($visao) {
+            VisaoAgenda::Dia, VisaoAgenda::Lista => $ref->translatedFormat('D, d \\d\\e F \\d\\e Y'),
+            VisaoAgenda::Semana => sprintf(
+                '%s – %s',
+                $ref->startOfWeek(CarbonImmutable::MONDAY)->translatedFormat('d M'),
+                $ref->startOfWeek(CarbonImmutable::MONDAY)->addDays(6)->translatedFormat('d M Y'),
+            ),
+            VisaoAgenda::Mes => Str::ucfirst($ref->translatedFormat('F \\d\\e Y')),
+        };
+    }
 
     // ─── Render ───────────────────────────────────────────────────
     public function render(): View
     {
-        $query = Agendamento::with([
-            'paciente:id,nome,telefone',
-            'profissional:id,nome,cor_agenda',
-            'procedimento:id,nome,duracao_minutos',
-        ])
-            ->select(['id', 'paciente_id', 'profissional_id', 'procedimento_id', 'procedimentos_ids',
-                      'inicio_em', 'fim_em', 'status', 'observacoes', 'motivo_cancelamento', 'google_event_id'])
-            ->orderBy('inicio_em', 'asc');
+        $visao = $this->visaoAtual();
 
-        if ($this->filtroData) {
-            $query->whereDate('inicio_em', $this->filtroData);
-        }
-        if ($this->filtroProfissionalId) {
-            $query->where('profissional_id', $this->filtroProfissionalId);
-        }
-        if ($this->filtroStatus) {
-            $query->where('status', $this->filtroStatus);
+        if ($visao->isCalendario()) {
+            $calendario = app(AgendaCalendarioService::class);
+            $dados      = $this->dadosCalendario($visao, $calendario);
+            $agendamentos = null;
+            // No mês, os totais consideram só o mês de referência (não os dias vizinhos da grade).
+            [$statsInicio, $statsFim] = $visao === VisaoAgenda::Mes
+                ? [$dados['calReferencia']->startOfMonth(), $dados['calReferencia']->startOfMonth()->addMonth()]
+                : [$dados['calInicio'], $dados['calFim']];
+            $statsBase = Agendamento::where('inicio_em', '>=', $statsInicio)
+                ->where('inicio_em', '<', $statsFim);
+        } else {
+            $dados        = [];
+            $agendamentos = Agendamento::with([
+                'paciente:id,nome,telefone',
+                'profissional:id,nome,cor_agenda',
+                'procedimento:id,nome,duracao_minutos',
+            ])
+                ->select(['id', 'paciente_id', 'profissional_id', 'procedimento_id', 'procedimentos_ids',
+                          'inicio_em', 'fim_em', 'status', 'observacoes', 'motivo_cancelamento', 'google_event_id'])
+                ->orderBy('inicio_em', 'asc')
+                ->when($this->filtroData, fn ($q) => $q->whereDate('inicio_em', $this->filtroData))
+                ->when($this->filtroProfissionalId, fn ($q) => $q->where('profissional_id', $this->filtroProfissionalId))
+                ->when($this->filtroStatus, fn ($q) => $q->where('status', $this->filtroStatus))
+                ->paginate(20);
+            $statsBase = Agendamento::when($this->filtroData, fn ($q) => $q->whereDate('inicio_em', $this->filtroData));
         }
 
-        $agendamentos = $query->paginate(20);
-
-        // Stats com queries diretas (não baseadas na página atual)
-        $statsBase = Agendamento::when($this->filtroData, fn ($q) => $q->whereDate('inicio_em', $this->filtroData))
-            ->when($this->filtroProfissionalId, fn ($q) => $q->where('profissional_id', $this->filtroProfissionalId));
+        // Stats com queries diretas (não baseadas na página atual / no limite do calendário)
+        $statsBase->when($this->filtroProfissionalId, fn ($q) => $q->where('profissional_id', $this->filtroProfissionalId));
 
         $statsTotal      = (clone $statsBase)->count();
         $statsConfirmado = (clone $statsBase)->where('status', StatusAgendamento::Confirmado->value)->count();
@@ -449,12 +666,25 @@ class AgendamentoIndex extends Component
         ])->count();
 
         $agendamentoDetalhe = $this->detalheId
-            ? Agendamento::with(['paciente', 'profissional', 'procedimento', 'agendamentoOrigem'])->find($this->detalheId)
+            ? Agendamento::with(['paciente', 'profissional', 'procedimento', 'agendamentoOrigem', 'receita:id,agendamento_id,valor_bruto,status'])->find($this->detalheId)
             : null;
 
-        return view('livewire.agendamento-index', compact(
-            'agendamentos', 'agendamentoDetalhe',
-            'statsTotal', 'statsConfirmado', 'statsPendente',
-        ))->layout('layouts.app', ['title' => 'Agenda']);
+        $agendamentoConcluir = $this->modalConcluir && $this->concluirId
+            ? Agendamento::with(['paciente:id,nome,valor_mensalidade', 'procedimento:id,nome'])
+                ->select(['id', 'paciente_id', 'procedimento_id', 'procedimentos_ids', 'inicio_em', 'fim_em'])
+                ->find($this->concluirId)
+            : null;
+
+        return view('livewire.agendamento-index', [
+            ...$dados,
+            'visaoAtual'         => $visao,
+            'tituloPeriodo'      => $this->tituloPeriodo($visao),
+            'agendamentos'       => $agendamentos,
+            'agendamentoDetalhe' => $agendamentoDetalhe,
+            'agendamentoConcluir' => $agendamentoConcluir,
+            'statsTotal'         => $statsTotal,
+            'statsConfirmado'    => $statsConfirmado,
+            'statsPendente'      => $statsPendente,
+        ])->layout('layouts.app', ['title' => 'Agenda']);
     }
 }

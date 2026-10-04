@@ -13,14 +13,17 @@ class BloqueioAgenda extends Model
 
     protected $fillable = [
         'profissional_id',
+        'grupo_id',
         'inicio_em',
         'fim_em',
+        'dia_inteiro',
         'motivo',
     ];
 
     protected $casts = [
-        'inicio_em' => 'datetime',
-        'fim_em'    => 'datetime',
+        'inicio_em'   => 'datetime',
+        'fim_em'      => 'datetime',
+        'dia_inteiro' => 'boolean',
     ];
 
     public function profissional(): BelongsTo

@@ -103,14 +103,7 @@ class TransacaoIndex extends Component
     // ─── Categorias ─────────────────────────────────────────────
     public function getCategoriasEntradaProperty(): array
     {
-        return [
-            'Procedimento Facial',
-            'Depilação',
-            'Massagem',
-            'Skincare',
-            'Produto Vendido',
-            'Outros',
-        ];
+        return Transacao::CATEGORIAS_ENTRADA;
     }
 
     public function getCategoriasSaidaProperty(): array
