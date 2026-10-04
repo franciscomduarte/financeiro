@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions;
 
 use App\Enums\FormaPagamento;
+use App\Enums\StatusTransacao;
 use App\Enums\TipoTransacao;
 use App\Models\Transacao;
 use Illuminate\Support\Facades\DB;
@@ -43,6 +44,17 @@ class UpdateTransacaoAction
                 $data['taxa_operacional'] = $valores['taxa_operacional'];
                 $data['imposto_estimado'] = $valores['imposto_estimado'];
                 $data['valor_liquido']    = $valores['valor_liquido'];
+            }
+
+            if (isset($data['forma_pagamento']) && $formaPagamento->parcelas() > 1) {
+                $data['num_parcelas'] = $formaPagamento->parcelas();
+            }
+
+            // Pago sempre tem data de pagamento (o Dashboard soma por ela)
+            $status        = StatusTransacao::from($data['status'] ?? $transacao->getRawOriginal('status'));
+            $dataPagamento = array_key_exists('data_pagamento', $data) ? $data['data_pagamento'] : $transacao->data_pagamento;
+            if ($status === StatusTransacao::Pago && empty($dataPagamento)) {
+                $data['data_pagamento'] = now()->toDateString();
             }
 
             $transacao->update($data);

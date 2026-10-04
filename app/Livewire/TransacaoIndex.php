@@ -23,6 +23,8 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -66,7 +68,6 @@ class TransacaoIndex extends Component
     public string $pacienteBusca    = '';
     public string $valorBruto       = '';
     public string $formaPagamento   = 'pix';
-    public string $numParcelas      = '1';
     public string $dataCompetencia  = '';
     public string $dataPagamento    = '';
     public string $status           = 'pendente';
@@ -108,17 +109,7 @@ class TransacaoIndex extends Component
 
     public function getCategoriasSaidaProperty(): array
     {
-        return [
-            'Infraestrutura',
-            'Utilidades',
-            'Marketing',
-            'Burocracia',
-            'Reforma',
-            'Impostos',
-            'Pessoal',
-            'Insumos',
-            'Outros',
-        ];
+        return Transacao::CATEGORIAS_SAIDA;
     }
 
     #[Computed]
@@ -168,6 +159,13 @@ class TransacaoIndex extends Component
     public function updatedFormaPagamento(): void
     {
         $this->recalcularValores();
+    }
+
+    public function updatedStatus(): void
+    {
+        if ($this->status === StatusTransacao::Pago->value && $this->dataPagamento === '') {
+            $this->dataPagamento = now()->toDateString();
+        }
     }
 
     public function updatedTipo(): void
@@ -235,7 +233,6 @@ class TransacaoIndex extends Component
         $this->pacienteBusca       = $transacao->paciente?->nome ?? '';
         $this->valorBruto          = (string) $transacao->valor_bruto;
         $this->formaPagamento      = $transacao->forma_pagamento->value;
-        $this->numParcelas         = (string) ($transacao->num_parcelas ?? 1);
         $this->dataCompetencia     = $transacao->data_competencia?->format('Y-m-d') ?? '';
         $this->dataPagamento       = $transacao->data_pagamento?->format('Y-m-d') ?? '';
         $this->status              = $transacao->status->value;
@@ -376,6 +373,26 @@ class TransacaoIndex extends Component
         }
     }
 
+    // ─── Marcar como pago ───────────────────────────────────────
+    public function marcarComoPago(string $id): void
+    {
+        try {
+            $transacao = Transacao::findOrFail($id);
+            if ($transacao->status !== StatusTransacao::Pendente) {
+                $this->flashErro = 'Apenas transações pendentes podem ser marcadas como pagas.';
+                return;
+            }
+            app(UpdateTransacaoAction::class)->execute($transacao, [
+                'status'         => StatusTransacao::Pago->value,
+                'data_pagamento' => $transacao->data_pagamento?->toDateString() ?? now()->toDateString(),
+            ]);
+            $this->flashSucesso = 'Transação marcada como paga.';
+        } catch (Throwable $e) {
+            Log::error('Erro ao marcar transação como paga', ['id' => $id, 'error' => $e->getMessage()]);
+            $this->flashErro = 'Erro ao marcar como pago.';
+        }
+    }
+
     // ─── Upload de anexos ────────────────────────────────────────
     public function uploadBoleto(): void
     {
@@ -419,7 +436,9 @@ class TransacaoIndex extends Component
     public function removerAnexo(string $anexoId): void
     {
         try {
-            \App\Models\TransacaoAnexo::findOrFail($anexoId)->delete();
+            $anexo = TransacaoAnexo::where('transacao_id', $this->transacaoDetalheId)->findOrFail($anexoId);
+            Storage::disk('local')->delete($anexo->caminho);
+            $anexo->delete();
             $this->flashSucesso = 'Anexo removido.';
         } catch (Throwable $e) {
             Log::error('Erro ao remover anexo', ['error' => $e->getMessage()]);
@@ -438,7 +457,6 @@ class TransacaoIndex extends Component
         $this->pacienteBusca   = '';
         $this->valorBruto      = '';
         $this->formaPagamento  = 'pix';
-        $this->numParcelas     = '1';
         $this->dataCompetencia = '';
         $this->dataPagamento   = '';
         $this->status          = 'pendente';
@@ -453,19 +471,20 @@ class TransacaoIndex extends Component
     private function validarFormulario(): void
     {
         $this->validate([
-            'tipo'             => 'required|in:entrada,saida',
-            'fase'             => 'required|in:implantacao,operacao',
+            'tipo'             => ['required', Rule::enum(TipoTransacao::class)],
+            'fase'             => ['required', Rule::enum(FaseTransacao::class)],
             'categoria'        => 'required|string|max:100',
             'descricao'        => 'required|string|max:255',
-            'valorBruto'       => 'required|numeric|min:0.01',
-            'formaPagamento'   => 'required|string',
+            'valorBruto'       => 'required|numeric|min:0.01|max:99999999.99',
+            'formaPagamento'   => ['required', Rule::enum(FormaPagamento::class)],
             'dataCompetencia'  => 'required|date',
-            'dataPagamento'    => 'nullable|date',
-            'status'           => 'required|in:pago,pendente,cancelado',
-            'recorrencia'      => 'required|string',
-            'numParcelas'      => 'nullable|integer|min:1|max:12',
+            'dataPagamento'    => 'nullable|date|required_if:status,pago',
+            'status'           => ['required', Rule::enum(StatusTransacao::class)],
+            'recorrencia'      => ['required', Rule::enum(RecorrenciaTransacao::class)],
             'pacienteId'       => 'nullable|uuid|exists:pacientes,id',
             'observacoes'      => 'nullable|string|max:1000',
+        ], [
+            'dataPagamento.required_if' => 'Informe a data de pagamento de uma transação paga.',
         ]);
     }
 
@@ -477,10 +496,9 @@ class TransacaoIndex extends Component
             'categoria'        => $this->categoria,
             'descricao'        => $this->descricao,
             'paciente_id'      => $this->pacienteId ?: null,
-            'cliente'          => null,
             'valor_bruto'      => (float) str_replace(',', '.', $this->valorBruto),
             'forma_pagamento'  => $this->formaPagamento,
-            'num_parcelas'     => (int) $this->numParcelas ?: 1,
+            'num_parcelas'     => FormaPagamento::from($this->formaPagamento)->parcelas(),
             'data_competencia' => $this->dataCompetencia,
             'data_pagamento'   => $this->dataPagamento ?: null,
             'status'           => $this->status,
@@ -520,12 +538,14 @@ class TransacaoIndex extends Component
         $this->fase            = $dados['fase']            ?? $this->fase;
         $this->categoria       = $dados['categoria']       ?? '';
         $this->descricao       = $dados['descricao']       ?? '';
-        $this->valorBruto      = $dados['valor_bruto'] !== null ? (string) $dados['valor_bruto'] : '';
+        $this->valorBruto      = isset($dados['valor_bruto']) ? (string) $dados['valor_bruto'] : '';
         $this->formaPagamento  = $dados['forma_pagamento'] ?? 'pix';
         $this->dataCompetencia = $dados['data_competencia'] ?? '';
         $this->dataPagamento   = $dados['data_pagamento']  ?? '';
         $this->status          = $dados['status']          ?? 'pendente';
         $this->observacoes     = $dados['observacoes']     ?? '';
+        $this->updatedStatus();
+        $this->recalcularValores();
     }
 
     // ─── Transação de detalhe (computed) ─────────────────────────
@@ -571,19 +591,27 @@ class TransacaoIndex extends Component
         }
 
         if ($this->periodoInicio !== '') {
-            $query->whereDate('data_competencia', '>=', $this->periodoInicio);
+            $query->where('data_competencia', '>=', $this->periodoInicio);
         }
 
         if ($this->periodoFim !== '') {
-            $query->whereDate('data_competencia', '<=', $this->periodoFim);
+            $query->where('data_competencia', '<=', $this->periodoFim);
         }
 
         /** @var LengthAwarePaginator $transacoes */
-        $transacoes = $query->paginate(15);
+        $transacoes = $query->paginate(20);
 
-        // ─── Stats (same filters, excludes cancelados) ──
-        $statsQuery = Transacao::query()->where('status', '!=', 'cancelado');
+        // ─── Stats (mesmos filtros; sem filtro de status, ignora cancelados) ──
+        $statsQuery = Transacao::query();
 
+        if ($this->filtroStatus !== '') {
+            $statsQuery->where('status', $this->filtroStatus);
+        } else {
+            $statsQuery->where('status', '!=', StatusTransacao::Cancelado->value);
+        }
+        if ($this->filtroTipo !== '') {
+            $statsQuery->where('tipo', $this->filtroTipo);
+        }
         if ($this->filtroFase !== '') {
             $statsQuery->where('fase', $this->filtroFase);
         }
@@ -591,10 +619,10 @@ class TransacaoIndex extends Component
             $statsQuery->where('categoria', $this->filtroCategoria);
         }
         if ($this->periodoInicio !== '') {
-            $statsQuery->whereDate('data_competencia', '>=', $this->periodoInicio);
+            $statsQuery->where('data_competencia', '>=', $this->periodoInicio);
         }
         if ($this->periodoFim !== '') {
-            $statsQuery->whereDate('data_competencia', '<=', $this->periodoFim);
+            $statsQuery->where('data_competencia', '<=', $this->periodoFim);
         }
 
         $stats = $statsQuery->selectRaw(
@@ -613,6 +641,7 @@ class TransacaoIndex extends Component
             'statusEnum'        => StatusTransacao::cases(),
             'formasPagamento'   => FormaPagamento::cases(),
             'recorrenciasEnum'  => RecorrenciaTransacao::cases(),
+            'todasCategorias'   => array_values(array_unique([...Transacao::CATEGORIAS_ENTRADA, ...Transacao::CATEGORIAS_SAIDA])),
             'totalEntradas'     => $totalEntradas,
             'totalSaidas'       => $totalSaidas,
             'saldo'             => $saldo,

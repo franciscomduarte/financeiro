@@ -22,7 +22,7 @@
             <p x-show="gravando" class="text-xs text-red-600 font-medium">Fale a transação e diga <strong>"gravar"</strong> para finalizar</p>
             <p x-show="processando" class="text-xs text-stone-500">Extraindo dados com IA...</p>
             <p x-show="gravando && parcial" x-text="parcial" class="text-xs text-stone-500 italic leading-relaxed"></p>
-            <p x-show="transcricao && !processando && !gravando" x-text="'\"' + transcricao + '\"'" class="text-xs text-stone-600 italic leading-relaxed"></p>
+            <p x-show="transcricao && !processando && !gravando" x-text="'“' + transcricao + '”'" class="text-xs text-stone-600 italic leading-relaxed"></p>
             <p x-show="erro" x-text="erro" class="text-xs text-red-500 font-medium"></p>
         </div>
     </div>
@@ -134,25 +134,11 @@
             <label class="block text-xs font-medium text-stone-600 mb-1.5">Forma de Pagamento <span class="text-red-500">*</span></label>
             <select wire:model.live="formaPagamento" class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 bg-white @error('formaPagamento') border-red-300 @enderror">
                 @foreach ($formasPagamento as $fp)
-                    <option value="{{ $fp->value }}">{{ str_replace('_', ' ', ucfirst($fp->value)) }}</option>
+                    <option value="{{ $fp->value }}">{{ $fp->label() }}</option>
                 @endforeach
             </select>
         </div>
     </div>
-
-    {{-- Parcelas (apenas crédito) --}}
-    @if (str_starts_with($formaPagamento, 'credito_'))
-        <div>
-            <label class="block text-xs font-medium text-stone-600 mb-1.5">Número de Parcelas</label>
-            <input
-                type="number"
-                wire:model="numParcelas"
-                min="1"
-                max="12"
-                class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
-            >
-        </div>
-    @endif
 
     {{-- Valores Calculados --}}
     @if ($taxaOperacional !== null)
@@ -184,33 +170,26 @@
             >
         </div>
         <div>
-            <label class="block text-xs font-medium text-stone-600 mb-1.5">Data de Pagamento</label>
+            <label class="block text-xs font-medium text-stone-600 mb-1.5">
+                Data de Pagamento @if ($status === 'pago') <span class="text-red-500">*</span> @endif
+            </label>
             <input
                 type="date"
                 wire:model="dataPagamento"
-                class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
+                class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 @error('dataPagamento') border-red-300 @enderror"
             >
+            @error('dataPagamento') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
         </div>
     </div>
 
-    {{-- Status / Recorrência --}}
-    <div class="grid grid-cols-2 gap-4">
-        <div>
-            <label class="block text-xs font-medium text-stone-600 mb-1.5">Status <span class="text-red-500">*</span></label>
-            <select wire:model="status" class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 bg-white @error('status') border-red-300 @enderror">
-                @foreach ($statusEnum as $st)
-                    <option value="{{ $st->value }}">{{ ucfirst($st->value) }}</option>
-                @endforeach
-            </select>
-        </div>
-        <div>
-            <label class="block text-xs font-medium text-stone-600 mb-1.5">Recorrência</label>
-            <select wire:model="recorrencia" class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 bg-white">
-                @foreach ($recorrenciasEnum as $rec)
-                    <option value="{{ $rec->value }}">{{ ucfirst($rec->value) }}</option>
-                @endforeach
-            </select>
-        </div>
+    {{-- Status (recorrência fica oculta até existir geração automática dos lançamentos) --}}
+    <div>
+        <label class="block text-xs font-medium text-stone-600 mb-1.5">Status <span class="text-red-500">*</span></label>
+        <select wire:model.live="status" class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 bg-white @error('status') border-red-300 @enderror">
+            @foreach ($statusEnum as $st)
+                <option value="{{ $st->value }}">{{ $st->label() }}</option>
+            @endforeach
+        </select>
     </div>
 
     {{-- Observações --}}

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\Transacao;
+
 class TransacaoExtracaoService
 {
     private const FORMAS_PAGAMENTO = [
@@ -14,8 +16,8 @@ class TransacaoExtracaoService
     ];
 
     private const CATEGORIAS = [
-        'entrada' => ['Procedimento Facial', 'Depilação', 'Massagem', 'Skincare', 'Produto Vendido', 'Outros'],
-        'saida'   => ['Infraestrutura', 'Utilidades', 'Marketing', 'Burocracia', 'Reforma', 'Impostos', 'Pessoal', 'Insumos', 'Outros'],
+        'entrada' => Transacao::CATEGORIAS_ENTRADA,
+        'saida'   => Transacao::CATEGORIAS_SAIDA,
     ];
 
     public function __construct(private readonly LlmService $llm) {}

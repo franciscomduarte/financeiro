@@ -36,6 +36,14 @@ enum FormaPagamento: string
         };
     }
 
+    /** Número de parcelas implícito na forma (crédito Nx); 1 para as demais. */
+    public function parcelas(): int
+    {
+        return str_starts_with($this->value, 'credito_')
+            ? (int) substr($this->value, strlen('credito_'), -1)
+            : 1;
+    }
+
     public function modalidade(): string
     {
         return $this->value;

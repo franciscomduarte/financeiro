@@ -29,7 +29,8 @@ class UpdateTransacaoRequest extends FormRequest
             'centro_custo'            => ['nullable', 'string', 'max:100'],
             'descricao'               => ['sometimes', 'string', 'max:255'],
             'cliente'                 => ['nullable', 'string', 'max:150'],
-            'fornecedor_id'           => ['nullable', 'uuid'],
+            'fornecedor_id'           => ['nullable', 'uuid', 'exists:fornecedores,id'],
+            'paciente_id'             => ['nullable', 'uuid', 'exists:pacientes,id'],
             'valor_bruto'             => ['sometimes', 'numeric', 'min:0.01'],
             'data_competencia'        => ['sometimes', 'date'],
             'data_pagamento'          => ['nullable', 'date'],
@@ -40,7 +41,7 @@ class UpdateTransacaoRequest extends FormRequest
             'recorrencia'             => ['sometimes', Rule::enum(RecorrenciaTransacao::class)],
             'data_inicio_recorrencia' => ['nullable', 'date'],
             'transacao_pai_id'        => ['nullable', 'uuid', 'exists:transacoes,id'],
-            'observacoes'             => ['nullable', 'string'],
+            'observacoes'             => ['nullable', 'string', 'max:1000'],
         ];
     }
 }
