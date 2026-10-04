@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\Support\ClinicaAtual;
 use App\Mail\AnexoTransacaoMail;
 use App\Models\Paciente;
 use App\Models\TransacaoAnexo;
@@ -50,7 +51,7 @@ class EnviarAnexoAction
             try {
                 $conteudo = (string) Storage::disk('local')->get($anexo->caminho);
                 $base64   = base64_encode($conteudo);
-                $caption  = '📎 ' . ucfirst($anexo->tipo->value) . ' — LC Estética';
+                $caption  = '📎 ' . ucfirst($anexo->tipo->value) . ' — ' . app(ClinicaAtual::class)->nome();
 
                 $ok = $this->whatsapp->enviarDocumento(
                     numero:      $paciente->telefone,

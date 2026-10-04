@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Exceptions\ClinicaNaoDefinidaException;
+use App\Models\Clinica;
+use App\Support\ClinicaAtual;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -11,13 +14,23 @@ use RuntimeException;
 
 class AsaasService
 {
-    private string $baseUrl;
-    private string $apiKey;
+    public function __construct(private readonly ClinicaAtual $clinicaAtual) {}
 
-    public function __construct()
+    /** Conta Asaas da clínica ativa (cada clínica cobra na própria conta). */
+    private function clinica(): Clinica
     {
-        $this->apiKey  = (string) config('asaas.api_key');
-        $this->baseUrl = config('asaas.sandbox')
+        $clinica = $this->clinicaAtual->get() ?? throw new ClinicaNaoDefinidaException('Asaas');
+
+        if (! $clinica->asaasConfigurado()) {
+            throw new RuntimeException("A clínica {$clinica->nome} não tem a chave do Asaas configurada (Configurações → Integrações).");
+        }
+
+        return $clinica;
+    }
+
+    private function baseUrl(): string
+    {
+        return $this->clinica()->asaas_sandbox
             ? 'https://sandbox.asaas.com/api/v3'
             : 'https://api.asaas.com/v3';
     }
@@ -25,14 +38,14 @@ class AsaasService
     public function obterOuCriarCliente(array $paciente): string
     {
         $resposta = Http::withHeaders($this->headers())
-            ->get("{$this->baseUrl}/customers", ['cpfCnpj' => $paciente['cpf']]);
+            ->get("{$this->baseUrl()}/customers", ['cpfCnpj' => $paciente['cpf']]);
 
         if ($resposta->successful() && $resposta->json('totalCount') > 0) {
             return (string) $resposta->json('data.0.id');
         }
 
         $resposta = Http::withHeaders($this->headers())
-            ->post("{$this->baseUrl}/customers", [
+            ->post("{$this->baseUrl()}/customers", [
                 'name'        => $paciente['nome'],
                 'cpfCnpj'     => $paciente['cpf'],
                 'email'       => $paciente['email'],
@@ -50,7 +63,7 @@ class AsaasService
     public function gerarCobrancaPix(string $clienteId, float $valor, string $descricao, Carbon $vencimento): array
     {
         $resposta = Http::withHeaders($this->headers())
-            ->post("{$this->baseUrl}/payments", [
+            ->post("{$this->baseUrl()}/payments", [
                 'customer'    => $clienteId,
                 'billingType' => 'PIX',
                 'value'       => $valor,
@@ -77,10 +90,24 @@ class AsaasService
         ];
     }
 
+    /** Confere se a chave da clínica é aceita pelo Asaas (tela de configurações). */
+    public function testarConexao(): bool
+    {
+        $resposta = Http::withHeaders($this->headers())
+            ->timeout(10)
+            ->get("{$this->baseUrl()}/customers", ['limit' => 1]);
+
+        if ($resposta->failed()) {
+            Log::warning('Asaas: teste de conexão falhou', ['status' => $resposta->status()]);
+        }
+
+        return $resposta->successful();
+    }
+
     public function consultarStatus(string $pagamentoId): string
     {
         $resposta = Http::withHeaders($this->headers())
-            ->get("{$this->baseUrl}/payments/{$pagamentoId}");
+            ->get("{$this->baseUrl()}/payments/{$pagamentoId}");
 
         return (string) ($resposta->json('status') ?? 'UNKNOWN');
     }
@@ -88,7 +115,7 @@ class AsaasService
     public function buscarQrCode(string $pagamentoId): array
     {
         $resposta = Http::withHeaders($this->headers())
-            ->get("{$this->baseUrl}/payments/{$pagamentoId}/pixQrCode");
+            ->get("{$this->baseUrl()}/payments/{$pagamentoId}/pixQrCode");
 
         $data = $resposta->json() ?? [];
 
@@ -135,7 +162,7 @@ class AsaasService
     private function headers(): array
     {
         return [
-            'access_token' => $this->apiKey,
+            'access_token' => $this->clinica()->asaas_api_key,
             'Content-Type' => 'application/json',
         ];
     }

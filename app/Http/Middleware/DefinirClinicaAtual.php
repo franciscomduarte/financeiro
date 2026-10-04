@@ -10,7 +10,6 @@ use App\Support\ClinicaAtual;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Context;
-use Illuminate\Support\Facades\View;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -55,7 +54,6 @@ class DefinirClinicaAtual
         if ($request->hasSession()) {
             $request->session()->put('clinica_id', $clinica->id);
         }
-        View::share('clinicaAtual', $clinica);
 
         return $next($request);
     }

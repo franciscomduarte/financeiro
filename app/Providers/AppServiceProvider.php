@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Log\Context\Repository as ContextRepository;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -37,6 +38,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Model::preventLazyLoading(! app()->isProduction());
+
+        // Toda view (telas, e-mails na fila, PDFs) enxerga a clínica ativa como $clinicaAtual
+        View::composer('*', fn ($view) => $view->with('clinicaAtual', app(ClinicaAtual::class)->get()));
 
         // Jobs na fila herdam a clínica de quem os despachou (via Context) e limpam ao terminar
         Context::hydrated(function (ContextRepository $context): void {

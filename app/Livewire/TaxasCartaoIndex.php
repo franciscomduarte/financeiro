@@ -98,6 +98,6 @@ class TaxasCartaoIndex extends Component
     public function render(): View
     {
         return view('livewire.taxas-cartao-index')
-            ->layout('layouts.app', ['title' => 'Taxas de Cartão — LC Estética']);
+            ->layout('layouts.app', ['title' => 'Taxas de Cartão']);
     }
 }

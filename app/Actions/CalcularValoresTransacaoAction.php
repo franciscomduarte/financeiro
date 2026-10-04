@@ -7,10 +7,14 @@ namespace App\Actions;
 use App\Enums\FormaPagamento;
 use App\Enums\TipoTransacao;
 use App\Models\TaxaCartao;
+use App\Support\ClinicaAtual;
 
 class CalcularValoresTransacaoAction
 {
-    private const ALIQUOTA_IMPOSTO = 0.06;
+    /** Usada só se não houver clínica ativa (não deveria ocorrer). */
+    private const ALIQUOTA_PADRAO = 0.06;
+
+    public function __construct(private readonly ClinicaAtual $clinicaAtual) {}
 
     public function execute(
         float $valorBruto,
@@ -59,6 +63,9 @@ class CalcularValoresTransacaoAction
             return 0.0;
         }
 
-        return $valorBruto * self::ALIQUOTA_IMPOSTO;
+        // Alíquota configurada por clínica (Configurações → Financeiro)
+        $aliquota = $this->clinicaAtual->get()?->aliquotaImpostoFracao() ?? self::ALIQUOTA_PADRAO;
+
+        return $valorBruto * $aliquota;
     }
 }

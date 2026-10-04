@@ -8,6 +8,7 @@ use App\Http\Controllers\DocumentoDownloadController;
 use App\Http\Controllers\EsqueciSenhaController;
 use App\Http\Controllers\VozTransacaoController;
 use App\Livewire\AdminUsuarioIndex;
+use App\Livewire\ConfiguracaoClinica;
 use App\Livewire\CobrancaIndex;
 use App\Livewire\ContaConsumoIndex;
 use App\Livewire\DashboardIndex;
@@ -67,6 +68,7 @@ Route::middleware('auth')->group(function (): void {
 
     Route::middleware('admin')->prefix('admin')->group(function (): void {
         Route::get('/usuarios', AdminUsuarioIndex::class)->name('admin.usuarios');
+        Route::get('/clinica', ConfiguracaoClinica::class)->name('admin.clinica');
     });
 
     Route::get('/documentos', DocumentoIndex::class)->name('web.documentos');

@@ -4,20 +4,40 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Exceptions\ClinicaNaoDefinidaException;
+use App\Support\ClinicaAtual;
+use Illuminate\Http\Client\RequestException;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class WhatsAppService
 {
     private string $baseUrl;
-    private string $apiKey;
-    private string $instance;
 
-    public function __construct()
+    /** Servidor Evolution é único; instância e chave são de cada clínica. */
+    public function __construct(private readonly ClinicaAtual $clinicaAtual)
     {
-        $this->baseUrl  = rtrim((string) config('evolution.url'), '/');
-        $this->apiKey   = (string) config('evolution.api_key');
-        $this->instance = (string) config('evolution.instance');
+        $this->baseUrl = rtrim((string) config('evolution.url'), '/');
+    }
+
+    /** @return array{0: string, 1: string}|null [instância, chave] da clínica ativa */
+    private function credenciais(): ?array
+    {
+        $clinica = $this->clinicaAtual->get() ?? throw new ClinicaNaoDefinidaException('WhatsApp');
+
+        if (! $clinica->whatsappConfigurado()) {
+            Log::warning('WhatsApp: clínica sem instância configurada; mensagem não enviada', ['tenant_id' => $clinica->id]);
+            return null;
+        }
+
+        return [$clinica->evolution_instance, $clinica->evolution_api_key];
+    }
+
+    /** Nome da clínica ativa para os textos das mensagens. */
+    private function nomeClinica(): string
+    {
+        return $this->clinicaAtual->get()?->nome ?? (string) config('app.name');
     }
 
     public function enviarCobranca(string $telefone, array $cobranca, string $nomePaciente): bool
@@ -53,8 +73,8 @@ class WhatsAppService
         $isParcela = ! empty($cobranca['parcela_info']);
 
         $titulo = $isParcela
-            ? "💚 *Parcela {$cobranca['parcela_info']} - LC Estética*"
-            : "💚 *Cobrança mensal - LC Estética*";
+            ? "💚 *Parcela {$cobranca['parcela_info']} - {$this->nomeClinica()}*"
+            : "💚 *Cobrança mensal - {$this->nomeClinica()}*";
 
         $msg = "{$titulo}\n\n"
             . "Olá, *{$nome}*!\n\n";
@@ -86,11 +106,14 @@ class WhatsAppService
 
     public function enviarTexto(string $numero, string $mensagem): bool
     {
-        $resposta = Http::withHeaders(['apikey' => $this->apiKey])
-            ->post("{$this->baseUrl}/message/sendText/{$this->instance}", [
-                'number'      => $numero,
-                'textMessage' => ['text' => $mensagem],
-            ]);
+        $resposta = $this->enviar('sendText', [
+            'number'      => $numero,
+            'textMessage' => ['text' => $mensagem],
+        ]);
+
+        if ($resposta === null) {
+            return false;
+        }
 
         if ($resposta->failed()) {
             Log::warning('WhatsApp: falha ao enviar texto', [
@@ -112,7 +135,7 @@ class WhatsAppService
         $proc      = $agendamento->procedimento->nome;
         $prof      = $agendamento->profissional->nome;
 
-        $mensagem = "📅 *Agendamento Confirmado — LC Estética*\n\n"
+        $mensagem = "📅 *Agendamento Confirmado — {$this->nomeClinica()}*\n\n"
             . "Olá, *{$nome}*!\n\n"
             . "Seu agendamento foi confirmado:\n"
             . "✂️ Procedimento: *{$proc}*\n"
@@ -133,7 +156,7 @@ class WhatsAppService
         $hora    = $agendamento->inicio_em->format('H:i');
         $motivo  = $agendamento->motivo_cancelamento;
 
-        $mensagem = "❌ *Agendamento Cancelado — LC Estética*\n\n"
+        $mensagem = "❌ *Agendamento Cancelado — {$this->nomeClinica()}*\n\n"
             . "Olá, *{$nome}*!\n\n"
             . "Seu agendamento de *{$proc}* do dia *{$data}* às *{$hora}* foi cancelado."
             . ($motivo ? "\n\n📝 Motivo: {$motivo}" : '')
@@ -151,7 +174,7 @@ class WhatsAppService
         $data   = $agendamento->inicio_em->translatedFormat('l, d \d\e F');
         $hora   = $agendamento->inicio_em->format('H:i');
 
-        $mensagem = "🔄 *Reagendamento Confirmado — LC Estética*\n\n"
+        $mensagem = "🔄 *Reagendamento Confirmado — {$this->nomeClinica()}*\n\n"
             . "Olá, *{$nome}*!\n\n"
             . "Seu agendamento foi reagendado:\n"
             . "✂️ Procedimento: *{$proc}*\n"
@@ -176,7 +199,7 @@ class WhatsAppService
             ? $preambulo = "sua consulta é *amanhã*!"
             : $preambulo = "sua consulta é *hoje daqui a pouco*!";
 
-        $mensagem = "⏰ *Lembrete — LC Estética*\n\n"
+        $mensagem = "⏰ *Lembrete — {$this->nomeClinica()}*\n\n"
             . "Olá, *{$nome}*, {$preambulo}\n\n"
             . "✂️ Procedimento: *{$proc}*\n"
             . "👩‍⚕️ Profissional: *{$prof}*\n"
@@ -194,31 +217,43 @@ class WhatsAppService
         string $nomeArquivo,
         string $caption = '',
     ): bool {
-        $resposta = Http::withHeaders(['apikey' => $this->apiKey])
-            ->post("{$this->baseUrl}/message/sendMedia/{$this->instance}", [
-                'number'    => $this->formatarTelefone($numero),
-                'mediatype' => 'document',
-                'mimetype'  => $mimeType,
-                'caption'   => $caption,
-                'media'     => $base64,
-                'fileName'  => $nomeArquivo,
-            ]);
+        $resposta = $this->enviar('sendMedia', [
+            'number'    => $this->formatarTelefone($numero),
+            'mediatype' => 'document',
+            'mimetype'  => $mimeType,
+            'caption'   => $caption,
+            'media'     => $base64,
+            'fileName'  => $nomeArquivo,
+        ]);
 
-        return $resposta->successful();
+        return (bool) $resposta?->successful();
     }
 
     private function enviarImagem(string $numero, string $base64, string $caption = ''): bool
     {
-        $resposta = Http::withHeaders(['apikey' => $this->apiKey])
-            ->post("{$this->baseUrl}/message/sendMedia/{$this->instance}", [
-                'number'      => $numero,
-                'mediatype'   => 'image',
-                'mimetype'    => 'image/png',
-                'caption'     => $caption,
-                'media'       => $base64,
-            ]);
+        $resposta = $this->enviar('sendMedia', [
+            'number'      => $numero,
+            'mediatype'   => 'image',
+            'mimetype'    => 'image/png',
+            'caption'     => $caption,
+            'media'       => $base64,
+        ]);
 
-        return $resposta->successful();
+        return (bool) $resposta?->successful();
+    }
+
+    /** POST na instância da clínica ativa, com 2 novas tentativas em erro de conexão/5xx. Null = sem credenciais. */
+    private function enviar(string $acao, array $payload): ?Response
+    {
+        $credenciais = $this->credenciais();
+        if ($credenciais === null) {
+            return null;
+        }
+        [$instancia, $chave] = $credenciais;
+
+        return Http::withHeaders(['apikey' => $chave])
+            ->retry(3, 500, fn ($e) => ! $e instanceof RequestException || $e->response->serverError(), throw: false)
+            ->post("{$this->baseUrl}/message/{$acao}/" . rawurlencode($instancia), $payload);
     }
 
     private function formatarTelefone(string $telefone): string

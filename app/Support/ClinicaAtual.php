@@ -45,6 +45,12 @@ class ClinicaAtual
         return 'clinicas/' . $id . '/' . ltrim($subpasta, '/');
     }
 
+    /** Nome para textos (e-mails, mensagens); sem clínica, o nome da plataforma. */
+    public function nome(): string
+    {
+        return $this->clinica?->nome ?? (string) config('app.name');
+    }
+
     public function definida(): bool
     {
         return $this->clinica !== null;
