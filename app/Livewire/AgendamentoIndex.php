@@ -107,7 +107,7 @@ class AgendamentoIndex extends Component
     #[Computed]
     public function profissionais(): Collection
     {
-        return Profissional::where('ativo', true)->orderBy('nome')->get(['id', 'nome']);
+        return Profissional::where('ativo', true)->orderBy('nome')->get(['id', 'nome', 'cor_agenda']);
     }
 
     #[Computed]

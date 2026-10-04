@@ -25,6 +25,19 @@ enum StatusAgendamento: string
         };
     }
 
+    /** Classe Tailwind da bolinha de status no calendário. */
+    public function corPonto(): string
+    {
+        return match ($this) {
+            self::Agendado   => 'bg-violet-500',
+            self::Confirmado => 'bg-emerald-500',
+            self::Realizado  => 'bg-sky-500',
+            self::Cancelado  => 'bg-red-500',
+            self::Reagendado => 'bg-amber-500',
+            self::Falta      => 'bg-stone-400',
+        };
+    }
+
     public function isPendente(): bool
     {
         return in_array($this, [self::Agendado, self::Confirmado], true);

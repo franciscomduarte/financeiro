@@ -11,14 +11,6 @@
     $minAgora = $agora->hour * 60 + $agora->minute;
     $nomesDia = [1 => 'Seg', 2 => 'Ter', 3 => 'Qua', 4 => 'Qui', 5 => 'Sex', 6 => 'Sáb', 7 => 'Dom'];
     $colunas  = 'grid-template-columns: 3.5rem repeat(' . count($calDias) . ', minmax(0, 1fr));';
-    $corStatus = fn (StatusAgendamento $s) => match ($s) {
-        StatusAgendamento::Agendado   => 'bg-violet-500',
-        StatusAgendamento::Confirmado => 'bg-emerald-500',
-        StatusAgendamento::Realizado  => 'bg-sky-500',
-        StatusAgendamento::Cancelado  => 'bg-red-500',
-        StatusAgendamento::Reagendado => 'bg-amber-500',
-        StatusAgendamento::Falta      => 'bg-stone-400',
-    };
 @endphp
 
 <div class="rounded-2xl border border-stone-100 bg-white shadow-sm overflow-hidden">
@@ -134,7 +126,7 @@
                                     title="{{ $ag->inicio_em->format('H:i') }} · {{ $ag->paciente?->nome ?? '—' }} · {{ $ag->profissional?->nome ?? '—' }} · {{ $ag->status->label() }}"
                                     class="absolute z-10 flex flex-col justify-start overflow-hidden rounded-lg px-2 py-1 text-left shadow-sm ring-1 ring-black/5 hover:z-30 hover:shadow-md transition-shadow {{ $inativo ? 'opacity-60' : '' }}"
                                     style="top: {{ ($iniMin - $faixaIni) * $pxPorMin + 1 }}px; height: {{ $altura }}px; left: calc({{ $item['coluna'] * $largura }}% + 2px); width: calc({{ $largura }}% - 4px); background-color: color-mix(in srgb, {{ $cor }} 14%, white); border-left: 3px solid {{ $cor }};">
-                                <span class="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full {{ $corStatus($ag->status) }}"></span>
+                                <span class="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full {{ $ag->status->corPonto() }}"></span>
                                 <p class="truncate pr-2 text-[11px] font-semibold tabular-nums text-stone-600">
                                     {{ $ag->inicio_em->format('H:i') }}<span class="hidden sm:inline">–{{ $ag->fim_em->format('H:i') }}</span>
                                 </p>

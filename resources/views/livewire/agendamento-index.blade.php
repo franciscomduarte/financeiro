@@ -149,6 +149,7 @@
         @else
             @include('livewire.partials.agenda-grade-horarios')
         @endif
+        @include('livewire.partials.agenda-legenda')
     @else
     {{-- ─── Tabela ──────────────────────────────────────────────────────── --}}
     <div class="rounded-2xl border border-stone-100 bg-white shadow-sm overflow-hidden">
