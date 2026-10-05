@@ -13,7 +13,6 @@ use App\Models\Paciente;
 use App\Models\Transacao;
 use App\Models\User;
 use App\Support\ClinicaAtual;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
@@ -202,8 +201,8 @@ class MulticlinicaIsolamentoTest extends TestCase
             ->assertSee('Admin LC')
             ->assertDontSee('Usuária da outra');
 
-        $this->expectException(ModelNotFoundException::class);
-        $tela->call('abrirModalEditar', (string) $dela->id);
+        // Usuário de outra clínica não abre (404) e o formulário não é preenchido
+        $tela->call('abrirModalEditar', (string) $dela->id)->assertStatus(404);
     }
 
     public function test_incluir_email_existente_so_libera_acesso(): void

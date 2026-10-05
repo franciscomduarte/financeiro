@@ -150,8 +150,8 @@ class PerfisDeAcessoTest extends TestCase
         $this->assertSame(1, Agendamento::count());
 
         Livewire::test(PacienteIndex::class)->assertSee('Paciente da Ana')->assertDontSee('Paciente do Bruno');
-        $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
-        Livewire::test(PacienteIndex::class)->call('abrirDetalhe', $outro->paciente_id);
+        // Paciente de outro profissional não abre (404)
+        Livewire::test(PacienteIndex::class)->call('abrirDetalhe', $outro->paciente_id)->assertStatus(404);
     }
 
     public function test_profissional_sem_vinculo_nao_ve_nada(): void
