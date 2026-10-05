@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\Support\ClinicaAtual;
 use App\Models\Documento;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -18,7 +19,7 @@ class UpdateDocumentoAction
             if ($documento->arquivo_path) {
                 Storage::disk('local')->delete($documento->arquivo_path);
             }
-            $path = $arquivo->store('documentos', 'local');
+            $path = $arquivo->store(app(ClinicaAtual::class)->pasta('documentos'), 'local');
             $data['arquivo_path']       = $path;
             $data['arquivo_nome']       = $nome;
             $data['arquivo_tamanho_kb'] = $tamanhoKb;

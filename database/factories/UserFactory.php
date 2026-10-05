@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\User;
+use App\Support\ClinicaAtual;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -31,6 +32,23 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
+    }
+
+    /** Vincula o usuário à clínica ativa (se houver), com o papel do campo role. */
+    public function configure(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            $clinica = app(ClinicaAtual::class)->get();
+            if ($clinica && ! $user->clinicas()->whereKey($clinica->id)->exists()) {
+                $user->clinicas()->attach($clinica->id, ['papel' => $user->role?->value ?? 'user']);
+            }
+        });
+    }
+
+    /** Usuário sem nenhuma clínica vinculada. */
+    public function semClinica(): static
+    {
+        return $this->afterCreating(fn (User $user) => $user->clinicas()->detach());
     }
 
     /**

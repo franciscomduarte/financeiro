@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToClinica;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Cobranca extends Model
 {
+    use BelongsToClinica;
+
     protected $table = 'cobrancas';
 
     protected $fillable = [

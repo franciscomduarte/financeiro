@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Models\Clinica;
+use App\Support\ClinicaAtual;
 use App\Services\StockService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -13,8 +15,16 @@ class StockDailyReportCommand extends Command
     protected $signature   = 'stock:daily-report';
     protected $description = 'Relatório diário de estoque: produtos abaixo do mínimo e frascos próximos do vencimento.';
 
-    public function handle(StockService $stock): int
+    public function handle(StockService $stock, ClinicaAtual $clinicaAtual): int
     {
+        $clinicaAtual->paraCadaClinica(fn (Clinica $clinica) => $this->relatorio($stock, $clinica));
+
+        return Command::SUCCESS;
+    }
+
+    private function relatorio(StockService $stock, Clinica $clinica): void
+    {
+        $this->line("## {$clinica->nome}");
         $lowStock    = $stock->getLowStockProducts();
         $nearExpiry  = $stock->getOpenBatchesNearExpiry(hours: 24);
 
@@ -36,7 +46,5 @@ class StockDailyReportCommand extends Command
                 $this->line("  - {$batch->product?->name} | Lote: {$batch->lot_number} | Vence: {$batch->beyond_use_expires_at?->format('d/m H:i')}");
             }
         }
-
-        return Command::SUCCESS;
     }
 }

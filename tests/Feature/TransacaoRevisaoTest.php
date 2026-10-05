@@ -27,7 +27,7 @@ class TransacaoRevisaoTest extends TestCase
         $this->actingAs(User::factory()->create());
 
         TaxaCartao::insert([
-            ['id' => fake()->uuid(), 'modalidade' => 'credito_3x', 'percentual' => 3.50, 'ativo' => true],
+            ['id' => fake()->uuid(), 'tenant_id' => $this->clinica->id, 'modalidade' => 'credito_3x', 'percentual' => 3.50, 'ativo' => true],
         ]);
     }
 

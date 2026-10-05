@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToClinica;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
 class TaxaCartao extends Model
 {
-    use HasUuids;
+    use BelongsToClinica, HasUuids;
 
     protected $table = 'taxas_cartao';
 

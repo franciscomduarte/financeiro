@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\Support\ClinicaAtual;
 use App\Enums\StatusDocumento;
 use App\Models\Documento;
 use App\Models\DocumentoVersao;
@@ -38,7 +39,7 @@ class RenovarDocumentoAction
             if ($arquivo !== null) {
                 $nome      = $arquivo->getClientOriginalName();
                 $tamanhoKb = (int) ceil($arquivo->getSize() / 1024);
-                $path      = $arquivo->store('documentos', 'local');
+                $path      = $arquivo->store(app(ClinicaAtual::class)->pasta('documentos'), 'local');
                 $update['arquivo_path']       = $path;
                 $update['arquivo_nome']       = $nome;
                 $update['arquivo_tamanho_kb'] = $tamanhoKb;
