@@ -455,13 +455,16 @@
                         <div class="flex flex-col-reverse gap-2 sm:mr-auto sm:flex-row">
                             <a href="{{ route('pacientes.exportar', $p->id) }}" class="btn-ghost">Exportar dados</a>
                             <button type="button" wire:click="anonimizar"
-                                    wire:confirm="Anonimizar {{ $p->nome }}? Nome, contatos, documentos, foto e anotações clínicas serão apagados para sempre. Os lançamentos financeiros ficam guardados sem identificar o paciente."
+                                    wire:confirm="Anonimizar {{ $p->nome }}? Nome, contatos, documentos, foto e anotações da ficha serão apagados para sempre. O prontuário e os lançamentos financeiros ficam guardados pelo prazo legal, sem identificar o paciente."
                                     class="btn-ghost text-red-600">Anonimizar (LGPD)</button>
                         </div>
                     @endif
                     <button wire:click="fecharModais" class="btn-secondary">
                         Fechar
                     </button>
+                    @if ($veDadosClinicos)
+                        <a href="{{ route('pacientes.prontuario', $p->id) }}" wire:navigate class="btn-secondary">Abrir prontuário</a>
+                    @endif
                     @unless ($p->anonimizado())
                         <button wire:click="abrirModalEditar('{{ $p->id }}')" class="btn-primary">
                             Editar paciente
