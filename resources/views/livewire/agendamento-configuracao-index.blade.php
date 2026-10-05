@@ -532,6 +532,13 @@
                         @error('procValor') <p class="field-error">{{ $message }}</p> @enderror
                     </div>
                 </div>
+                <div>
+                    <label for="proc-retorno" class="label">Retorno sugerido (dias)</label>
+                    <input id="proc-retorno" type="number" inputmode="numeric" wire:model="procRetornoDias" min="1" max="730"
+                           placeholder="Ex.: 120 para toxina" class="input tabular-nums">
+                    <p class="hint">Opcional. O paciente aparece em Relacionamento › Retornos quando chegar a hora de voltar.</p>
+                    @error('procRetornoDias') <p class="field-error">{{ $message }}</p> @enderror
+                </div>
                 <label for="procAtivo" class="flex min-h-[44px] cursor-pointer items-center gap-3">
                     <input type="checkbox" id="procAtivo" wire:model="procAtivo"
                            class="h-5 w-5 rounded border-stone-300 text-rose-600 focus:ring-rose-100">

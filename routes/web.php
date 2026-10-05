@@ -7,7 +7,9 @@ use App\Http\Controllers\CadastroController;
 use App\Http\Controllers\ClinicaController;
 use App\Http\Controllers\DocumentoDownloadController;
 use App\Http\Controllers\EsqueciSenhaController;
+use App\Http\Controllers\AvaliacaoController;
 use App\Http\Controllers\OrcamentoPdfController;
+use App\Livewire\RelacionamentoIndex;
 use App\Http\Controllers\PacienteExportacaoController;
 use App\Livewire\ComissaoIndex;
 use App\Livewire\OrcamentoIndex;
@@ -64,6 +66,12 @@ Route::get('/redefinir-senha/{token}', [EsqueciSenhaController::class, 'showRese
 Route::post('/redefinir-senha', [EsqueciSenhaController::class, 'reset'])->name('password.update');
 
 // ─── Rotas protegidas ───────────────────────────────────────────
+// Pesquisa de satisfação (link enviado ao paciente, sem login)
+Route::middleware('throttle:30,1')->group(function (): void {
+    Route::get('/avaliacao/{token}', [AvaliacaoController::class, 'mostrar'])->name('avaliacao.mostrar');
+    Route::post('/avaliacao/{token}', [AvaliacaoController::class, 'responder'])->name('avaliacao.responder');
+});
+
 Route::middleware('auth')->group(function (): void {
     Route::get('/email/confirmar', [VerificacaoEmailController::class, 'aviso'])->name('verificacao.aviso');
     Route::post('/email/reenviar', [VerificacaoEmailController::class, 'reenviar'])
@@ -82,6 +90,7 @@ Route::middleware('auth')->group(function (): void {
     Route::middleware('modulo:pacientes')->group(function (): void {
         Route::get('/pacientes', PacienteIndex::class)->name('pacientes.index');
         Route::get('/pacientes/{id}/exportar', PacienteExportacaoController::class)->name('pacientes.exportar');
+        Route::get('/relacionamento', RelacionamentoIndex::class)->name('relacionamento.index');
     });
     // Prontuário: só quem vê dados clínicos (admin, profissional)
     Route::middleware('modulo:dados_clinicos')->group(function (): void {

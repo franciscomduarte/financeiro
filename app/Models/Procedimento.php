@@ -20,11 +20,13 @@ class Procedimento extends Model
         'descricao',
         'duracao_minutos',
         'valor',
+        'retorno_dias',
         'ativo',
     ];
 
     protected $casts = [
         'duracao_minutos' => 'integer',
+        'retorno_dias'    => 'integer',
         'valor'           => 'decimal:2',
         'ativo'           => 'boolean',
     ];
