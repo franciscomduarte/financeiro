@@ -6,11 +6,14 @@ namespace App\Exceptions;
 
 use RuntimeException;
 
-/** Tentativa de gravar dados em clínica cujo teste grátis terminou (modo somente leitura). */
+/** Tentativa de gravar dados com a clínica em modo somente leitura (teste encerrado ou acesso de suporte). */
 class ClinicaSomenteLeituraException extends RuntimeException
 {
-    public function __construct()
+    public const TESTE_ENCERRADO = 'O teste grátis terminou e o sistema está em modo somente leitura. Fale conosco para assinar.';
+    public const SUPORTE         = 'Acesso de suporte: somente leitura. Nada pode ser criado ou alterado.';
+
+    public function __construct(string $mensagem = self::TESTE_ENCERRADO)
     {
-        parent::__construct('O teste grátis terminou e o sistema está em modo somente leitura. Fale conosco para assinar.');
+        parent::__construct($mensagem);
     }
 }

@@ -37,10 +37,14 @@ class DefinirClinicaAtual
 
         Context::add('user_id', $user->id);
 
+        if ($suporte = $this->clinicaDeSuporte($request, $user)) {
+            return $this->modoSuporte($request, $suporte, $next);
+        }
+
         $clinica = $this->resolver($request, $user);
 
         if ($clinica === null) {
-            if ($request->routeIs(...self::ROTAS_LIVRES)) {
+            if ($request->routeIs(...self::ROTAS_LIVRES) || $this->painelDaPlataforma($request, $user)) {
                 return $next($request);
             }
 
@@ -60,6 +64,7 @@ class DefinirClinicaAtual
         if ($request->hasSession()) {
             $request->session()->put('clinica_id', $clinica->id);
         }
+        $this->registrarAcesso($clinica);
 
         if ($clinica->somenteLeitura()) {
             return $this->testeEncerrado($request, $user, $next);
@@ -91,6 +96,51 @@ class DefinirClinicaAtual
         return $next($request);
     }
 
+    /** Super admin no painel da plataforma (inclusive as requisições Livewire dele) não precisa de clínica. */
+    private function painelDaPlataforma(Request $request, User $user): bool
+    {
+        return $user->is_super_admin && $request->routeIs('plataforma.*', 'livewire.*');
+    }
+
+    /** Clínica que o dono da plataforma está vendo como suporte (sessão), se houver. */
+    private function clinicaDeSuporte(Request $request, User $user): ?Clinica
+    {
+        if (! $user->is_super_admin || ! $request->hasSession()) {
+            return null;
+        }
+
+        $id = $request->session()->get(\App\Http\Controllers\SuporteClinicaController::SESSAO);
+
+        return $id ? Clinica::find($id) : null;
+    }
+
+    /**
+     * Suporte: vê a clínica (mesmo bloqueada ou com teste encerrado) sempre em somente leitura.
+     * Gravações via HTTP são recusadas aqui; as do Livewire, nos Models. O painel da plataforma segue livre.
+     */
+    private function modoSuporte(Request $request, Clinica $clinica, Closure $next): Response
+    {
+        $this->clinicaAtual->definirSuporte($clinica);
+
+        $leitura = $request->isMethodSafe()
+            || \Livewire\Livewire::isLivewireRequest()
+            || $request->routeIs('plataforma.*', 'logout');
+
+        if (! $leitura) {
+            throw new \App\Exceptions\ClinicaSomenteLeituraException(\App\Exceptions\ClinicaSomenteLeituraException::SUPORTE);
+        }
+
+        return $next($request);
+    }
+
+    /** Último acesso da clínica (painel da plataforma), gravado no máximo a cada 10 minutos. */
+    private function registrarAcesso(Clinica $clinica): void
+    {
+        if ($clinica->ultimo_acesso_em === null || $clinica->ultimo_acesso_em->lt(now()->subMinutes(10))) {
+            $clinica->forceFill(['ultimo_acesso_em' => now()])->saveQuietly();
+        }
+    }
+
     private function resolver(Request $request, User $user): ?Clinica
     {
         $solicitada = $request->header('X-Clinica-Id')
@@ -113,6 +163,10 @@ class DefinirClinicaAtual
 
     private function semClinica(Request $request, User $user): Response
     {
+        if ($user->is_super_admin && ! $request->expectsJson()) {
+            return redirect()->route('plataforma.index');
+        }
+
         $temClinicas = $user->clinicas()->exists();
 
         if ($request->expectsJson()) {

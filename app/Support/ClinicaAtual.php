@@ -20,9 +20,13 @@ class ClinicaAtual
     /** Uma gravação foi barrada pelo modo somente leitura (lido pelas telas Livewire para avisar). */
     private bool $escritaBloqueada = false;
 
+    /** Dono da plataforma vendo a clínica para dar suporte (sempre somente leitura). */
+    private bool $suporte = false;
+
     public function definir(?Clinica $clinica): void
     {
         $this->clinica = $clinica;
+        $this->suporte = false;
 
         // Logs estruturados e payload dos jobs passam a carregar a clínica
         $clinica
@@ -54,12 +58,31 @@ class ClinicaAtual
         return $this->clinica?->nome ?? (string) config('app.name');
     }
 
-    public function somenteLeitura(): bool
+    /** Ativa a clínica em modo suporte (super admin, somente leitura). */
+    public function definirSuporte(Clinica $clinica): void
     {
-        return (bool) $this->clinica?->somenteLeitura();
+        $this->definir($clinica);
+        $this->suporte = true;
     }
 
-    /** Barra gravações quando o teste da clínica ativa terminou. */
+    public function emSuporte(): bool
+    {
+        return $this->suporte && $this->clinica !== null;
+    }
+
+    public function somenteLeitura(): bool
+    {
+        return $this->emSuporte() || (bool) $this->clinica?->somenteLeitura();
+    }
+
+    public function mensagemSomenteLeitura(): string
+    {
+        return $this->emSuporte()
+            ? \App\Exceptions\ClinicaSomenteLeituraException::SUPORTE
+            : \App\Exceptions\ClinicaSomenteLeituraException::TESTE_ENCERRADO;
+    }
+
+    /** Barra gravações quando a clínica ativa está em modo somente leitura (teste encerrado ou suporte). */
     public function garantirEscrita(): void
     {
         if (! $this->somenteLeitura()) {
@@ -69,7 +92,7 @@ class ClinicaAtual
         // Marca para a tela Livewire trocar a mensagem genérica de erro pelo aviso (AppServiceProvider)
         $this->escritaBloqueada = true;
 
-        throw new \App\Exceptions\ClinicaSomenteLeituraException();
+        throw new \App\Exceptions\ClinicaSomenteLeituraException($this->mensagemSomenteLeitura());
     }
 
     /** Informa (e zera) se alguma gravação foi barrada desde a última consulta. */

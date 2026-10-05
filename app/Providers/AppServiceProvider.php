@@ -69,7 +69,7 @@ class AppServiceProvider extends ServiceProvider
             return function ($retorno) use ($component) {
                 if (app(ClinicaAtual::class)->consumirEscritaBloqueada()) {
                     if (property_exists($component, 'flashErro')) {
-                        $component->flashErro = (new \App\Exceptions\ClinicaSomenteLeituraException())->getMessage();
+                        $component->flashErro = app(ClinicaAtual::class)->mensagemSomenteLeitura();
                         if (property_exists($component, 'flashSucesso')) {
                             $component->flashSucesso = null;
                         }

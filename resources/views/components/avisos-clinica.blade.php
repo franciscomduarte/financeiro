@@ -1,5 +1,13 @@
 <div class="shrink-0">
-    @if ($somenteLeitura)
+    @if ($suporte)
+        <div class="bg-indigo-600 px-4 py-2.5 md:px-6 text-sm text-white flex flex-wrap items-center justify-between gap-2" role="status">
+            <p><strong>Modo suporte:</strong> você está vendo {{ $clinica->nome }} só para consulta. Nada pode ser alterado.</p>
+            <form method="POST" action="{{ route('plataforma.suporte.sair') }}">
+                @csrf
+                <button type="submit" class="min-h-[40px] px-3 rounded-lg bg-white/15 hover:bg-white/25 font-semibold">Sair do modo suporte</button>
+            </form>
+        </div>
+    @elseif ($somenteLeitura)
         <div class="bg-red-50 border-b border-red-100 px-4 py-3 md:px-6 text-sm text-red-800 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between" role="status">
             <p>
                 <strong>Seu teste grátis terminou em {{ $clinica->teste_ate->format('d/m') }}.</strong>

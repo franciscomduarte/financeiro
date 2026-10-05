@@ -35,10 +35,18 @@ class MenuLateral extends Component
         'usuarios'     => 'M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z',
     ];
 
+    private const ICONES_EXTRA = [
+        'conta'      => 'M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z',
+        'plataforma' => 'M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21',
+    ];
+
     public ?Clinica $clinica;
+    public bool $suporte;
+    /** @var array<int, array{rotulo: string, rota: string, ativo: bool, icone: string}> */
+    public array $menuUsuario;
     /** @var Collection<int, Clinica> */
     public Collection $outrasClinicas;
-    /** @var array<int, array{titulo: ?string, itens: array<int, array{rotulo: string, rota: string, ativo: bool, icone: string}>}> */
+    /** @var array<int, array{titulo: ?string, chave: string, ativo: bool, itens: array<int, array{rotulo: string, rota: string, ativo: bool, icone: string}>}> */
     public array $grupos;
 
     public function __construct(ClinicaAtual $clinicaAtual)
@@ -50,9 +58,15 @@ class MenuLateral extends Component
             ? $user->clinicas()->select(['clinicas.id', 'clinicas.nome'])->where('clinicas.id', '!=', $this->clinica?->id)->limit(20)->get()
             : collect();
 
-        $admin = (bool) $user?->isAdmin();
+        $admin         = (bool) $user?->isAdmin();
+        $this->suporte = $clinicaAtual->emSuporte();
+        $temClinica    = $this->clinica !== null;
+        if ($this->suporte) {
+            $this->outrasClinicas = collect(); // no suporte não se troca de clínica pelo menu
+        }
 
-        $this->grupos = array_values(array_filter([
+        // Navegação do dia a dia (grupos recolhíveis); configurações e conta ficam no menu do usuário
+        $this->grupos = ! $temClinica ? [] : array_values(array_filter([
             $this->grupo(null, [
                 ['Início', 'dashboard', 'dashboard', 'inicio'],
             ]),
@@ -78,26 +92,44 @@ class MenuLateral extends Component
                 ['Obrigações fiscais', 'web.obrigacoes-fiscais', 'web.obrigacoes-fiscais', 'fiscal'],
                 ['Documentos', 'web.documentos', 'web.documentos', 'documentos'],
             ]),
-            $this->grupo('Configurações', array_filter([
-                ['Profissionais e horários', 'agenda.configuracao', 'agenda.configuracao', 'horarios'],
-                $admin ? ['Dados da clínica', 'admin.clinica', 'admin.clinica', 'clinica'] : null,
-                $admin ? ['Usuários', 'admin.usuarios', 'admin.usuarios', 'usuarios'] : null,
-            ])),
         ]));
+
+        $this->menuUsuario = $this->itens(array_filter([
+            $temClinica && ! $this->suporte ? ['Minha conta', 'minha-conta', 'minha-conta', 'conta'] : null,
+            $temClinica ? ['Profissionais e horários', 'agenda.configuracao', 'agenda.configuracao', 'horarios'] : null,
+            $admin ? ['Dados da clínica', 'admin.clinica', 'admin.clinica', 'clinica'] : null,
+            $admin ? ['Usuários', 'admin.usuarios', 'admin.usuarios', 'usuarios'] : null,
+            $user?->is_super_admin ? ['Painel da plataforma', 'plataforma.index', 'plataforma.*', 'plataforma'] : null,
+        ]));
+
+        // Dono da plataforma sem clínica: o painel é a única navegação
+        if (! $temClinica && $user?->is_super_admin) {
+            $this->grupos = [$this->grupo(null, [['Clínicas', 'plataforma.index', 'plataforma.*', 'plataforma']])];
+        }
     }
 
     /** @param  array<int, array{0: string, 1: string, 2: string, 3: string}>  $itens */
     private function grupo(?string $titulo, array $itens): array
     {
+        $itens = $this->itens($itens);
+
         return [
             'titulo' => $titulo,
-            'itens'  => array_map(fn (array $i) => [
-                'rotulo' => $i[0],
-                'rota'   => $i[1],
-                'ativo'  => request()->routeIs($i[2]),
-                'icone'  => self::ICONES[$i[3]],
-            ], array_values($itens)),
+            'chave'  => $titulo ? \Illuminate\Support\Str::slug($titulo) : 'principal',
+            'ativo'  => in_array(true, array_column($itens, 'ativo'), true),
+            'itens'  => $itens,
         ];
+    }
+
+    /** @param  array<int, array{0: string, 1: string, 2: string, 3: string}>  $itens */
+    private function itens(array $itens): array
+    {
+        return array_map(fn (array $i) => [
+            'rotulo' => $i[0],
+            'rota'   => $i[1],
+            'ativo'  => request()->routeIs($i[2]),
+            'icone'  => self::ICONES[$i[3]] ?? self::ICONES_EXTRA[$i[3]],
+        ], array_values($itens));
     }
 
     public function render(): View

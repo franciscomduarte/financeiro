@@ -52,7 +52,14 @@ class Clinica extends Model
         'aviso_teste_3_dias_em' => 'datetime',
         'aviso_teste_fim_em'    => 'datetime',
         'primeiros_passos_dispensado_em' => 'datetime',
+        'ultimo_acesso_em'      => 'datetime',
+        'ativada_em'            => 'datetime',
     ];
+
+    public function eventos(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ClinicaEvento::class);
+    }
 
     public function usuarios(): BelongsToMany
     {
