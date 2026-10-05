@@ -64,3 +64,12 @@ Schedule::job(new \App\Jobs\EnviarLembretesAgendamentosJob())
     ->everyFifteenMinutes()
     ->name('lembretes-agendamentos')
     ->withoutOverlapping();
+
+// ─── Alertas de vencimento ────────────────────────────────────────────────────
+
+// Resumo diário (e-mail aos admins + WhatsApp da gestão) de contas, contratos e documentos
+Schedule::job(new \App\Jobs\ResumoVencimentosJob())
+    ->dailyAt('07:30')
+    ->timezone('America/Sao_Paulo') // app roda em UTC; 07:30 no horário da clínica
+    ->name('resumo-vencimentos')
+    ->withoutOverlapping();

@@ -6,9 +6,9 @@ namespace App\Livewire;
 
 use App\Models\Contrato;
 use App\Models\ContaConsumoFatura;
-use App\Models\Documento;
 use App\Models\ObrigacaoFiscalLancamento;
 use App\Models\Transacao;
+use App\Services\AlertasVencimentoService;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
 
@@ -53,44 +53,8 @@ class DashboardIndex extends Component
             ->orderByDesc('total')
             ->get();
 
-        // ─── Alertas ────────────────────────────────────────────
-        $alertasFiscais = ObrigacaoFiscalLancamento::whereIn('status', ['pendente', 'vencido'])
-            ->where('data_vencimento', '<=', $hoje->copy()->addDays(7)->toDateString())
-            ->with('obrigacaoFiscal')
-            ->orderBy('data_vencimento')
-            ->get();
-
-        $alertasFaturas = ContaConsumoFatura::whereIn('status', ['pendente', 'vencida'])
-            ->with('contaConsumo')
-            ->orderBy('data_vencimento')
-            ->get();
-
-        $alertasContratosFim = Contrato::where('status', 'ativo')
-            ->whereNotNull('data_fim')
-            ->where('data_fim', '<=', $hoje->copy()->addDays(60)->toDateString())
-            ->with('fornecedor')
-            ->orderBy('data_fim')
-            ->get();
-
-        $alertasContratosPgto = Contrato::where('status', 'ativo')
-            ->whereNotNull('dia_vencimento')
-            ->with('fornecedor')
-            ->get()
-            ->filter(fn ($c) => ($c->diasParaVencimento() ?? 99) <= 5)
-            ->sortBy(fn ($c) => $c->diasParaVencimento());
-
-        $alertasDocumentos = Documento::whereNotNull('data_validade')
-            ->where('status', '!=', 'arquivado')
-            ->where('data_validade', '<=', $hoje->copy()->addDays(30)->toDateString())
-            ->with('categoria')
-            ->orderBy('data_validade')
-            ->get();
-
-        $totalAlertas = $alertasFiscais->count()
-            + $alertasFaturas->count()
-            + $alertasContratosFim->count()
-            + $alertasContratosPgto->count()
-            + $alertasDocumentos->count();
+        // ─── Alertas (mesma fonte do resumo diário por e-mail/WhatsApp) ──
+        ['vencidos' => $alertasVencidos, 'a_vencer' => $alertasAVencer] = app(AlertasVencimentoService::class)->levantar();
 
         $custoMinimo = $this->custoMinimoMensal();
 
@@ -106,12 +70,10 @@ class DashboardIndex extends Component
             'fluxo'              => $fluxo,
             'despesasCat'        => $despesasCat,
             // Alertas
-            'alertasFiscais'          => $alertasFiscais,
-            'alertasFaturas'          => $alertasFaturas,
-            'alertasContratosFim'     => $alertasContratosFim,
-            'alertasContratosPgto'    => $alertasContratosPgto,
-            'alertasDocumentos'       => $alertasDocumentos,
-            'totalAlertas'            => $totalAlertas,
+            'alertasVencidos' => $alertasVencidos,
+            'alertasAVencer'  => $alertasAVencer,
+            'totalAlertas'    => $alertasVencidos->count() + $alertasAVencer->count(),
+            'hojeAlertas'     => \Carbon\CarbonImmutable::today(),
             // Custo mínimo
             'custoMinimo'      => $custoMinimo,
             // Meta

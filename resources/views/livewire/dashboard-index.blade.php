@@ -2,39 +2,6 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 @endpush
 
-@php
-// Pré-classifica alertas em urgentes vs próximos para uso na seção de alertas
-$alertasUrgentes = collect();
-$alertasProximos = collect();
-
-foreach ($alertasFiscais as $i) {
-    $vencida = $i->data_vencimento->isPast() || $i->status->value === 'vencido';
-    $vencida
-        ? $alertasUrgentes->push(['tipo' => 'fiscal', 'item' => $i, 'vencida' => true])
-        : $alertasProximos->push(['tipo' => 'fiscal', 'item' => $i, 'vencida' => false]);
-}
-foreach ($alertasFaturas as $f) {
-    $vencida = $f->status->value === 'vencida' || ($f->data_vencimento && $f->data_vencimento->isPast());
-    $vencida
-        ? $alertasUrgentes->push(['tipo' => 'fatura', 'item' => $f, 'vencida' => true])
-        : $alertasProximos->push(['tipo' => 'fatura', 'item' => $f, 'vencida' => false]);
-}
-foreach ($alertasContratosFim as $c) {
-    $dias = now()->diffInDays($c->data_fim, false);
-    $dias <= 14
-        ? $alertasUrgentes->push(['tipo' => 'contrato_fim', 'item' => $c, 'dias' => $dias])
-        : $alertasProximos->push(['tipo' => 'contrato_fim', 'item' => $c, 'dias' => $dias]);
-}
-foreach ($alertasContratosPgto as $c) {
-    $alertasProximos->push(['tipo' => 'contrato_pgto', 'item' => $c]);
-}
-foreach ($alertasDocumentos as $d) {
-    $diasDoc = $d->diasParaVencer();
-    $diasDoc !== null && $diasDoc < 0
-        ? $alertasUrgentes->push(['tipo' => 'documento', 'item' => $d, 'diasDoc' => $diasDoc])
-        : $alertasProximos->push(['tipo' => 'documento', 'item' => $d, 'diasDoc' => $diasDoc]);
-}
-@endphp
 
 <div class="space-y-6">
 
@@ -99,6 +66,7 @@ foreach ($alertasDocumentos as $d) {
     </div>
 
     {{-- ─── 2. Alertas — "O que precisa de atenção?" ───────────────── --}}
+    {{-- Mesma fonte do resumo diário enviado por e-mail/WhatsApp (AlertasVencimentoService) --}}
     @if ($totalAlertas > 0)
     <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         <div class="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
@@ -109,131 +77,34 @@ foreach ($alertasDocumentos as $d) {
             <span class="ml-auto text-xs text-slate-400">{{ $totalAlertas }} item{{ $totalAlertas > 1 ? 's' : '' }}</span>
         </div>
         <div class="divide-y divide-slate-50">
-
-            {{-- Grupo: Ação imediata --}}
-            @if ($alertasUrgentes->isNotEmpty())
-            <div class="px-5 py-2 bg-red-50 flex items-center gap-2">
-                <span class="h-1.5 w-1.5 rounded-full bg-red-500 shrink-0"></span>
-                <p class="text-xs font-bold text-red-700 uppercase tracking-wider">Requer ação imediata · {{ $alertasUrgentes->count() }} item{{ $alertasUrgentes->count() > 1 ? 's' : '' }}</p>
-            </div>
-            @foreach ($alertasUrgentes as $alerta)
-                @php $item = $alerta['item']; $tipo = $alerta['tipo']; @endphp
-                <div class="flex items-center gap-4 px-5 py-3.5 bg-red-50/30 hover:bg-red-50/60 transition">
-                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-100">
-                        @if($tipo === 'fiscal')
-                            <svg class="h-4 w-4 text-red-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg>
-                        @elseif($tipo === 'fatura')
-                            <svg class="h-4 w-4 text-red-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
-                        @elseif($tipo === 'contrato_fim')
-                            <svg class="h-4 w-4 text-red-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
-                        @else
-                            <svg class="h-4 w-4 text-red-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12l-3-3m0 0l-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
-                        @endif
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        @if($tipo === 'fiscal')
-                            <p class="text-sm font-medium text-slate-800 truncate">{{ $item->obrigacaoFiscal->descricao }}</p>
-                            <p class="text-xs text-slate-400">{{ $item->obrigacaoFiscal->tipo_tributo->label() }} · {{ $item->competenciaFormatada() }}</p>
-                        @elseif($tipo === 'fatura')
-                            <p class="text-sm font-medium text-slate-800 truncate">{{ $item->contaConsumo->descricao }}</p>
-                            <p class="text-xs text-slate-400">{{ $item->contaConsumo->tipo->label() }} · {{ $item->competenciaFormatada() }}</p>
-                        @elseif($tipo === 'contrato_fim')
-                            <p class="text-sm font-medium text-slate-800 truncate">{{ $item->fornecedor->nome_fantasia }}</p>
-                            <p class="text-xs text-slate-400">Contrato encerra em {{ $item->data_fim->format('d/m/Y') }}</p>
-                        @else
-                            <p class="text-sm font-medium text-slate-800 truncate">{{ $item->titulo }}</p>
-                            <p class="text-xs text-slate-400">{{ $item->categoria->nome }}</p>
-                        @endif
-                    </div>
-                    <div class="text-right shrink-0">
-                        @if($tipo === 'fiscal')
-                            <p class="text-sm font-semibold tabular-nums text-slate-800">R$ {{ number_format($item->valorTotal(), 2, ',', '.') }}</p>
-                            <p class="text-xs text-red-600 font-semibold">Vence {{ $item->data_vencimento->format('d/m') }} · VENCIDA</p>
-                        @elseif($tipo === 'fatura')
-                            @if($item->valor)<p class="text-sm font-semibold tabular-nums text-slate-800">R$ {{ number_format((float)$item->valor, 2, ',', '.') }}</p>@endif
-                            <p class="text-xs text-red-600 font-semibold">VENCIDA</p>
-                        @elseif($tipo === 'contrato_fim')
-                            @if($item->valor_mensal)<p class="text-sm font-semibold tabular-nums text-slate-800">R$ {{ number_format((float)$item->valor_mensal, 2, ',', '.') }}/mês</p>@endif
-                            <p class="text-xs text-red-600 font-semibold">{{ ($alerta['dias'] ?? 0) <= 0 ? 'Encerrou' : 'Faltam ' . ($alerta['dias'] ?? 0) . ' dias' }}</p>
-                        @else
-                            <p class="text-xs text-red-600 font-semibold">Vencido há {{ abs($alerta['diasDoc'] ?? 0) }}d</p>
-                        @endif
-                    </div>
-                    @php
-                        $badge = match($tipo) { 'fiscal' => 'Fiscal', 'fatura' => 'Consumo', 'contrato_fim' => 'Contrato', default => 'Documento' };
-                    @endphp
-                    <span class="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700">{{ $badge }}</span>
+            @foreach ([['vencidos', 'Já venceram', $alertasVencidos], ['avencer', 'Vencimento próximo', $alertasAVencer]] as [$grupo, $tituloGrupo, $itens])
+                @continue($itens->isEmpty())
+                @php $urgente = $grupo === 'vencidos'; @endphp
+                <div class="px-5 py-2 flex items-center gap-2 {{ $urgente ? 'bg-red-50' : 'bg-amber-50' }}">
+                    <span class="h-1.5 w-1.5 rounded-full shrink-0 {{ $urgente ? 'bg-red-500' : 'bg-amber-500' }}"></span>
+                    <p class="text-xs font-bold uppercase tracking-wider {{ $urgente ? 'text-red-700' : 'text-amber-700' }}">
+                        {{ $tituloGrupo }} · {{ $itens->count() }} item{{ $itens->count() > 1 ? 's' : '' }}
+                    </p>
                 </div>
+                @foreach ($itens as $alerta)
+                    <a href="{{ route($alerta->tipo->rota()) }}"
+                       class="flex min-h-[56px] items-center gap-3 px-5 py-3 transition {{ $urgente ? 'bg-red-50/30 hover:bg-red-50/60' : 'hover:bg-slate-50/60' }}">
+                        <div class="min-w-0 flex-1">
+                            <p class="truncate text-sm font-medium text-slate-800">{{ $alerta->titulo }}</p>
+                            <p class="text-xs text-slate-400">
+                                <span class="sm:hidden">{{ $alerta->tipo->label() }} · </span>{{ $alerta->data->format('d/m/Y') }}
+                            </p>
+                        </div>
+                        <div class="shrink-0 text-right">
+                            @if ($alerta->valorFormatado())
+                                <p class="text-sm font-semibold tabular-nums text-slate-800">{{ $alerta->valorFormatado() }}</p>
+                            @endif
+                            <p class="text-xs font-semibold {{ $urgente ? 'text-red-600' : 'text-amber-600' }}">{{ ucfirst($alerta->prazo($hojeAlertas)) }}</p>
+                        </div>
+                        <span class="hidden shrink-0 rounded-full px-2 py-0.5 text-xs font-medium sm:inline {{ $urgente ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700' }}">{{ $alerta->tipo->label() }}</span>
+                    </a>
+                @endforeach
             @endforeach
-            @endif
-
-            {{-- Grupo: Vencimento próximo --}}
-            @if ($alertasProximos->isNotEmpty())
-            <div class="px-5 py-2 bg-amber-50 flex items-center gap-2">
-                <span class="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0"></span>
-                <p class="text-xs font-bold text-amber-700 uppercase tracking-wider">Vencimento próximo · {{ $alertasProximos->count() }} item{{ $alertasProximos->count() > 1 ? 's' : '' }}</p>
-            </div>
-            @foreach ($alertasProximos as $alerta)
-                @php $item = $alerta['item']; $tipo = $alerta['tipo']; @endphp
-                <div class="flex items-center gap-4 px-5 py-3.5 hover:bg-slate-50/60 transition">
-                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100">
-                        @if($tipo === 'fiscal')
-                            <svg class="h-4 w-4 text-amber-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg>
-                        @elseif($tipo === 'fatura')
-                            <svg class="h-4 w-4 text-amber-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
-                        @elseif($tipo === 'contrato_fim')
-                            <svg class="h-4 w-4 text-amber-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
-                        @elseif($tipo === 'contrato_pgto')
-                            <svg class="h-4 w-4 text-amber-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>
-                        @else
-                            <svg class="h-4 w-4 text-amber-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12l-3-3m0 0l-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
-                        @endif
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        @if($tipo === 'fiscal')
-                            <p class="text-sm font-medium text-slate-800 truncate">{{ $item->obrigacaoFiscal->descricao }}</p>
-                            <p class="text-xs text-slate-400">{{ $item->obrigacaoFiscal->tipo_tributo->label() }} · {{ $item->competenciaFormatada() }}</p>
-                        @elseif($tipo === 'fatura')
-                            <p class="text-sm font-medium text-slate-800 truncate">{{ $item->contaConsumo->descricao }}</p>
-                            <p class="text-xs text-slate-400">{{ $item->contaConsumo->tipo->label() }} · {{ $item->competenciaFormatada() }}</p>
-                        @elseif($tipo === 'contrato_fim')
-                            <p class="text-sm font-medium text-slate-800 truncate">{{ $item->fornecedor->nome_fantasia }}</p>
-                            <p class="text-xs text-slate-400">Contrato encerra em {{ $item->data_fim->format('d/m/Y') }}</p>
-                        @elseif($tipo === 'contrato_pgto')
-                            <p class="text-sm font-medium text-slate-800 truncate">{{ $item->fornecedor->nome_fantasia }}</p>
-                            <p class="text-xs text-slate-400">Pagamento mensal — dia {{ $item->dia_vencimento }}</p>
-                        @else
-                            <p class="text-sm font-medium text-slate-800 truncate">{{ $item->titulo }}</p>
-                            <p class="text-xs text-slate-400">{{ $item->categoria->nome }}</p>
-                        @endif
-                    </div>
-                    <div class="text-right shrink-0">
-                        @if($tipo === 'fiscal')
-                            <p class="text-sm font-semibold tabular-nums text-slate-800">R$ {{ number_format($item->valorTotal(), 2, ',', '.') }}</p>
-                            <p class="text-xs text-amber-600">Vence {{ $item->data_vencimento->format('d/m') }}</p>
-                        @elseif($tipo === 'fatura')
-                            @if($item->valor)<p class="text-sm font-semibold tabular-nums text-slate-800">R$ {{ number_format((float)$item->valor, 2, ',', '.') }}</p>
-                            @else<p class="text-xs text-slate-400">Valor pendente</p>@endif
-                            @if($item->data_vencimento)<p class="text-xs text-amber-600">Vence {{ $item->data_vencimento->format('d/m') }}</p>@endif
-                        @elseif($tipo === 'contrato_fim')
-                            @if($item->valor_mensal)<p class="text-sm font-semibold tabular-nums text-slate-800">R$ {{ number_format((float)$item->valor_mensal, 2, ',', '.') }}/mês</p>@endif
-                            <p class="text-xs text-amber-600">Faltam {{ $alerta['dias'] }} dias</p>
-                        @elseif($tipo === 'contrato_pgto')
-                            @if($item->valor_mensal)<p class="text-sm font-semibold tabular-nums text-slate-800">R$ {{ number_format((float)$item->valor_mensal, 2, ',', '.') }}</p>@endif
-                            <p class="text-xs text-amber-600 font-semibold">{{ $item->diasParaVencimento() === 0 ? 'Vence hoje' : 'Vence em ' . $item->diasParaVencimento() . 'd' }}</p>
-                        @else
-                            @php $d = $alerta['diasDoc'] ?? null; @endphp
-                            <p class="text-xs text-amber-600">{{ $d === 0 ? 'Vence hoje' : 'Vence em ' . $d . 'd' }} · {{ $item->data_validade->format('d/m/Y') }}</p>
-                        @endif
-                    </div>
-                    @php
-                        $badge = match($tipo) { 'fiscal' => ['label' => 'Fiscal', 'cls' => 'bg-amber-100 text-amber-700'], 'fatura' => ['label' => 'Consumo', 'cls' => 'bg-orange-100 text-orange-700'], 'contrato_fim' => ['label' => 'Contrato', 'cls' => 'bg-amber-100 text-amber-700'], 'contrato_pgto' => ['label' => 'Pagamento', 'cls' => 'bg-violet-100 text-violet-700'], default => ['label' => 'Documento', 'cls' => 'bg-blue-100 text-blue-700'] };
-                    @endphp
-                    <span class="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium {{ $badge['cls'] }}">{{ $badge['label'] }}</span>
-                </div>
-            @endforeach
-            @endif
-
         </div>
     </div>
     @else
@@ -241,7 +112,7 @@ foreach ($alertasDocumentos as $d) {
         <svg class="w-5 h-5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>
-        <span><strong>Tudo em dia!</strong> Nenhum alerta no momento.</span>
+        <span><strong>Tudo em dia!</strong> Nenhum vencimento próximo.</span>
     </div>
     @endif
 
