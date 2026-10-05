@@ -31,6 +31,14 @@ class ExportarDadosPacienteAction
                 ->orderBy('data_competencia')->limit(self::LIMITE),
             'cobrancas' => fn ($q) => $q->select(['id', 'paciente_id', 'valor', 'vencimento', 'mes_referencia', 'status', 'pago_em'])
                 ->orderBy('vencimento')->limit(self::LIMITE),
+            'evolucoes' => fn ($q) => $q->select(['id', 'paciente_id', 'profissional_id', 'user_id', 'texto', 'created_at'])
+                ->with(['profissional:id,nome', 'autor:id,name'])->orderBy('created_at')->limit(self::LIMITE),
+            'fotosProntuario' => fn ($q) => $q->select(['id', 'paciente_id', 'momento', 'regiao', 'descricao', 'tirada_em'])
+                ->orderBy('tirada_em')->limit(self::LIMITE),
+            'termos' => fn ($q) => $q->select(['id', 'paciente_id', 'titulo', 'conteudo', 'assinante_nome', 'assinado_em', 'hash'])
+                ->orderBy('assinado_em')->limit(self::LIMITE),
+            'orientacoes' => fn ($q) => $q->select(['id', 'paciente_id', 'titulo', 'texto', 'created_at'])
+                ->orderBy('created_at')->limit(self::LIMITE),
         ]);
 
         $dados = [
@@ -73,6 +81,31 @@ class ExportarDadosPacienteAction
                 'situacao'   => $c->status,
                 'pago_em'    => $c->pago_em?->toIso8601String(),
             ])->all(),
+            'prontuario' => [
+                'evolucoes' => $paciente->evolucoes->map(fn ($e) => [
+                    'data'         => $e->created_at?->toIso8601String(),
+                    'profissional' => $e->profissional?->nome ?? $e->autor?->name,
+                    'texto'        => $e->texto,
+                ])->all(),
+                'fotos' => $paciente->fotosProntuario->map(fn ($f) => [
+                    'data'      => $f->tirada_em?->toDateString(),
+                    'momento'   => $f->momento->value,
+                    'regiao'    => $f->regiao,
+                    'descricao' => $f->descricao,
+                ])->all(),
+                'termos_assinados' => $paciente->termos->map(fn ($t) => [
+                    'titulo'                 => $t->titulo,
+                    'assinado_por'           => $t->assinante_nome,
+                    'assinado_em'            => $t->assinado_em?->toIso8601String(),
+                    'codigo_de_verificacao'  => $t->hash,
+                    'texto'                  => $t->conteudo,
+                ])->all(),
+                'orientacoes' => $paciente->orientacoes->map(fn ($o) => [
+                    'data'   => $o->created_at?->toIso8601String(),
+                    'titulo' => $o->titulo,
+                    'texto'  => $o->texto,
+                ])->all(),
+            ],
             'acessos_aos_dados' => $this->consultarAcessos->execute($paciente, self::LIMITE),
         ];
 

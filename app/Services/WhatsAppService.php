@@ -104,6 +104,12 @@ class WhatsAppService
         return $msg;
     }
 
+    /** Texto para o telefone como está no cadastro (com máscara, sem DDI). */
+    public function enviarTextoParaTelefone(string $telefone, string $mensagem): bool
+    {
+        return $this->enviarTexto($this->formatarTelefone($telefone), $mensagem);
+    }
+
     public function enviarTexto(string $numero, string $mensagem): bool
     {
         $resposta = $this->enviar('sendText', [

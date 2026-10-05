@@ -10,7 +10,10 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
 
-/** Limita agendamentos e pacientes ao profissional logado (perfil Profissional). */
+/**
+ * Limita agendamentos, pacientes e registros do prontuário ao profissional logado (perfil Profissional).
+ * Models com paciente_id (prontuário) seguem os pacientes que ele atende.
+ */
 class ProfissionalScope implements Scope
 {
     public function apply(Builder $builder, Model $model): void
@@ -26,8 +29,10 @@ class ProfissionalScope implements Scope
             return;
         }
 
-        // Pacientes: só os que têm (ou tiveram) atendimento com o profissional
-        $builder->whereIn($model->qualifyColumn('id'), fn ($q) => $q->select('paciente_id')
+        // Pacientes (e o prontuário deles): só os que têm ou tiveram atendimento com o profissional
+        $coluna = $model instanceof \App\Models\Paciente ? 'id' : 'paciente_id';
+
+        $builder->whereIn($model->qualifyColumn($coluna), fn ($q) => $q->select('paciente_id')
             ->from('agendamentos')
             ->where('profissional_id', $profissionalId)
             ->whereNotNull('paciente_id'));

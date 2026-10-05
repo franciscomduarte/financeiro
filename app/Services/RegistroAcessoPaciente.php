@@ -27,7 +27,7 @@ class RegistroAcessoPaciente
             'acao'        => $acao->value,
         ];
 
-        if ($acao === AcaoAcessoPaciente::Visualizou && DB::table('paciente_acessos')
+        if (in_array($acao, [AcaoAcessoPaciente::Visualizou, AcaoAcessoPaciente::AbriuProntuario], true) && DB::table('paciente_acessos')
             ->where($base)->where('created_at', '>=', now()->subMinutes(10))->exists()) {
             return;
         }

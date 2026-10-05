@@ -8,6 +8,9 @@ use App\Http\Controllers\ClinicaController;
 use App\Http\Controllers\DocumentoDownloadController;
 use App\Http\Controllers\EsqueciSenhaController;
 use App\Http\Controllers\PacienteExportacaoController;
+use App\Http\Controllers\ProntuarioArquivoController;
+use App\Livewire\Prontuario;
+use App\Livewire\ProntuarioModelos;
 use App\Http\Controllers\SuporteClinicaController;
 use App\Http\Controllers\VerificacaoEmailController;
 use App\Http\Controllers\VozTransacaoController;
@@ -75,6 +78,15 @@ Route::middleware('auth')->group(function (): void {
     Route::middleware('modulo:pacientes')->group(function (): void {
         Route::get('/pacientes', PacienteIndex::class)->name('pacientes.index');
         Route::get('/pacientes/{id}/exportar', PacienteExportacaoController::class)->name('pacientes.exportar');
+    });
+    // Prontuário: só quem vê dados clínicos (admin, profissional)
+    Route::middleware('modulo:dados_clinicos')->group(function (): void {
+        Route::get('/pacientes/{id}/prontuario', Prontuario::class)->name('pacientes.prontuario');
+        Route::get('/prontuario/modelos', ProntuarioModelos::class)->name('prontuario.modelos');
+        Route::get('/prontuario/fotos/{id}/{tamanho?}', [ProntuarioArquivoController::class, 'foto'])
+            ->whereIn('tamanho', ['mini'])->name('prontuario.foto');
+        Route::get('/prontuario/termos/{id}/pdf', [ProntuarioArquivoController::class, 'termo'])->name('prontuario.termo.pdf');
+        Route::get('/prontuario/orientacoes/{id}/pdf', [ProntuarioArquivoController::class, 'orientacao'])->name('prontuario.orientacao.pdf');
     });
     Route::get('/cobrancas', CobrancaIndex::class)->name('cobrancas.index')->middleware('modulo:cobrancas');
     Route::middleware('modulo:lancamentos')->group(function (): void {

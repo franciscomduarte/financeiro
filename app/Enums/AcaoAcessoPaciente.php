@@ -11,6 +11,7 @@ enum AcaoAcessoPaciente: string
     case Editou      = 'editou';
     case Exportou    = 'exportou';
     case Anonimizou  = 'anonimizou';
+    case AbriuProntuario = 'abriu_prontuario';
 
     public function label(): string
     {
@@ -19,6 +20,7 @@ enum AcaoAcessoPaciente: string
             self::Editou     => 'Alterou os dados',
             self::Exportou   => 'Exportou os dados',
             self::Anonimizou => 'Anonimizou o paciente',
+            self::AbriuProntuario => 'Abriu o prontuário',
         };
     }
 }
