@@ -24,15 +24,21 @@ class ConcluirAtendimentoAction
     public function __construct(
         private readonly AgendamentoService $agendamentoService,
         private readonly CreateTransacaoAction $createTransacao,
+        private readonly \App\Actions\Pacotes\UsarSessaoPacoteAction $usarSessao,
     ) {}
 
     /**
      * @param  array{valor_bruto: float|string, categoria: string, forma_pagamento: string, pago: bool}|null  $receita
      *         null = concluir sem lançar receita
+     * @param  string|null  $pacoteId  usa uma sessão deste pacote (a receita já entrou na venda do pacote)
      */
-    public function execute(string $agendamentoId, ?array $receita): Agendamento
+    public function execute(string $agendamentoId, ?array $receita, ?string $pacoteId = null): Agendamento
     {
-        return DB::transaction(function () use ($agendamentoId, $receita): Agendamento {
+        if ($receita !== null && $pacoteId !== null) {
+            throw new RuntimeException('Atendimento pago com pacote não gera outra receita.');
+        }
+
+        return DB::transaction(function () use ($agendamentoId, $receita, $pacoteId): Agendamento {
             $agendamento = Agendamento::with(['paciente:id,nome'])->lockForUpdate()->findOrFail($agendamentoId);
 
             if (! $agendamento->status->isPendente()) {
@@ -66,6 +72,10 @@ class ConcluirAtendimentoAction
                     'transacao_id'   => $transacao->id,
                     'valor_bruto'    => $transacao->valor_bruto,
                 ]);
+            }
+
+            if ($pacoteId !== null) {
+                $this->usarSessao->execute($pacoteId, $agendamento);
             }
 
             return $this->agendamentoService->marcarRealizado($agendamento);

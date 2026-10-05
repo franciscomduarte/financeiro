@@ -735,6 +735,22 @@
                     </div>
                 @endif
 
+                @if ($pacotesConcluir->isNotEmpty())
+                    <div>
+                        <label for="concluir-pacote" class="label">Usar sessão de pacote</label>
+                        <select id="concluir-pacote" wire:model.live="concluirPacoteId" class="input">
+                            <option value="">Não usar pacote</option>
+                            @foreach ($pacotesConcluir as $pc)
+                                <option value="{{ $pc->id }}">{{ $pc->nome }} · saldo {{ $pc->saldo() }} de {{ $pc->sessoes_total }}</option>
+                            @endforeach
+                        </select>
+                        @if ($concluirPacoteId !== '')
+                            <p class="hint">A receita entrou na venda do pacote. Aqui só descontamos uma sessão.</p>
+                        @endif
+                    </div>
+                @endif
+
+                @if ($concluirPacoteId === '')
                 <label class="flex min-h-[44px] cursor-pointer items-center gap-3 rounded-xl border border-stone-200 px-4 py-2.5">
                     <input type="checkbox" wire:model.live="concluirLancarReceita"
                            class="h-5 w-5 rounded border-stone-300 text-rose-600 focus:ring-rose-100">
@@ -784,6 +800,7 @@
                     <p class="hint">A taxa do cartão e o imposto são calculados sozinhos, como nos outros lançamentos.</p>
                 @else
                     <p class="text-sm text-stone-600">O agendamento fica como realizado, sem lançar receita.</p>
+                @endif
                 @endif
             </div>
             <div class="flex flex-col-reverse gap-2 border-t border-stone-100 px-5 py-4 sm:flex-row sm:justify-end sm:px-6">

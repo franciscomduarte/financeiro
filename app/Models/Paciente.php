@@ -66,6 +66,11 @@ class Paciente extends Model
         return $this->hasMany(PacienteAcesso::class, 'paciente_id');
     }
 
+    public function pacotes(): HasMany
+    {
+        return $this->hasMany(Pacote::class, 'paciente_id');
+    }
+
     public function evolucoes(): HasMany
     {
         return $this->hasMany(ProntuarioEvolucao::class, 'paciente_id');

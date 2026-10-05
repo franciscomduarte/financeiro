@@ -24,10 +24,12 @@ class Profissional extends Model
         'google_refresh_token',
         'cor_agenda',
         'ativo',
+        'comissao_percentual',
     ];
 
     protected $casts = [
-        'ativo' => 'boolean',
+        'ativo'               => 'boolean',
+        'comissao_percentual' => 'decimal:2',
     ];
 
     protected $hidden = [

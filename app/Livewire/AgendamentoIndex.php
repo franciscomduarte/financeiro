@@ -9,6 +9,7 @@ use App\Enums\FormaPagamento;
 use App\Enums\StatusAgendamento;
 use App\Enums\VisaoAgenda;
 use App\Models\Agendamento;
+use App\Models\Pacote;
 use App\Models\Paciente;
 use App\Models\Procedimento;
 use App\Models\Profissional;
@@ -83,6 +84,8 @@ class AgendamentoIndex extends Component
     public string $concluirCategoria       = '';
     public string $concluirFormaPagamento  = 'pix';
     public bool   $concluirPago            = true;
+    /** Pacote do paciente usado neste atendimento ('' = não usa pacote) */
+    public string $concluirPacoteId        = '';
 
     // ─── Detalhe ──────────────────────────────────────────────────
     public bool    $modalDetalhe = false;
@@ -435,6 +438,17 @@ class AgendamentoIndex extends Component
         $this->concluirCategoria      = '';
         $this->concluirFormaPagamento = ($forma && $forma !== FormaPagamento::AportePessoal ? $forma : FormaPagamento::Pix)->value;
         $this->concluirPago           = true;
+
+        // Pacote com saldo para o procedimento: sugere usar a sessão em vez de lançar receita
+        $pacote = Pacote::query()->select(['id'])->utilizaveis()
+            ->where('paciente_id', $agendamento->paciente_id)
+            ->where('procedimento_id', $agendamento->procedimento_id)
+            ->orderBy('created_at')->first();
+        $this->concluirPacoteId = $pacote?->id ?? '';
+        if ($pacote) {
+            $this->concluirLancarReceita = false;
+        }
+
         $this->modalConcluir          = true;
     }
 
@@ -445,8 +459,27 @@ class AgendamentoIndex extends Component
         $this->resetErrorBag();
     }
 
+    public function updatedConcluirPacoteId(): void
+    {
+        if ($this->concluirPacoteId !== '') {
+            $this->concluirLancarReceita = false;
+        }
+    }
+
+    public function updatedConcluirLancarReceita(): void
+    {
+        if ($this->concluirLancarReceita) {
+            $this->concluirPacoteId = '';
+        }
+    }
+
     public function confirmarConclusao(ConcluirAtendimentoAction $concluir): void
     {
+        $usaPacote = $this->concluirPacoteId !== '';
+        if ($usaPacote) {
+            $this->concluirLancarReceita = false;
+        }
+
         if ($this->concluirLancarReceita) {
             $this->validate([
                 'concluirValor'          => 'required|numeric|min:0.01|max:999999.99',
@@ -468,11 +501,13 @@ class AgendamentoIndex extends Component
                 'categoria'       => $this->concluirCategoria,
                 'forma_pagamento' => $this->concluirFormaPagamento,
                 'pago'            => $this->concluirPago,
-            ] : null);
+            ] : null, $usaPacote ? $this->concluirPacoteId : null);
 
-            $this->flashSucesso = $this->concluirLancarReceita
-                ? 'Atendimento concluído e receita lançada no financeiro.'
-                : 'Atendimento concluído, sem lançar receita.';
+            $this->flashSucesso = match (true) {
+                $usaPacote                   => 'Atendimento concluído e sessão descontada do pacote.',
+                $this->concluirLancarReceita => 'Atendimento concluído e receita lançada no financeiro.',
+                default                      => 'Atendimento concluído, sem lançar receita.',
+            };
             $this->fecharModalConcluir();
         } catch (RuntimeException $e) {
             $this->flashErro = $this->mensagemDeErro($e);
@@ -687,8 +722,15 @@ class AgendamentoIndex extends Component
                 ->find($this->concluirId)
             : null;
 
+        $pacotesConcluir = $agendamentoConcluir
+            ? Pacote::query()->select(['id', 'paciente_id', 'procedimento_id', 'nome', 'sessoes_total', 'sessoes_usadas', 'validade'])
+                ->utilizaveis()->where('paciente_id', $agendamentoConcluir->paciente_id)
+                ->orderBy('created_at')->limit(20)->get()
+            : collect();
+
         return view('livewire.agendamento-index', [
             ...$dados,
+            'pacotesConcluir'    => $pacotesConcluir,
             'visaoAtual'         => $visao,
             'tituloPeriodo'      => $this->tituloPeriodo($visao),
             'agendamentos'       => $agendamentos,

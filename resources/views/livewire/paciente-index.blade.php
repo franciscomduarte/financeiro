@@ -403,6 +403,29 @@
                     </div>
 
                     @if ($veFinanceiro)
+                    {{-- Pacotes com saldo --}}
+                    <div>
+                        <div class="mb-2 flex items-center justify-between">
+                            <h3 class="text-sm font-semibold text-stone-900">Pacotes</h3>
+                            @unless ($p->anonimizado())
+                                <div class="flex gap-1">
+                                    <a href="{{ route('orcamentos.index', ['paciente' => $p->id]) }}" wire:navigate class="btn-ghost min-h-9 px-2 text-sm">+ Orçamento</a>
+                                    <a href="{{ route('pacotes.index', ['paciente' => $p->id]) }}" wire:navigate class="btn-ghost min-h-9 px-2 text-sm">+ Pacote</a>
+                                </div>
+                            @endunless
+                        </div>
+                        @forelse ($p->pacotes as $pc)
+                            <div class="flex items-center justify-between gap-3 border-b border-stone-100 py-2 text-sm last:border-0">
+                                <span class="min-w-0 truncate text-stone-800">{{ $pc->nome }}</span>
+                                <span class="shrink-0 tabular-nums {{ $pc->vencido() ? 'text-red-700' : 'text-stone-500' }}">
+                                    {{ $pc->saldo() }} de {{ $pc->sessoes_total }}@if ($pc->validade) · até {{ $pc->validade->format('d/m/y') }}@endif
+                                </span>
+                            </div>
+                        @empty
+                            <p class="text-sm text-stone-500">Nenhum pacote ativo.</p>
+                        @endforelse
+                    </div>
+
                     {{-- Histórico de lançamentos --}}
                     <div>
                         <h3 class="mb-2 text-sm font-semibold text-stone-900">Histórico de lançamentos</h3>
