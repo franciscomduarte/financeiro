@@ -16,6 +16,12 @@ class Paciente extends Model
 {
     use BelongsToClinica, HasFactory, HasUuids;
 
+    protected static function booted(): void
+    {
+        // Perfil Profissional: só os pacientes que atende
+        static::addGlobalScope(new \App\Models\Scopes\ProfissionalScope());
+    }
+
     protected $table = 'pacientes';
 
     protected $fillable = [
@@ -29,12 +35,18 @@ class Paciente extends Model
         'anamnese',
         'observacoes',
         'status',
+        'aceita_whatsapp_marketing',
+        'aceita_email_marketing',
     ];
 
     protected $casts = [
         'status'             => StatusPaciente::class,
         'data_nascimento'    => 'date',
         'valor_mensalidade'  => 'decimal:2',
+        'consentimento_em'   => 'datetime',
+        'anonimizado_em'     => 'datetime',
+        'aceita_whatsapp_marketing' => 'boolean',
+        'aceita_email_marketing'    => 'boolean',
     ];
 
     public function getFotoUrlAttribute(): ?string
@@ -42,6 +54,21 @@ class Paciente extends Model
         return $this->foto_path
             ? Storage::disk('public')->url($this->foto_path)
             : null;
+    }
+
+    public function agendamentos(): HasMany
+    {
+        return $this->hasMany(Agendamento::class, 'paciente_id');
+    }
+
+    public function acessos(): HasMany
+    {
+        return $this->hasMany(PacienteAcesso::class, 'paciente_id');
+    }
+
+    public function anonimizado(): bool
+    {
+        return $this->anonimizado_em !== null;
     }
 
     public function transacoes(): HasMany

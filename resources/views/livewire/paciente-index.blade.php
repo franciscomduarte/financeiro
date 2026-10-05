@@ -205,10 +205,12 @@
                                             class="rounded-lg p-2 text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-colors" title="Ver detalhes" aria-label="Ver detalhes de {{ $paciente->nome }}">
                                         <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                     </button>
+                                    @unless ($paciente->anonimizado_em)
                                     <button wire:click="abrirModalEditar('{{ $paciente->id }}')"
                                             class="rounded-lg p-2 text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-colors" title="Editar" aria-label="Editar {{ $paciente->nome }}">
                                         <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg>
                                     </button>
+                                    @endunless
                                 </div>
                             </td>
                         </tr>
@@ -367,8 +369,8 @@
                         </div>
                     @endif
 
-                    {{-- Anamnese --}}
-                    @if ($p->anamnese)
+                    {{-- Anamnese (só perfis com acesso a dados clínicos) --}}
+                    @if ($veDadosClinicos && $p->anamnese)
                         <div>
                             <h3 class="mb-2 text-sm font-semibold text-stone-900">Anamnese e notas clínicas</h3>
                             <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
@@ -385,6 +387,22 @@
                         </div>
                     @endif
 
+                    @if ($p->anonimizado())
+                        <p class="rounded-xl bg-stone-100 px-4 py-3 text-sm text-stone-600">
+                            Dados pessoais apagados em {{ $p->anonimizado_em->format('d/m/Y') }} a pedido do paciente (LGPD). Os lançamentos financeiros foram mantidos.
+                        </p>
+                    @endif
+
+                    {{-- Privacidade (LGPD) --}}
+                    <div class="text-sm text-stone-600">
+                        <h3 class="mb-1 text-sm font-semibold text-stone-900">Privacidade (LGPD)</h3>
+                        <p>
+                            {{ $p->consentimento_em ? 'Autorizou o uso dos dados em ' . $p->consentimento_em->format('d/m/Y') . '.' : 'Autorização de uso dos dados não registrada.' }}
+                            Promoções: {{ collect(['WhatsApp' => $p->aceita_whatsapp_marketing, 'e-mail' => $p->aceita_email_marketing])->filter()->keys()->join(' e ') ?: 'não aceita' }}.
+                        </p>
+                    </div>
+
+                    @if ($veFinanceiro)
                     {{-- Histórico de lançamentos --}}
                     <div>
                         <h3 class="mb-2 text-sm font-semibold text-stone-900">Histórico de lançamentos</h3>
@@ -411,14 +429,44 @@
                             </ul>
                         @endif
                     </div>
+                    @endif
+
+                    @if ($ehAdmin)
+                        {{-- Quem acessou (LGPD) --}}
+                        <div>
+                            <h3 class="mb-2 text-sm font-semibold text-stone-900">Quem acessou estes dados</h3>
+                            @if (empty($this->acessosDetalhe))
+                                <p class="text-sm text-stone-500">Nenhum acesso registrado ainda.</p>
+                            @else
+                                <ul class="space-y-1.5 text-sm">
+                                    @foreach ($this->acessosDetalhe as $acesso)
+                                        <li class="flex justify-between gap-3">
+                                            <span class="text-stone-700">{{ $acesso['quem'] }} · {{ $acesso['acao'] }}</span>
+                                            <span class="shrink-0 text-xs text-stone-500 tabular-nums">{{ \Carbon\Carbon::parse($acesso['quando'])->format('d/m/Y H:i') }}</span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @endif
+                        </div>
+                    @endif
                 </div>
                 <div class="flex flex-col-reverse gap-2 border-t border-stone-100 px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
+                    @if ($ehAdmin && ! $p->anonimizado())
+                        <div class="flex flex-col-reverse gap-2 sm:mr-auto sm:flex-row">
+                            <a href="{{ route('pacientes.exportar', $p->id) }}" class="btn-ghost">Exportar dados</a>
+                            <button type="button" wire:click="anonimizar"
+                                    wire:confirm="Anonimizar {{ $p->nome }}? Nome, contatos, documentos, foto e anotações clínicas serão apagados para sempre. Os lançamentos financeiros ficam guardados sem identificar o paciente."
+                                    class="btn-ghost text-red-600">Anonimizar (LGPD)</button>
+                        </div>
+                    @endif
                     <button wire:click="fecharModais" class="btn-secondary">
                         Fechar
                     </button>
-                    <button wire:click="abrirModalEditar('{{ $p->id }}')" class="btn-primary">
-                        Editar paciente
-                    </button>
+                    @unless ($p->anonimizado())
+                        <button wire:click="abrirModalEditar('{{ $p->id }}')" class="btn-primary">
+                            Editar paciente
+                        </button>
+                    @endunless
                 </div>
             </div>
         </div>

@@ -60,7 +60,7 @@ class AutocadastroTest extends TestCase
         Mail::fake();
         config(['plataforma.email' => 'dono@plataforma.com']);
 
-        $this->post('/assine', $this->dados())->assertRedirect(route('dashboard'));
+        $this->post('/assine', $this->dados())->assertRedirect(route('inicio'));
 
         $user    = User::where('email', 'joana@bemestar.com')->firstOrFail();
         $clinica = $user->clinicas()->firstOrFail();
@@ -252,7 +252,7 @@ class AutocadastroTest extends TestCase
         Mail::fake();
         [$clinica, $admin] = $this->clinicaEmTeste(3);
         $usuarioComum = User::factory()->semClinica()->create();
-        $usuarioComum->clinicas()->attach($clinica->id, ['papel' => 'user']);
+        $usuarioComum->clinicas()->attach($clinica->id, ['papel' => 'recepcao']);
 
         $acao = app(AvisarFimDoTesteAction::class);
         $this->assertSame(1, $acao->execute());

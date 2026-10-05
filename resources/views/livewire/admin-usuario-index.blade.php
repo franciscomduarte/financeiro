@@ -132,7 +132,7 @@
                             <td class="px-5 py-3 text-sm text-stone-600">{{ $usuario->email }}</td>
                             <td class="px-5 py-3">
                                 <span class="badge {{ $usuario->pivot->papel === \App\Enums\RoleUsuario::Admin->value ? 'bg-rose-50 text-rose-700' : 'bg-stone-100 text-stone-600' }}">
-                                    {{ \App\Enums\RoleUsuario::from($usuario->pivot->papel)->label() }}
+                                    {{ \App\Enums\RoleUsuario::tryFrom($usuario->pivot->papel)?->label() ?? $usuario->pivot->papel }}
                                 </span>
                             </td>
                             <td class="px-5 py-3">
@@ -184,7 +184,7 @@
                                 <p class="text-sm text-stone-500 truncate">{{ $usuario->email }}</p>
                                 <div class="mt-2 flex flex-wrap items-center gap-2">
                                     <span class="badge {{ $usuario->pivot->papel === \App\Enums\RoleUsuario::Admin->value ? 'bg-rose-50 text-rose-700' : 'bg-stone-100 text-stone-600' }}">
-                                        {{ \App\Enums\RoleUsuario::from($usuario->pivot->papel)->label() }}
+                                        {{ \App\Enums\RoleUsuario::tryFrom($usuario->pivot->papel)?->label() ?? $usuario->pivot->papel }}
                                     </span>
                                     <button type="button" wire:click="toggleAtivo('{{ $usuario->id }}')"
                                         @disabled($usuario->id === auth()->id())
@@ -245,15 +245,34 @@
                         <p class="hint">Se o e-mail já tiver conta em outra clínica, a pessoa só ganha acesso a esta e continua com a senha que já usa.</p>
                     </div>
                 @endif
-                <div>
-                    <label for="usuario-role" class="label">Perfil</label>
-                    <select id="usuario-role" wire:model="role" class="input">
+                <fieldset>
+                    <legend class="label">Perfil</legend>
+                    <div class="space-y-2">
                         @foreach ($roleOpcoes as $r)
-                            <option value="{{ $r->value }}">{{ $r->label() }}</option>
+                            <label class="flex min-h-[44px] cursor-pointer items-start gap-3 rounded-xl border px-3 py-2.5 {{ $role === $r->value ? 'border-rose-300 bg-rose-50' : 'border-stone-200 hover:border-stone-300' }}">
+                                <input type="radio" wire:model.live="role" value="{{ $r->value }}" class="mt-1 w-4 h-4 border-stone-300 text-rose-600 focus:ring-rose-300">
+                                <span>
+                                    <span class="block text-sm font-medium text-stone-900">{{ $r->label() }}</span>
+                                    <span class="block text-xs text-stone-500">{{ $r->descricao() }}</span>
+                                </span>
+                            </label>
                         @endforeach
-                    </select>
+                    </div>
                     @error('role') <p class="field-error">{{ $message }}</p> @enderror
-                </div>
+                </fieldset>
+                @if ($role === 'profissional')
+                    <div>
+                        <label for="usuario-profissional" class="label">Quem é na agenda</label>
+                        <select id="usuario-profissional" wire:model="profissionalId" class="input">
+                            <option value="">Selecione o profissional</option>
+                            @foreach ($profissionais as $p)
+                                <option value="{{ $p->id }}">{{ $p->nome }}</option>
+                            @endforeach
+                        </select>
+                        <p class="hint">A pessoa vê só a agenda e os pacientes desse profissional. Cadastre profissionais em Profissionais e horários.</p>
+                        @error('profissionalId') <p class="field-error">{{ $message }}</p> @enderror
+                    </div>
+                @endif
                 @if ($usuarioEditandoId)
                     <label for="ativo-check" class="flex min-h-[44px] items-center gap-3 cursor-pointer select-none">
                         <input wire:model="ativo" id="ativo-check" type="checkbox" class="w-5 h-5 rounded border-stone-300 text-rose-600 focus:ring-rose-300">

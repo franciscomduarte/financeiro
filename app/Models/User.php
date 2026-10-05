@@ -46,22 +46,52 @@ class User extends Authenticatable
         return $clinica !== null && $this->clinicas()->whereKey($clinica->id)->exists();
     }
 
+    /** @var array<string, ?RoleUsuario> papel por clínica, lido uma vez por requisição */
+    private array $papeis = [];
+
     /** Papel na clínica informada (ou na clínica ativa). */
     public function papelNa(?Clinica $clinica = null): ?RoleUsuario
     {
-        $clinica ??= app(ClinicaAtual::class)->get();
+        $clinicaAtual = app(ClinicaAtual::class);
+        $clinica ??= $clinicaAtual->get();
         if ($clinica === null) {
             return null;
         }
 
-        $papel = $this->clinicas()->whereKey($clinica->id)->value('clinica_user.papel');
+        // Dono da plataforma em modo suporte enxerga como administrador (sempre só leitura)
+        if ($this->is_super_admin && $clinicaAtual->emSuporte() && $clinicaAtual->id() === $clinica->id) {
+            return RoleUsuario::Admin;
+        }
 
-        return $papel ? RoleUsuario::from($papel) : null;
+        if (! array_key_exists($clinica->id, $this->papeis)) {
+            $papel = $this->clinicas()->whereKey($clinica->id)->value('clinica_user.papel');
+            $this->papeis[$clinica->id] = $papel ? RoleUsuario::tryFrom($papel) : null;
+        }
+
+        return $this->papeis[$clinica->id];
+    }
+
+    /** Esquece os papéis lidos (após alterar o vínculo do usuário). */
+    public function esquecerPapeis(): void
+    {
+        $this->papeis = [];
     }
 
     /** Administrador da clínica ativa (o papel é por clínica). */
     public function isAdmin(): bool
     {
         return $this->papelNa() === RoleUsuario::Admin;
+    }
+
+    /** Acesso à área do sistema na clínica ativa, conforme o perfil. */
+    public function pode(\App\Enums\Modulo $modulo): bool
+    {
+        return (bool) $this->papelNa()?->pode($modulo);
+    }
+
+    /** Rota da tela inicial do usuário na clínica ativa. */
+    public function paginaInicial(): string
+    {
+        return $this->papelNa()?->paginaInicial() ?? 'dashboard';
     }
 }

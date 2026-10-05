@@ -22,7 +22,7 @@ class SuporteClinicaController extends Controller
         ClinicaEvento::registrar($clinica, AcaoClinicaEvento::SuporteEntrada);
         Log::warning('[Plataforma] acesso de suporte iniciado', ['tenant_id' => $clinica->id, 'user_id' => $request->user()->id]);
 
-        return redirect()->route('dashboard');
+        return redirect()->route('inicio');
     }
 
     public function sair(Request $request): RedirectResponse

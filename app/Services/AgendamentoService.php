@@ -25,6 +25,11 @@ class AgendamentoService
 
     public function criar(array $dados): Agendamento
     {
+        // Perfil Profissional só agenda para si mesmo (telas e API)
+        if ($proprio = app(\App\Support\EscopoProfissional::class)->profissionalId()) {
+            $dados['profissional_id'] = $proprio;
+        }
+
         return DB::transaction(function () use ($dados): Agendamento {
             // Suporta array de procedimentos ou ID único (retrocompatibilidade)
             $procedimentoIds = $dados['procedimentos_ids'] ?? [$dados['procedimento_id']];

@@ -24,39 +24,41 @@ Route::post('/webhook/asaas', [CobrancaController::class, 'webhook'])
 
 Route::middleware(['auth:sanctum', 'clinica'])->prefix('v1')->name('api.v1.')->group(function (): void {
 
-    // Transações
-    Route::apiResource('transacoes', TransacaoController::class)
-        ->parameters(['transacoes' => 'transacao']);
+    // Transações, anexos e download seguro de anexo
+    Route::middleware('modulo:lancamentos')->group(function (): void {
+        Route::apiResource('transacoes', TransacaoController::class)
+            ->parameters(['transacoes' => 'transacao']);
 
-    // Anexos de transações
-    Route::prefix('transacoes/{transacao}/anexos')->group(function (): void {
-        Route::get('/', [AnexoController::class, 'index']);
-        Route::post('/', [AnexoController::class, 'store']);
-        Route::delete('/{anexo}', [AnexoController::class, 'destroy']);
+        Route::prefix('transacoes/{transacao}/anexos')->group(function (): void {
+            Route::get('/', [AnexoController::class, 'index']);
+            Route::post('/', [AnexoController::class, 'store']);
+            Route::delete('/{anexo}', [AnexoController::class, 'destroy']);
+        });
+
+        Route::get('anexos/{anexo}/download', [AnexoController::class, 'download'])
+            ->name('anexos.download');
     });
 
-    // Download seguro de anexo
-    Route::get('anexos/{anexo}/download', [AnexoController::class, 'download'])
-        ->name('anexos.download');
-
     // Fornecedores
-    Route::apiResource('fornecedores', FornecedorController::class)
+    Route::apiResource('fornecedores', FornecedorController::class)->middleware('modulo:administrativo')
         ->parameters(['fornecedores' => 'fornecedor']);
 
     // Contratos
-    Route::apiResource('contratos', ContratoController::class)
-        ->parameters(['contratos' => 'contrato']);
-    Route::post('contratos/{contrato}/reajuste', [ContratoController::class, 'reajuste']);
-    Route::post('contratos/{contrato}/arquivo', [ContratoController::class, 'uploadArquivo']);
-    Route::get('contratos/{contrato}/arquivo/download', [ContratoController::class, 'downloadArquivo'])
-        ->name('contratos.arquivo.download');
+    Route::middleware('modulo:administrativo')->group(function (): void {
+        Route::apiResource('contratos', ContratoController::class)
+            ->parameters(['contratos' => 'contrato']);
+        Route::post('contratos/{contrato}/reajuste', [ContratoController::class, 'reajuste']);
+        Route::post('contratos/{contrato}/arquivo', [ContratoController::class, 'uploadArquivo']);
+        Route::get('contratos/{contrato}/arquivo/download', [ContratoController::class, 'downloadArquivo'])
+            ->name('contratos.arquivo.download');
+    });
 
     // Taxas de cartão
-    Route::get('taxas-cartao', [TaxaCartaoController::class, 'index']);
-    Route::put('taxas-cartao/{taxaCartao}', [TaxaCartaoController::class, 'update']);
+    Route::get('taxas-cartao', [TaxaCartaoController::class, 'index'])->middleware('modulo:taxas,lancamentos');
+    Route::put('taxas-cartao/{taxaCartao}', [TaxaCartaoController::class, 'update'])->middleware('modulo:taxas');
 
     // Cobranças
-    Route::prefix('cobrancas')->name('cobrancas.')->group(function (): void {
+    Route::prefix('cobrancas')->name('cobrancas.')->middleware('modulo:cobrancas')->group(function (): void {
         Route::get('/', [CobrancaController::class, 'index'])->name('index');
         Route::post('/disparar-todas', [CobrancaController::class, 'dispararTodas'])->name('disparar-todas');
         Route::post('/disparar/{pacienteId}', [CobrancaController::class, 'dispararManual'])->name('disparar');
@@ -65,7 +67,7 @@ Route::middleware(['auth:sanctum', 'clinica'])->prefix('v1')->name('api.v1.')->g
     });
 
     // ─── Agendamentos ─────────────────────────────────────────────────────────────
-    Route::prefix('agendamentos')->name('agendamentos.')->group(function (): void {
+    Route::prefix('agendamentos')->name('agendamentos.')->middleware('modulo:agenda')->group(function (): void {
         Route::get('/', [AgendamentoController::class, 'index'])->name('index');
         Route::post('/', [AgendamentoController::class, 'store'])->name('store');
         Route::get('/slots', [AgendamentoController::class, 'slots'])->name('slots');
@@ -77,20 +79,27 @@ Route::middleware(['auth:sanctum', 'clinica'])->prefix('v1')->name('api.v1.')->g
     });
 
     // ─── Profissionais ────────────────────────────────────────────────────────────
+    // Consulta: quem usa a agenda; alteração: só quem configura a agenda
     Route::prefix('profissionais')->name('profissionais.')->group(function (): void {
-        Route::get('/', [ProfissionalController::class, 'index'])->name('index');
-        Route::post('/', [ProfissionalController::class, 'store'])->name('store');
-        Route::get('/{profissional}', [ProfissionalController::class, 'show'])->name('show');
-        Route::put('/{profissional}', [ProfissionalController::class, 'update'])->name('update');
-        Route::delete('/{profissional}', [ProfissionalController::class, 'destroy'])->name('destroy');
-        Route::get('/{profissional}/grade', [ProfissionalController::class, 'grade'])->name('grade');
-        Route::put('/{profissional}/grade', [ProfissionalController::class, 'atualizarGrade'])->name('grade.update');
-        Route::get('/{profissional}/bloqueios', [BloqueioAgendaController::class, 'index'])->name('bloqueios.index');
-        Route::post('/{profissional}/bloqueios', [BloqueioAgendaController::class, 'store'])->name('bloqueios.store');
-        Route::delete('/bloqueios/{bloqueio}', [BloqueioAgendaController::class, 'destroy'])->name('bloqueios.destroy');
+        Route::middleware('modulo:agenda,configuracao_agenda')->group(function (): void {
+            Route::get('/', [ProfissionalController::class, 'index'])->name('index');
+            Route::get('/{profissional}', [ProfissionalController::class, 'show'])->name('show');
+            Route::get('/{profissional}/grade', [ProfissionalController::class, 'grade'])->name('grade');
+            Route::get('/{profissional}/bloqueios', [BloqueioAgendaController::class, 'index'])->name('bloqueios.index');
+        });
+        Route::middleware('modulo:configuracao_agenda')->group(function (): void {
+            Route::post('/', [ProfissionalController::class, 'store'])->name('store');
+            Route::put('/{profissional}', [ProfissionalController::class, 'update'])->name('update');
+            Route::delete('/{profissional}', [ProfissionalController::class, 'destroy'])->name('destroy');
+            Route::put('/{profissional}/grade', [ProfissionalController::class, 'atualizarGrade'])->name('grade.update');
+            Route::post('/{profissional}/bloqueios', [BloqueioAgendaController::class, 'store'])->name('bloqueios.store');
+            Route::delete('/bloqueios/{bloqueio}', [BloqueioAgendaController::class, 'destroy'])->name('bloqueios.destroy');
+        });
     });
 
     // ─── Procedimentos ────────────────────────────────────────────────────────────
-    Route::apiResource('procedimentos', ProcedimentoController::class)
-        ->parameters(['procedimentos' => 'procedimento']);
+    Route::apiResource('procedimentos', ProcedimentoController::class)->only(['index', 'show'])
+        ->parameters(['procedimentos' => 'procedimento'])->middleware('modulo:agenda,configuracao_agenda');
+    Route::apiResource('procedimentos', ProcedimentoController::class)->except(['index', 'show'])
+        ->parameters(['procedimentos' => 'procedimento'])->middleware('modulo:configuracao_agenda');
 });

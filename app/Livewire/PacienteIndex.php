@@ -49,8 +49,27 @@ class PacienteIndex extends Component
     public string $observacoes      = '';
     public string $status           = 'ativo';
 
+    // ─── LGPD ───────────────────────────────────────────────────
+    public bool $consentimento           = false;
+    public bool $aceitaWhatsappMarketing = false;
+    public bool $aceitaEmailMarketing    = false;
+
     /** @var mixed */
     public $foto = null;
+
+    /** Perfil vê anamnese e notas clínicas (admin, profissional) */
+    private function veDadosClinicos(): bool
+    {
+        return (bool) auth()->user()?->pode(\App\Enums\Modulo::DadosClinicos);
+    }
+
+    /** Perfil vê valores e cobranças do paciente (admin, recepção, financeiro) */
+    private function veFinanceiro(): bool
+    {
+        $user = auth()->user();
+
+        return (bool) ($user?->pode(\App\Enums\Modulo::Cobrancas) || $user?->pode(\App\Enums\Modulo::Lancamentos));
+    }
 
     // ─── Flash ─────────────────────────────────────────────────
     public ?string $flashSucesso = null;
@@ -80,6 +99,7 @@ class PacienteIndex extends Component
 
         try {
             $paciente = $action->execute($this->dadosFormulario());
+            $this->gravarConsentimento($paciente);
 
             if ($this->foto !== null) {
                 $uploadAction->execute($paciente, $this->foto);
@@ -97,6 +117,7 @@ class PacienteIndex extends Component
     public function abrirModalEditar(string $id): void
     {
         $paciente = Paciente::findOrFail($id);
+        abort_if($paciente->anonimizado(), 403, 'Paciente anonimizado não pode ser editado.');
 
         $this->pacienteEditandoId = $id;
         $this->nome               = $paciente->nome;
@@ -106,10 +127,13 @@ class PacienteIndex extends Component
         $this->email              = $paciente->email ?? '';
         $this->valorMensalidade   = $paciente->valor_mensalidade ? (string) $paciente->valor_mensalidade : '';
         $this->formaPagamento     = $paciente->forma_pagamento ?? 'pix';
-        $this->anamnese           = $paciente->anamnese ?? '';
+        $this->anamnese           = $this->veDadosClinicos() ? ($paciente->anamnese ?? '') : '';
         $this->observacoes        = $paciente->observacoes ?? '';
         $this->status             = $paciente->status->value;
         $this->foto               = null;
+        $this->consentimento           = $paciente->consentimento_em !== null;
+        $this->aceitaWhatsappMarketing = $paciente->aceita_whatsapp_marketing;
+        $this->aceitaEmailMarketing    = $paciente->aceita_email_marketing;
 
         $this->modalDetalhe = false;
         $this->modalEditar  = true;
@@ -122,6 +146,8 @@ class PacienteIndex extends Component
         try {
             $paciente = Paciente::findOrFail($this->pacienteEditandoId);
             $action->execute($paciente, $this->dadosFormulario());
+            $this->gravarConsentimento($paciente);
+            app(\App\Services\RegistroAcessoPaciente::class)->registrar($paciente, \App\Enums\AcaoAcessoPaciente::Editou);
 
             if ($this->foto !== null) {
                 $uploadAction->execute($paciente->fresh(), $this->foto);
@@ -138,8 +164,36 @@ class PacienteIndex extends Component
     // ─── Modal Detalhe ──────────────────────────────────────────
     public function abrirDetalhe(string $id): void
     {
+        $paciente = Paciente::findOrFail($id);
+        app(\App\Services\RegistroAcessoPaciente::class)->registrar($paciente, \App\Enums\AcaoAcessoPaciente::Visualizou);
+
         $this->pacienteDetalheId = $id;
         $this->modalDetalhe      = true;
+    }
+
+    /** LGPD: apaga dados pessoais e clínicos e mantém o financeiro (só administradores). */
+    public function anonimizar(\App\Actions\AnonimizarPacienteAction $action): void
+    {
+        abort_unless(auth()->user()?->isAdmin(), 403);
+
+        try {
+            $action->execute(Paciente::findOrFail($this->pacienteDetalheId));
+            unset($this->pacienteDetalhe);
+            $this->flashSucesso = 'Dados pessoais apagados. Os lançamentos financeiros continuam guardados, sem identificar o paciente.';
+        } catch (Throwable $e) {
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível anonimizar o paciente');
+        }
+    }
+
+    /** Consentimento LGPD: guarda quando e quem registrou; desmarcar apaga o registro. */
+    private function gravarConsentimento(Paciente $paciente): void
+    {
+        $paciente->forceFill([
+            'consentimento_em'          => $this->consentimento ? ($paciente->consentimento_em ?? now()) : null,
+            'consentimento_por'         => $this->consentimento ? ($paciente->consentimento_por ?? auth()->id()) : null,
+            'aceita_whatsapp_marketing' => $this->aceitaWhatsappMarketing,
+            'aceita_email_marketing'    => $this->aceitaEmailMarketing,
+        ])->save();
     }
 
     #[Computed]
@@ -149,12 +203,27 @@ class PacienteIndex extends Component
             return null;
         }
 
-        return Paciente::with([
+        $relacoes = $this->veFinanceiro() ? [
             'transacoes' => fn ($q) => $q
                 ->select(['id', 'tipo', 'descricao', 'valor_liquido', 'data_competencia', 'status', 'paciente_id'])
                 ->orderBy('data_competencia', 'desc')
                 ->limit(20),
-        ])->find($this->pacienteDetalheId);
+        ] : [];
+
+        return Paciente::with($relacoes)->find($this->pacienteDetalheId);
+    }
+
+    /** Últimos acessos aos dados do paciente aberto (só administradores). */
+    #[Computed]
+    public function acessosDetalhe(): array
+    {
+        if ($this->pacienteDetalheId === null || ! auth()->user()?->isAdmin()) {
+            return [];
+        }
+
+        $paciente = Paciente::find($this->pacienteDetalheId);
+
+        return $paciente ? app(\App\Actions\ConsultarAcessosPacienteAction::class)->execute($paciente, 15) : [];
     }
 
     // ─── Fechar modais ──────────────────────────────────────────
@@ -173,7 +242,7 @@ class PacienteIndex extends Component
     public function render(): View
     {
         $query = Paciente::query()
-            ->select(['id', 'nome', 'cpf', 'telefone', 'email', 'status', 'foto_path', 'valor_mensalidade', 'forma_pagamento', 'created_at'])
+            ->select(['id', 'nome', 'cpf', 'telefone', 'email', 'status', 'foto_path', 'valor_mensalidade', 'forma_pagamento', 'anonimizado_em', 'created_at'])
             ->orderBy('nome');
 
         if ($this->filtroStatus !== '') {
@@ -195,6 +264,9 @@ class PacienteIndex extends Component
         $ativosCount = Paciente::where('status', 'ativo')->count();
 
         return view('livewire.paciente-index', [
+            'veDadosClinicos' => $this->veDadosClinicos(),
+            'veFinanceiro'    => $this->veFinanceiro(),
+            'ehAdmin'         => (bool) auth()->user()?->isAdmin(),
             'pacientes'   => $pacientes,
             'totalCount'  => $totalCount,
             'ativosCount' => $ativosCount,
@@ -219,12 +291,15 @@ class PacienteIndex extends Component
             'observacoes'      => ['nullable', 'string'],
             'status'           => ['required', 'in:ativo,inativo'],
             'foto'             => ['nullable', 'image', 'max:2048', 'mimes:jpg,jpeg,png,webp'],
+            'consentimento'           => ['boolean'],
+            'aceitaWhatsappMarketing' => ['boolean'],
+            'aceitaEmailMarketing'    => ['boolean'],
         ];
     }
 
     private function dadosFormulario(): array
     {
-        return [
+        $dados = [
             'nome'              => $this->nome,
             'cpf'               => $this->cpf ?: null,
             'data_nascimento'   => $this->dataNascimento ?: null,
@@ -236,6 +311,16 @@ class PacienteIndex extends Component
             'observacoes'       => $this->observacoes ?: null,
             'status'            => $this->status,
         ];
+
+        // Quem não vê, não altera: campos ocultos para o perfil ficam como estão
+        if (! $this->veDadosClinicos()) {
+            unset($dados['anamnese']);
+        }
+        if (! $this->veFinanceiro()) {
+            unset($dados['valor_mensalidade'], $dados['forma_pagamento']);
+        }
+
+        return $dados;
     }
 
     private function resetFormulario(): void
@@ -251,6 +336,9 @@ class PacienteIndex extends Component
         $this->observacoes        = '';
         $this->status             = 'ativo';
         $this->foto               = null;
+        $this->consentimento           = false;
+        $this->aceitaWhatsappMarketing = false;
+        $this->aceitaEmailMarketing    = false;
         $this->pacienteEditandoId = null;
         $this->resetValidation();
     }

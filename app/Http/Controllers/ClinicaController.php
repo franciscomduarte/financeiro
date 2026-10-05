@@ -26,6 +26,6 @@ class ClinicaController extends Controller
         $request->session()->put('clinica_id', $escolhida->id);
         Log::info('[Clinica] clínica ativa trocada', ['user_id' => $request->user()->id, 'tenant_id' => $escolhida->id]);
 
-        return redirect()->route('dashboard');
+        return redirect()->route('inicio');
     }
 }

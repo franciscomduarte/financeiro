@@ -47,7 +47,7 @@
     @endforeach
 
     <p style="text-align:center; margin-top:24px">
-        <a class="btn" href="{{ route('dashboard') }}">Abrir o sistema</a>
+        <a class="btn" href="{{ route('inicio') }}">Abrir o sistema</a>
     </p>
 
     <div class="footer">Resumo automático enviado todos os dias às 07:30 quando há vencimentos.</div>

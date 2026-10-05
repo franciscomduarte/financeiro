@@ -15,7 +15,7 @@ class CadastroController extends Controller
 {
     public function create(): View|RedirectResponse
     {
-        return Auth::check() ? redirect()->route('dashboard') : view('auth.assine');
+        return Auth::check() ? redirect()->route('inicio') : view('auth.assine');
     }
 
     public function store(CadastroClinicaRequest $request, CadastrarClinicaAction $action): RedirectResponse
@@ -26,6 +26,6 @@ class CadastroController extends Controller
         $request->session()->regenerate();
         $request->session()->put('clinica_id', $clinica->id);
 
-        return redirect()->route('dashboard')->with('success', 'Bem-vindo! Seu teste grátis vai até ' . $clinica->teste_ate->format('d/m') . '.');
+        return redirect()->route('inicio')->with('success', 'Bem-vindo! Seu teste grátis vai até ' . $clinica->teste_ate->format('d/m') . '.');
     }
 }

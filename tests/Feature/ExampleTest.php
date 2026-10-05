@@ -20,10 +20,10 @@ class ExampleTest extends TestCase
             ->assertSee(route('login'));
     }
 
-    public function test_raiz_leva_usuario_autenticado_para_o_dashboard(): void
+    public function test_raiz_leva_usuario_autenticado_para_a_tela_inicial(): void
     {
         $this->actingAs(User::factory()->create())
             ->get('/')
-            ->assertRedirect('/dashboard');
+            ->assertRedirect(route('inicio'));
     }
 }

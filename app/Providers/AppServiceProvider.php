@@ -23,6 +23,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Clínica ativa da requisição/job (multiclínica)
         $this->app->singleton(ClinicaAtual::class);
+        $this->app->singleton(\App\Support\EscopoProfissional::class);
 
         // exists:/unique: passam a considerar apenas a clínica ativa
         $this->app->extend('validation.presence', fn ($verifier, $app) => new ClinicaPresenceVerifier(
@@ -54,7 +55,15 @@ class AppServiceProvider extends ServiceProvider
             app(ClinicaAtual::class)->definir($clinicaId ? Clinica::find($clinicaId) : null);
         });
         Queue::after(fn () => app(ClinicaAtual::class)->definir(null));
+        Queue::before(fn () => app(\App\Support\EscopoProfissional::class)->esquecer());
         Queue::failing(fn () => app(ClinicaAtual::class)->definir(null));
+
+        // Ações das telas Livewire passam pelas mesmas regras de acesso da rota da página
+        \Livewire\Livewire::addPersistentMiddleware([
+            \App\Http\Middleware\EnsureModulo::class,
+            \App\Http\Middleware\EnsureAdmin::class,
+            \App\Http\Middleware\EnsureSuperAdmin::class,
+        ]);
 
         // Teste encerrado: ação do Livewire que tenta gravar não vira erro 500 e a tela mostra o motivo
         // no lugar do "Erro ao salvar" genérico (os componentes usam $flashErro) ou num aviso do layout.

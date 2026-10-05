@@ -31,7 +31,7 @@ class PrimeirosPassosTest extends TestCase
 
     public function test_usuario_comum_nao_ve(): void
     {
-        $this->actingAs(User::factory()->create(['role' => 'user']));
+        $this->actingAs(User::factory()->create(['role' => 'recepcao']));
 
         Livewire::test(PrimeirosPassos::class)->assertDontSee('Primeiros passos');
     }
@@ -67,7 +67,7 @@ class PrimeirosPassosTest extends TestCase
 
     public function test_usuario_comum_nao_pode_dispensar(): void
     {
-        $this->actingAs(User::factory()->create(['role' => 'user']));
+        $this->actingAs(User::factory()->create(['role' => 'recepcao']));
 
         Livewire::test(PrimeirosPassos::class)->call('dispensar')->assertForbidden();
     }
