@@ -208,6 +208,11 @@ class PacienteIndex extends Component
                 ->select(['id', 'tipo', 'descricao', 'valor_liquido', 'data_competencia', 'status', 'paciente_id'])
                 ->orderBy('data_competencia', 'desc')
                 ->limit(20),
+            'pacotes' => fn ($q) => $q
+                ->select(['id', 'paciente_id', 'nome', 'sessoes_total', 'sessoes_usadas', 'validade', 'status'])
+                ->where('status', \App\Enums\StatusPacote::Ativo)
+                ->orderBy('created_at')
+                ->limit(20),
         ] : [];
 
         return Paciente::with($relacoes)->find($this->pacienteDetalheId);

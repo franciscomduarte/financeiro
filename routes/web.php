@@ -7,7 +7,11 @@ use App\Http\Controllers\CadastroController;
 use App\Http\Controllers\ClinicaController;
 use App\Http\Controllers\DocumentoDownloadController;
 use App\Http\Controllers\EsqueciSenhaController;
+use App\Http\Controllers\OrcamentoPdfController;
 use App\Http\Controllers\PacienteExportacaoController;
+use App\Livewire\ComissaoIndex;
+use App\Livewire\OrcamentoIndex;
+use App\Livewire\PacoteIndex;
 use App\Http\Controllers\ProntuarioArquivoController;
 use App\Livewire\Prontuario;
 use App\Livewire\ProntuarioModelos;
@@ -88,7 +92,13 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/prontuario/termos/{id}/pdf', [ProntuarioArquivoController::class, 'termo'])->name('prontuario.termo.pdf');
         Route::get('/prontuario/orientacoes/{id}/pdf', [ProntuarioArquivoController::class, 'orientacao'])->name('prontuario.orientacao.pdf');
     });
-    Route::get('/cobrancas', CobrancaIndex::class)->name('cobrancas.index')->middleware('modulo:cobrancas');
+    Route::middleware('modulo:cobrancas')->group(function (): void {
+        Route::get('/cobrancas', CobrancaIndex::class)->name('cobrancas.index');
+        Route::get('/orcamentos', OrcamentoIndex::class)->name('orcamentos.index');
+        Route::get('/orcamentos/{id}/pdf', OrcamentoPdfController::class)->name('orcamentos.pdf');
+        Route::get('/pacotes', PacoteIndex::class)->name('pacotes.index');
+    });
+    Route::get('/comissoes', ComissaoIndex::class)->name('comissoes.index')->middleware('modulo:relatorios');
     Route::middleware('modulo:lancamentos')->group(function (): void {
         Route::get('/transacoes', TransacaoIndex::class)->name('transacoes.index');
         Route::get('/transacoes/recorrencias', RecorrenciaIndex::class)->name('transacoes.recorrencias');
