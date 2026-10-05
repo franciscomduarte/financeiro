@@ -54,9 +54,11 @@ class AppServiceProvider extends ServiceProvider
             $clinicaId = $context->get('tenant_id');
             app(ClinicaAtual::class)->definir($clinicaId ? Clinica::find($clinicaId) : null);
         });
-        Queue::after(fn () => app(ClinicaAtual::class)->definir(null));
+        // Na fila "sync" (testes, ambiente local) o job roda dentro da própria requisição:
+        // limpar a clínica ali apagaria a clínica de quem despachou.
+        Queue::after(fn ($e) => $e->connectionName === 'sync' ?: app(ClinicaAtual::class)->definir(null));
         Queue::before(fn () => app(\App\Support\EscopoProfissional::class)->esquecer());
-        Queue::failing(fn () => app(ClinicaAtual::class)->definir(null));
+        Queue::failing(fn ($e) => $e->connectionName === 'sync' ?: app(ClinicaAtual::class)->definir(null));
 
         // Ações das telas Livewire passam pelas mesmas regras de acesso da rota da página
         \Livewire\Livewire::addPersistentMiddleware([

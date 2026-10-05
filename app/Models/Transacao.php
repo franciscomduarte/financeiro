@@ -121,6 +121,11 @@ class Transacao extends Model
         return $this->belongsTo(Recorrencia::class, 'recorrencia_id');
     }
 
+    public function notasFiscais(): HasMany
+    {
+        return $this->hasMany(NotaFiscal::class, 'transacao_id');
+    }
+
     public function anexos(): HasMany
     {
         return $this->hasMany(TransacaoAnexo::class, 'transacao_id');

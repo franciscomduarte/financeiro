@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Storage;
  */
 class AtualizarConfiguracaoClinicaAction
 {
-    private const SEGREDOS = ['evolution_api_key', 'asaas_api_key', 'asaas_webhook_token'];
+    private const SEGREDOS = ['evolution_api_key', 'asaas_api_key', 'asaas_webhook_token', 'nfse_token'];
 
     public function __construct(private readonly ClinicaAtual $clinicaAtual) {}
 

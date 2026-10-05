@@ -12,6 +12,7 @@ use App\Http\Controllers\OrcamentoPdfController;
 use App\Livewire\RelacionamentoIndex;
 use App\Http\Controllers\PacienteExportacaoController;
 use App\Livewire\ComissaoIndex;
+use App\Livewire\NotaFiscalIndex;
 use App\Livewire\OrcamentoIndex;
 use App\Livewire\PacoteIndex;
 use App\Http\Controllers\ProntuarioArquivoController;
@@ -111,6 +112,7 @@ Route::middleware('auth')->group(function (): void {
     Route::middleware('modulo:lancamentos')->group(function (): void {
         Route::get('/transacoes', TransacaoIndex::class)->name('transacoes.index');
         Route::get('/transacoes/recorrencias', RecorrenciaIndex::class)->name('transacoes.recorrencias');
+        Route::get('/notas-fiscais', NotaFiscalIndex::class)->name('notas-fiscais.index');
         Route::post('/voz/transacao', [VozTransacaoController::class, 'processar'])->name('voz.transacao');
     });
     Route::get('/taxas-cartao', TaxasCartaoIndex::class)->name('taxas-cartao.index')->middleware('modulo:taxas');
