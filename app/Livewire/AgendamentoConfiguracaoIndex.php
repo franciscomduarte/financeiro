@@ -18,6 +18,7 @@ use Throwable;
 
 class AgendamentoConfiguracaoIndex extends Component
 {
+    use Concerns\MensagemDeErro;
     // ─── Aba ──────────────────────────────────────────────────────
     public string $aba = 'profissionais';
 
@@ -116,15 +117,15 @@ class AgendamentoConfiguracaoIndex extends Component
 
             if ($this->profissionalEditandoId) {
                 Profissional::findOrFail($this->profissionalEditandoId)->update($data);
-                $this->flashSucesso = 'Profissional atualizado.';
+                $this->flashSucesso = 'Profissional salvo.';
             } else {
                 Profissional::create($data);
-                $this->flashSucesso = 'Profissional criado.';
+                $this->flashSucesso = 'Profissional salvo.';
             }
             $this->modalProfissional = false;
             $this->resetProfissionalForm();
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro ao salvar profissional: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível salvar o profissional');
         }
     }
 
@@ -242,10 +243,10 @@ class AgendamentoConfiguracaoIndex extends Component
                     );
                 }
             });
-            $this->flashSucesso = "Grade de {$this->gradeEditandoNome} salva.";
+            $this->flashSucesso = "Horários de {$this->gradeEditandoNome} salvos.";
             $this->fecharModalGrade();
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro ao salvar grade: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível salvar os horários');
         }
     }
 
@@ -294,15 +295,15 @@ class AgendamentoConfiguracaoIndex extends Component
 
             if ($this->procedimentoEditandoId) {
                 Procedimento::findOrFail($this->procedimentoEditandoId)->update($data);
-                $this->flashSucesso = 'Procedimento atualizado.';
+                $this->flashSucesso = 'Procedimento salvo.';
             } else {
                 Procedimento::create($data);
-                $this->flashSucesso = 'Procedimento criado.';
+                $this->flashSucesso = 'Procedimento salvo.';
             }
             $this->modalProcedimento = false;
             $this->resetProcedimentoForm();
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro ao salvar procedimento: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível salvar o procedimento');
         }
     }
 
@@ -356,7 +357,7 @@ class AgendamentoConfiguracaoIndex extends Component
             : [$this->bloqProfissionalId];
 
         if ($profissionalIds === []) {
-            $this->addError('bloqProfissionalId', 'Não há profissionais ativos para bloquear.');
+            $this->addError('bloqProfissionalId', 'Nenhum profissional ativo. Cadastre ou ative um profissional antes de bloquear.');
             return;
         }
 
@@ -368,7 +369,7 @@ class AgendamentoConfiguracaoIndex extends Component
             $resultado = $service->criar($profissionalIds, $inicio, $fim, $this->bloqDiaInteiro, $this->bloqMotivo ?: null);
         } catch (Throwable $e) {
             Log::error('[AgendamentoConfiguracao] salvarBloqueio erro', ['message' => $e->getMessage()]);
-            $this->flashErro = 'Erro ao salvar bloqueio: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível salvar o bloqueio');
             return;
         }
 
@@ -384,7 +385,7 @@ class AgendamentoConfiguracaoIndex extends Component
 
         $this->flashSucesso = $conflitos->isEmpty()
             ? 'Bloqueio criado.'
-            : 'Bloqueio criado. Há agendamentos no período — veja a lista.';
+            : 'Bloqueio criado. Há agendamentos nesse período: veja a lista abaixo.';
         $this->modalBloqueio = false;
         $this->resetBloqueioForm();
     }
@@ -393,10 +394,10 @@ class AgendamentoConfiguracaoIndex extends Component
     {
         try {
             $service->remover(BloqueioAgenda::findOrFail($id));
-            $this->flashSucesso = 'Bloqueio removido.';
+            $this->flashSucesso = 'Bloqueio excluído.';
         } catch (Throwable $e) {
             Log::error('[AgendamentoConfiguracao] removerBloqueio erro', ['id' => $id, 'message' => $e->getMessage()]);
-            $this->flashErro = 'Erro ao remover bloqueio: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível excluir o bloqueio');
         }
     }
 
@@ -443,6 +444,6 @@ class AgendamentoConfiguracaoIndex extends Component
             : collect();
 
         return view('livewire.agendamento-configuracao-index', compact('profissionais', 'procedimentos', 'bloqueios'))
-            ->layout('layouts.app', ['title' => 'Configuração — Agenda']);
+            ->layout('layouts.app', ['title' => 'Profissionais e horários']);
     }
 }

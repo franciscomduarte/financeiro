@@ -19,6 +19,7 @@ use Throwable;
 
 class PacienteIndex extends Component
 {
+    use Concerns\MensagemDeErro;
     use WithFileUploads, WithPagination;
 
     // ─── Filtros ────────────────────────────────────────────────
@@ -85,10 +86,10 @@ class PacienteIndex extends Component
             }
 
             $this->modalCriar    = false;
-            $this->flashSucesso  = 'Paciente cadastrado com sucesso!';
+            $this->flashSucesso  = 'Paciente salvo.';
             $this->resetFormulario();
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro ao cadastrar paciente: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível salvar o paciente');
         }
     }
 
@@ -127,10 +128,10 @@ class PacienteIndex extends Component
             }
 
             $this->modalEditar   = false;
-            $this->flashSucesso  = 'Paciente atualizado com sucesso!';
+            $this->flashSucesso  = 'Alterações salvas.';
             $this->resetFormulario();
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro ao atualizar paciente: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível salvar as alterações');
         }
     }
 

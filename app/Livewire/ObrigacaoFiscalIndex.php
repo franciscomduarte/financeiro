@@ -21,6 +21,7 @@ use Throwable;
 
 class ObrigacaoFiscalIndex extends Component
 {
+    use Concerns\MensagemDeErro;
     use WithFileUploads, WithPagination;
 
     // ─── Filtros ────────────────────────────────────────────────
@@ -99,7 +100,7 @@ class ObrigacaoFiscalIndex extends Component
             $this->resetFormularioOb();
             $this->flashSucesso = 'Obrigação salva.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Não foi possível salvar a obrigação: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível salvar a obrigação');
         }
     }
 
@@ -128,7 +129,7 @@ class ObrigacaoFiscalIndex extends Component
             $this->resetFormularioOb();
             $this->flashSucesso = 'Alterações salvas.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Não foi possível salvar as alterações: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível salvar as alterações');
         }
     }
 
@@ -172,7 +173,7 @@ class ObrigacaoFiscalIndex extends Component
             $this->modalLancar  = false;
             $this->flashSucesso = 'Guia lançada.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Não foi possível lançar a guia: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível lançar a guia');
         }
     }
 
@@ -212,7 +213,7 @@ class ObrigacaoFiscalIndex extends Component
             $this->modalPagar   = false;
             $this->flashSucesso = 'Guia paga e lançada no financeiro.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Não foi possível registrar o pagamento: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível registrar o pagamento');
         }
     }
 
@@ -237,7 +238,7 @@ class ObrigacaoFiscalIndex extends Component
             $this->arquivoGuia     = null;
             $this->flashSucesso    = 'Arquivo enviado.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Não foi possível enviar o arquivo: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível enviar o arquivo');
         }
     }
 

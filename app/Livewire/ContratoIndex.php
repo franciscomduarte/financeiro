@@ -21,6 +21,7 @@ use Throwable;
 
 class ContratoIndex extends Component
 {
+    use Concerns\MensagemDeErro;
     use WithPagination;
     use WithFileUploads;
 
@@ -115,7 +116,7 @@ class ContratoIndex extends Component
             $this->resetFormulario();
             $this->flashSucesso = 'Contrato salvo.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Não foi possível salvar o contrato: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível salvar o contrato');
         }
     }
 
@@ -156,7 +157,7 @@ class ContratoIndex extends Component
             $this->resetFormulario();
             $this->flashSucesso = 'Alterações salvas.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Não foi possível salvar as alterações: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível salvar as alterações');
         }
     }
 
@@ -196,7 +197,7 @@ class ContratoIndex extends Component
             $this->modalReajuste = false;
             $this->flashSucesso  = 'Reajuste registrado.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Não foi possível registrar o reajuste: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível registrar o reajuste');
         }
     }
 
@@ -234,7 +235,7 @@ class ContratoIndex extends Component
             $this->modalPagarContrato = false;
             $this->flashSucesso       = 'Pagamento registrado.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Não foi possível registrar o pagamento: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível registrar o pagamento');
         }
     }
 
@@ -247,7 +248,7 @@ class ContratoIndex extends Component
             $this->contratoDetalheId = $this->contratoDetalheId; // força re-render do detalhe
             $this->flashSucesso = 'Pagamento excluído.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Não foi possível excluir o pagamento: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível excluir o pagamento');
         }
     }
 
@@ -269,7 +270,7 @@ class ContratoIndex extends Component
             $this->contratoExcluirNome = null;
             $this->flashSucesso        = 'Contrato excluído.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Não foi possível excluir o contrato: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível excluir o contrato');
         }
     }
 
@@ -293,7 +294,7 @@ class ContratoIndex extends Component
             $this->modalArquivo = false;
             $this->flashSucesso = 'Arquivo enviado.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Não foi possível enviar o arquivo: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível enviar o arquivo');
         }
     }
 

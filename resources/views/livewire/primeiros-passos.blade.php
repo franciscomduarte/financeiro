@@ -2,12 +2,12 @@
     @if ($mostrar)
         @php($total = count($passos))
         <section class="card p-5 sm:p-6 mb-6" aria-labelledby="primeiros-passos-titulo" x-data="{ aberto: true }">
-            <div class="flex items-start justify-between gap-4">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                 <div class="min-w-0">
                     <h2 id="primeiros-passos-titulo" class="text-base font-semibold text-stone-900">Primeiros passos</h2>
                     <p class="mt-0.5 text-sm text-stone-500">Deixe a clínica pronta para atender. Você fez {{ $feitos }} de {{ $total }}.</p>
                 </div>
-                <div class="flex items-center gap-1 shrink-0">
+                <div class="flex items-center gap-1 shrink-0 -ml-3 sm:ml-0">
                     <button type="button" @click="aberto = !aberto" class="btn-ghost px-3" :aria-expanded="aberto">
                         <span x-text="aberto ? 'Recolher' : 'Mostrar'"></span>
                     </button>

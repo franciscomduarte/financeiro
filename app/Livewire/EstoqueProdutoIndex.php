@@ -20,6 +20,7 @@ use Throwable;
 
 class EstoqueProdutoIndex extends Component
 {
+    use Concerns\MensagemDeErro;
     use WithPagination;
 
     // ─── Filtros ─────────────────────────────────────────────────
@@ -214,7 +215,7 @@ class EstoqueProdutoIndex extends Component
 
             $this->flashSucesso = 'Entrada registrada.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Não foi possível registrar a entrada: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível registrar a entrada');
         }
     }
 
@@ -239,7 +240,7 @@ class EstoqueProdutoIndex extends Component
                     ? "Válido por {$batch->product->beyond_use_hours}h."
                     : "Sem restrição de validade pós-abertura.");
         } catch (Throwable $e) {
-            $this->flashErro = $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e);
             $this->modalAbrirFrasco = false;
         }
     }
@@ -282,7 +283,7 @@ class EstoqueProdutoIndex extends Component
             $this->modalConsumo = false;
             $this->flashSucesso = 'Uso registrado.';
         } catch (Throwable $e) {
-            $this->flashErro = $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e);
         }
     }
 

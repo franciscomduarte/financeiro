@@ -19,6 +19,7 @@ use Throwable;
 /** Configurações da clínica ativa (somente administradores — rota com middleware "admin"). */
 class ConfiguracaoClinica extends Component
 {
+    use Concerns\MensagemDeErro;
     use WithFileUploads;
 
     #[Url(history: true)]
@@ -173,7 +174,7 @@ class ConfiguracaoClinica extends Component
                 $this->flashErro = 'O Asaas recusou a chave. Confira a chave e o ambiente (sandbox/produção).';
             }
         } catch (Throwable $e) {
-            $this->flashErro = $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e);
         }
     }
 

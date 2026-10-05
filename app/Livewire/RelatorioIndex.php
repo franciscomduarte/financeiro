@@ -24,6 +24,7 @@ use Throwable;
 
 class RelatorioIndex extends Component
 {
+    use Concerns\MensagemDeErro;
     public string $competencia;
     public string $tab = 'gerencial';
 
@@ -177,7 +178,7 @@ class RelatorioIndex extends Component
             $this->flashSucesso = 'Pagamento registrado.';
             $this->resetPagamento();
         } catch (Throwable $e) {
-            $this->flashErro = 'Não foi possível registrar o pagamento: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível registrar o pagamento');
         }
     }
 
@@ -572,9 +573,9 @@ class RelatorioIndex extends Component
         }
 
         if ($margem >= 20.0) {
-            $insights[] = ['tipo' => 'positivo', 'msg' => sprintf('Margem líquida de %.1f%%. Resultado saudável.', $margem)];
+            $insights[] = ['tipo' => 'positivo', 'msg' => sprintf('Margem líquida de %s%%. Resultado saudável.', number_format($margem, 1, ',', '.'))];
         } elseif ($margem >= 0.0) {
-            $insights[] = ['tipo' => 'atencao', 'msg' => sprintf('Margem líquida de %.1f%%, abaixo do ideal. Vale revisar as despesas operacionais.', $margem)];
+            $insights[] = ['tipo' => 'atencao', 'msg' => sprintf('Margem líquida de %s%%, abaixo do ideal. Vale revisar as despesas operacionais.', number_format($margem, 1, ',', '.'))];
         } else {
             $insights[] = ['tipo' => 'critico', 'msg' => sprintf('Resultado negativo de R$ %s. Revise os custos o quanto antes.', number_format(abs($saldo), 2, ',', '.'))];
         }

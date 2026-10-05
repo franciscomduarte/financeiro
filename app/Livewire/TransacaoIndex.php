@@ -33,6 +33,7 @@ use Throwable;
 
 class TransacaoIndex extends Component
 {
+    use Concerns\MensagemDeErro;
     use WithPagination;
     use WithFileUploads;
 
@@ -313,7 +314,7 @@ class TransacaoIndex extends Component
                 $this->flashErro = 'Não foi possível enviar. Confira o e-mail e o telefone do paciente e tente de novo.';
             }
         } catch (RuntimeException $e) {
-            $this->flashErro = $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e);
         } catch (\Throwable $e) {
             Log::error('Erro ao enviar anexo', ['error' => $e->getMessage()]);
             $this->flashErro = 'Não foi possível enviar o documento. Tente de novo em instantes.';
@@ -334,7 +335,7 @@ class TransacaoIndex extends Component
             $this->resetFormulario();
         } catch (Throwable $e) {
             Log::error('Erro ao criar transação', ['error' => $e->getMessage()]);
-            $this->flashErro = 'Não foi possível salvar o lançamento: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível salvar o lançamento');
         }
     }
 
@@ -354,7 +355,7 @@ class TransacaoIndex extends Component
             $this->resetFormulario();
         } catch (Throwable $e) {
             Log::error('Erro ao atualizar transação', ['error' => $e->getMessage()]);
-            $this->flashErro = 'Não foi possível salvar as alterações: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível salvar as alterações');
         }
     }
 

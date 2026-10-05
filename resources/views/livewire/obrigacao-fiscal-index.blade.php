@@ -631,7 +631,7 @@
                     @error('arquivoGuia')
                         <p class="field-error">{{ $message }}</p>
                     @else
-                        <p class="hint">PDF, JPG, PNG ou DOCX, com até 10 MB.</p>
+                        <p class="hint">PDF, JPG, PNG ou DOCX, com até 100 MB.</p>
                     @enderror
                     <p wire:loading wire:target="arquivoGuia" class="mt-2 text-xs text-stone-500">Carregando arquivo...</p>
                 </div>

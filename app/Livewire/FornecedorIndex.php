@@ -15,6 +15,7 @@ use Throwable;
 
 class FornecedorIndex extends Component
 {
+    use Concerns\MensagemDeErro;
     use WithPagination;
 
     // ─── Filtros ────────────────────────────────────────────────
@@ -78,7 +79,7 @@ class FornecedorIndex extends Component
             $this->resetFormulario();
             $this->flashSucesso = 'Fornecedor salvo.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Não foi possível salvar o fornecedor: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível salvar o fornecedor');
         }
     }
 
@@ -115,7 +116,7 @@ class FornecedorIndex extends Component
             $this->resetFormulario();
             $this->flashSucesso = 'Alterações salvas.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Não foi possível salvar as alterações: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível salvar as alterações');
         }
     }
 

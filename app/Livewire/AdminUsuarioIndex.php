@@ -20,6 +20,7 @@ use Throwable;
 
 class AdminUsuarioIndex extends Component
 {
+    use Concerns\MensagemDeErro;
     use WithPagination;
 
     public string $busca       = '';
@@ -106,7 +107,7 @@ class AdminUsuarioIndex extends Component
             $this->modalUsuario = false;
             $this->resetForm();
         } catch (RuntimeException $e) {
-            $this->flashErro = $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e);
         } catch (Throwable $e) {
             report($e);
             $this->flashErro = 'Não foi possível salvar. Tente de novo em instantes.';
@@ -143,7 +144,7 @@ class AdminUsuarioIndex extends Component
                 $this->flashSucesso = 'Acesso a esta clínica removido. A pessoa continua nas outras clínicas.';
             }
         } catch (RuntimeException $e) {
-            $this->flashErro = $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e);
         } catch (Throwable $e) {
             report($e);
             $this->flashErro = 'Não foi possível excluir. Tente de novo em instantes.';
@@ -179,7 +180,7 @@ class AdminUsuarioIndex extends Component
             try {
                 UpdateUsuarioAction::garantirOutroAdmin($this->clinica(), $user);
             } catch (RuntimeException $e) {
-                $this->flashErro = $e->getMessage();
+                $this->flashErro = $this->mensagemDeErro($e);
                 return;
             }
         }

@@ -23,6 +23,7 @@ use Throwable;
 
 class ContaConsumoIndex extends Component
 {
+    use Concerns\MensagemDeErro;
     use WithFileUploads, WithPagination;
 
     // ─── Filtros ────────────────────────────────────────────────
@@ -99,7 +100,7 @@ class ContaConsumoIndex extends Component
             $this->resetFormularioConta();
             $this->flashSucesso = 'Conta salva.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Não foi possível salvar a conta: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível salvar a conta');
         }
     }
 
@@ -129,7 +130,7 @@ class ContaConsumoIndex extends Component
             $this->resetFormularioConta();
             $this->flashSucesso = 'Alterações salvas.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Não foi possível salvar as alterações: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível salvar as alterações');
         }
     }
 
@@ -169,7 +170,7 @@ class ContaConsumoIndex extends Component
             $this->modalFatura  = false;
             $this->flashSucesso = 'Fatura lançada.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Não foi possível lançar a fatura: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível lançar a fatura');
         }
     }
 
@@ -202,7 +203,7 @@ class ContaConsumoIndex extends Component
             $this->modalPagar   = false;
             $this->flashSucesso = 'Fatura paga e lançada no financeiro.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Não foi possível registrar o pagamento: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível registrar o pagamento');
         }
     }
 
@@ -227,7 +228,7 @@ class ContaConsumoIndex extends Component
             $this->arquivoFatura     = null;
             $this->flashSucesso      = 'Arquivo enviado.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Não foi possível enviar o arquivo: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível enviar o arquivo');
         }
     }
 

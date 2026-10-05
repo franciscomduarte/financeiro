@@ -24,6 +24,7 @@ use Throwable;
 
 class CobrancaIndex extends Component
 {
+    use Concerns\MensagemDeErro;
     use WithPagination;
 
     // ─── Tab ─────────────────────────────────────────────────────
@@ -104,7 +105,7 @@ class CobrancaIndex extends Component
             ->get(['id', 'nome']);
 
         if ($pacientes->isEmpty()) {
-            $this->flashErro = 'Nenhum paciente ativo com mensalidade PIX cadastrada.';
+            $this->flashErro = 'Nenhum paciente ativo tem mensalidade por PIX. Ajuste o cadastro do paciente para cobrar por aqui.';
             return;
         }
 
@@ -112,7 +113,7 @@ class CobrancaIndex extends Component
             DisparadorCobrancaMensalJob::dispatch($paciente->id)->onQueue('cobrancas');
         }
 
-        $this->flashSucesso = "Cobranças agendadas para {$pacientes->count()} paciente(s). Serão processadas em breve.";
+        $this->flashSucesso = "Cobranças a caminho para {$pacientes->count()} paciente(s). O envio leva alguns minutos.";
     }
 
     public function abrirModalDisparar(string $pacienteId): void
@@ -137,7 +138,7 @@ class CobrancaIndex extends Component
             $this->modalDisparar = false;
             $this->flashSucesso  = "Cobrança agendada para {$this->pacienteDispararNome}.";
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro ao agendar cobrança: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível enviar a cobrança');
         }
     }
 
@@ -146,7 +147,7 @@ class CobrancaIndex extends Component
         $cobranca = Cobranca::with('paciente:id,nome,telefone,email')->findOrFail($cobrancaId);
 
         if ($cobranca->isPago()) {
-            $this->flashErro = 'Esta cobrança já foi paga.';
+            $this->flashErro = 'Esta cobrança já foi paga. Não é preciso reenviar.';
             return;
         }
 
@@ -196,9 +197,9 @@ class CobrancaIndex extends Component
             }
 
             $this->modalReenviar = false;
-            $this->flashSucesso  = 'Cobrança reenviada com sucesso.';
+            $this->flashSucesso  = 'Cobrança reenviada.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro ao reenviar: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível reenviar');
         }
     }
 
@@ -243,9 +244,9 @@ class CobrancaIndex extends Component
             ]);
 
             $this->modalNovoParcelamento = false;
-            $this->flashSucesso = 'Parcelamento cadastrado com sucesso.';
+            $this->flashSucesso = 'Parcelamento salvo.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro ao cadastrar: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível salvar o parcelamento');
         }
     }
 
@@ -265,7 +266,7 @@ class CobrancaIndex extends Component
             $this->modalCancelarParcelamento = false;
             $this->flashSucesso = 'Parcelamento cancelado.';
         } catch (Throwable $e) {
-            $this->flashErro = $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e);
             $this->modalCancelarParcelamento = false;
         }
     }
@@ -275,7 +276,7 @@ class CobrancaIndex extends Component
         $parcelamento = Parcelamento::with('paciente:id,nome')->findOrFail($id);
 
         if (! $parcelamento->podeDisparar()) {
-            $this->flashErro = 'Este parcelamento não pode disparar mais parcelas.';
+            $this->flashErro = 'Este parcelamento não tem mais parcelas para enviar.';
             return;
         }
 
@@ -290,9 +291,9 @@ class CobrancaIndex extends Component
         try {
             DisparadorParcelaJob::dispatch($this->parcelamentoDispararId)->onQueue('cobrancas');
             $this->modalDispararParcela = false;
-            $this->flashSucesso = 'Parcela agendada para envio. Será processada em breve.';
+            $this->flashSucesso = 'Parcela a caminho. O envio leva alguns minutos.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro ao agendar parcela: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível enviar a parcela');
         }
     }
 
