@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\PadraoNfse;
 use App\Exceptions\ClinicaNaoDefinidaException;
 use App\Models\Clinica;
 use App\Support\ClinicaAtual;
@@ -16,7 +17,7 @@ use RuntimeException;
 
 /**
  * Cliente da API v2 da Focus NFe (NFS-e), com o token e o ambiente da clínica ativa.
- * Documentação: https://focusnfe.com.br/doc/#nfse
+ * Padrão municipal em /v2/nfse e NFS-e Nacional em /v2/nfsen. Documentação: https://focusnfe.com.br/doc/#nfse
  */
 class FocusNfeService
 {
@@ -31,16 +32,17 @@ class FocusNfeService
      * @param  array<string, mixed>  $nota
      * @return array{status: string, mensagem: ?string}
      */
-    public function emitir(string $referencia, array $nota): array
+    public function emitir(PadraoNfse $padrao, string $referencia, array $nota): array
     {
-        $resposta = $this->cliente()->post('/v2/nfse?ref=' . urlencode($referencia), $nota);
+        $resposta = $this->cliente()->post($padrao->endpoint() . '?ref=' . urlencode($referencia), $nota);
+        $this->registrar('envio', $padrao, $referencia, $resposta);
 
         if ($resposta->status() === 422 && ($resposta->json('codigo') === 'nfe_ja_existente' || str_contains((string) $resposta->json('mensagem'), 'já foi'))) {
             return ['status' => 'processando_autorizacao', 'mensagem' => null]; // reenvio da mesma ref: segue consultando
         }
 
         if ($resposta->failed()) {
-            return ['status' => 'erro_autorizacao', 'mensagem' => $this->mensagemDeErro($resposta)];
+            return ['status' => 'erro_autorizacao', 'mensagem' => $this->mensagemDeErro($resposta) ?? 'A Focus NFe recusou a nota (HTTP ' . $resposta->status() . ').'];
         }
 
         return ['status' => (string) $resposta->json('status', 'processando_autorizacao'), 'mensagem' => null];
@@ -49,13 +51,16 @@ class FocusNfeService
     /**
      * @return array{status: string, numero: ?string, codigo_verificacao: ?string, url: ?string, url_xml: ?string, mensagem: ?string}
      */
-    public function consultar(string $referencia): array
+    public function consultar(PadraoNfse $padrao, string $referencia): array
     {
-        $resposta = $this->cliente()->get('/v2/nfse/' . urlencode($referencia));
+        $resposta = $this->cliente()->get($padrao->endpoint() . '/' . urlencode($referencia));
 
         if ($resposta->status() === 404) {
-            return ['status' => 'erro_autorizacao', 'numero' => null, 'codigo_verificacao' => null, 'url' => null, 'url_xml' => null,
-                'mensagem' => 'A Focus NFe não encontrou esta nota. Emita de novo.'];
+            // Logo após o envio a Focus pode ainda não ter registrado a nota; quem decide se desiste é a consulta.
+            $this->registrar('consulta', $padrao, $referencia, $resposta);
+
+            return ['status' => 'nao_encontrado', 'numero' => null, 'codigo_verificacao' => null, 'url' => null, 'url_xml' => null,
+                'mensagem' => $this->mensagemDeErro($resposta)];
         }
         $resposta->throw();
 
@@ -72,15 +77,31 @@ class FocusNfeService
     }
 
     /** @return array{status: string, mensagem: ?string} */
-    public function cancelar(string $referencia, string $justificativa): array
+    public function cancelar(PadraoNfse $padrao, string $referencia, string $justificativa): array
     {
-        $resposta = $this->cliente()->delete('/v2/nfse/' . urlencode($referencia), ['justificativa' => $justificativa]);
+        $resposta = $this->cliente()->delete($padrao->endpoint() . '/' . urlencode($referencia), ['justificativa' => $justificativa]);
+        $this->registrar('cancelamento', $padrao, $referencia, $resposta);
 
         if ($resposta->failed()) {
             return ['status' => 'erro_cancelamento', 'mensagem' => $this->mensagemDeErro($resposta)];
         }
 
         return ['status' => (string) $resposta->json('status', 'cancelado'), 'mensagem' => $this->mensagemDeErro($resposta)];
+    }
+
+    /** Registra a resposta da Focus (sem o corpo da nota, que tem dados do paciente). */
+    private function registrar(string $operacao, PadraoNfse $padrao, string $referencia, Response $resposta): void
+    {
+        Log::log($resposta->successful() ? 'info' : 'warning', '[NFS-e] resposta da Focus NFe', [
+            'tenant_id'  => $this->clinica()->id,
+            'operacao'   => $operacao,
+            'padrao'     => $padrao->value,
+            'referencia' => $referencia,
+            'http'       => $resposta->status(),
+            'status'     => $resposta->json('status'),
+            'codigo'     => $resposta->json('codigo'),
+            'mensagem'   => $this->mensagemDeErro($resposta),
+        ]);
     }
 
     /** Erros vêm como {"mensagem"} ou {"erros": [{"mensagem", "correcao"}]}. */

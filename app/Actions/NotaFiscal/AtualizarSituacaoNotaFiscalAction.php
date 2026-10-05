@@ -12,11 +12,14 @@ use Illuminate\Support\Facades\Log;
 /** Consulta a nota na Focus NFe e grava a situação (número, links, erro). */
 class AtualizarSituacaoNotaFiscalAction
 {
+    /** Consultas com "não encontrada" toleradas antes de dar a nota como perdida. */
+    public const CONSULTAS_ATE_DESISTIR = 3;
+
     public function __construct(private readonly FocusNfeService $focus) {}
 
     public function execute(NotaFiscal $nota): NotaFiscal
     {
-        $r = $this->focus->consultar($nota->referencia);
+        $r = $this->focus->consultar($nota->padrao, $nota->referencia);
 
         $dados = ['consultas' => $nota->consultas + 1];
 
@@ -35,6 +38,11 @@ class AtualizarSituacaoNotaFiscalAction
                 'status'        => StatusNotaFiscal::Erro,
                 'mensagem_erro' => $r['mensagem'] ?? 'A prefeitura recusou a nota.',
             ],
+            'nao_encontrado' => $dados['consultas'] >= self::CONSULTAS_ATE_DESISTIR ? $dados += [
+                'status'        => StatusNotaFiscal::Erro,
+                'mensagem_erro' => 'A Focus NFe não encontrou esta nota. Confira em Dados da clínica › Nota fiscal se o padrão '
+                    . '(da prefeitura ou nacional) é o que a Focus usa no seu município e emita de novo.',
+            ] : null,
             default => null, // processando_autorizacao: segue aguardando
         };
 

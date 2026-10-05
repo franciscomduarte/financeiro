@@ -157,6 +157,78 @@ class NotaFiscalTest extends TestCase
         $this->assertSame(ConsultarNotaFiscalJob::MAX_CONSULTAS, $nota->consultas);
     }
 
+    public function test_nota_nao_encontrada_logo_apos_o_envio_continua_sendo_consultada(): void
+    {
+        $this->configurarClinica();
+        Http::fake([
+            'homologacao.focusnfe.com.br/v2/nfse?ref=*' => Http::response(['status' => 'processando_autorizacao'], 202),
+            'homologacao.focusnfe.com.br/v2/nfse/*'     => Http::sequence()
+                ->push(['codigo' => 'nao_encontrado', 'mensagem' => 'Nota fiscal não encontrada'], 404)
+                ->push(['status' => 'autorizado', 'numero' => '77']),
+        ]);
+
+        $this->emitir();
+
+        $nota = NotaFiscal::sole();
+        $this->assertSame(StatusNotaFiscal::Autorizada, $nota->status);
+        $this->assertSame('77', $nota->numero);
+    }
+
+    public function test_nota_que_nunca_aparece_vira_erro_com_orientacao(): void
+    {
+        $this->configurarClinica();
+        Http::fake([
+            'homologacao.focusnfe.com.br/v2/nfse?ref=*' => Http::response(['status' => 'processando_autorizacao'], 202),
+            'homologacao.focusnfe.com.br/v2/nfse/*'     => Http::response(['codigo' => 'nao_encontrado'], 404),
+        ]);
+
+        $this->emitir();
+
+        $nota = NotaFiscal::sole();
+        $this->assertSame(StatusNotaFiscal::Erro, $nota->status);
+        $this->assertSame(3, $nota->consultas);
+        $this->assertStringContainsString('padrão', $nota->mensagem_erro);
+    }
+
+    public function test_padrao_nacional_usa_nfsen_e_o_leiaute_nacional(): void
+    {
+        $this->configurarClinica();
+        $this->clinica->update(['nfse_padrao' => 'nacional', 'nfse_codigo_tributacao_nacional' => null]);
+        app(ClinicaAtual::class)->definir($this->clinica->fresh());
+
+        $this->emitir()->assertSet('flashErro', 'Para emitir nota, complete em Dados da clínica › Nota fiscal: Código de tributação nacional.');
+
+        $this->clinica->update(['nfse_codigo_tributacao_nacional' => '060201', 'inscricao_municipal' => null, 'nfse_item_lista_servico' => null]);
+        app(ClinicaAtual::class)->definir($this->clinica->fresh());
+        Http::fake([
+            'homologacao.focusnfe.com.br/v2/nfsen?ref=*' => Http::response(['status' => 'processando_autorizacao'], 202),
+            'homologacao.focusnfe.com.br/v2/nfsen/*'     => Http::response(['status' => 'autorizado', 'numero' => '5', 'url_danfse' => 'https://danfse/5']),
+        ]);
+
+        $this->emitir()->assertSet('flashErro', null);
+
+        $nota = NotaFiscal::sole();
+        $this->assertSame(StatusNotaFiscal::Autorizada, $nota->status);
+        $this->assertSame('https://danfse/5', $nota->url);
+
+        Http::assertSent(function (Request $r): bool {
+            if ($r->method() !== 'POST') {
+                return false;
+            }
+            $this->assertStringContainsString('/v2/nfsen?ref=nf-', $r->url());
+            $this->assertSame('12345678000190', $r['cnpj_prestador']);
+            $this->assertSame('5300108', $r['codigo_municipio_emissora']);
+            $this->assertSame('060201', $r['codigo_tributacao_nacional_iss']);
+            $this->assertSame('12345678909', $r['cpf_tomador']);
+            $this->assertSame('Maria Silva', $r['razao_social_tomador']);
+            $this->assertSame(3, $r['codigo_opcao_simples_nacional']);
+            $this->assertEquals(350, $r['valor_servico']);
+            $this->assertArrayNotHasKey('prestador', $r->data());
+
+            return true;
+        });
+    }
+
     public function test_cancelamento_exige_justificativa_e_avisa_a_prefeitura(): void
     {
         $this->configurarClinica();
@@ -211,6 +283,18 @@ class NotaFiscalTest extends TestCase
         $this->assertSame('segredo-123', $this->clinica->fresh()->nfse_token);
         $this->assertNotSame('segredo-123', \DB::table('clinicas')->where('id', $this->clinica->id)->value('nfse_token'));
         $this->assertArrayNotHasKey('nfse_token', $this->clinica->fresh()->toArray());
+
+        Livewire::test(ConfiguracaoClinica::class)
+            ->set('aba', 'nota_fiscal')
+            ->set('nfsePadrao', 'nacional')
+            ->set('nfseCodigoNacional', '06.02.01')
+            ->call('salvarNotaFiscal')
+            ->assertHasErrors('nfseCodigoNacional')
+            ->set('nfseCodigoNacional', '060201')
+            ->call('salvarNotaFiscal')
+            ->assertHasNoErrors()
+            ->assertSee('Código de tributação nacional');
+        $this->assertSame('060201', $this->clinica->fresh()->nfse_codigo_tributacao_nacional);
 
         Livewire::test(ConfiguracaoClinica::class)->set('codigoMunicipio', '123')->call('salvarNotaFiscal')->assertHasErrors('codigoMunicipio');
     }

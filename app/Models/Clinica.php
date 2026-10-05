@@ -45,6 +45,8 @@ class Clinica extends Model
         'nfse_aliquota_iss',
         'nfse_optante_simples',
         'nfse_discriminacao_padrao',
+        'nfse_padrao',
+        'nfse_codigo_tributacao_nacional',
     ];
 
     /** Segredos nunca vão para arrays/JSON. */
@@ -62,6 +64,7 @@ class Clinica extends Model
         'nfse_homologacao'    => 'boolean',
         'nfse_optante_simples' => 'boolean',
         'nfse_aliquota_iss'   => 'decimal:2',
+        'nfse_padrao'         => \App\Enums\PadraoNfse::class,
         'aviso_teste_3_dias_em' => 'datetime',
         'aviso_teste_fim_em'    => 'datetime',
         'primeiros_passos_dispensado_em' => 'datetime',
@@ -84,13 +87,16 @@ class Clinica extends Model
     /** O que falta preencher para emitir NFS-e (vazio = pronto). */
     public function pendenciasNfse(): array
     {
+        $nacional = $this->nfse_padrao === \App\Enums\PadraoNfse::Nacional;
+
         return array_keys(array_filter([
             'Token da Focus NFe'          => ! filled($this->nfse_token),
             'CNPJ'                        => strlen((string) preg_replace('/\D/', '', (string) $this->cnpj)) !== 14,
-            'Inscrição municipal'         => ! filled($this->inscricao_municipal),
+            'Inscrição municipal'         => ! $nacional && ! filled($this->inscricao_municipal),
             'Código IBGE do município'    => ! preg_match('/^\d{7}$/', (string) $this->codigo_municipio),
-            'Item da lista de serviço'    => ! filled($this->nfse_item_lista_servico),
-            'Alíquota do ISS'             => $this->nfse_aliquota_iss === null,
+            'Item da lista de serviço'    => ! $nacional && ! filled($this->nfse_item_lista_servico),
+            'Código de tributação nacional' => $nacional && ! preg_match('/^\d{6}$/', (string) $this->nfse_codigo_tributacao_nacional),
+            'Alíquota do ISS'             => ! $nacional && $this->nfse_aliquota_iss === null,
         ]));
     }
 

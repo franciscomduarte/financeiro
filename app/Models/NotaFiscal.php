@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\PadraoNfse;
 use App\Enums\StatusNotaFiscal;
 use App\Models\Concerns\BelongsToClinica;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -20,11 +21,12 @@ class NotaFiscal extends Model
     protected $fillable = [
         'transacao_id', 'paciente_id', 'user_id', 'referencia', 'status', 'homologacao', 'valor', 'discriminacao',
         'tomador_nome', 'tomador_cpf', 'tomador_email', 'numero', 'codigo_verificacao', 'url', 'url_xml',
-        'mensagem_erro', 'consultas', 'autorizada_em', 'cancelada_em', 'justificativa_cancelamento',
+        'mensagem_erro', 'consultas', 'autorizada_em', 'cancelada_em', 'justificativa_cancelamento', 'padrao',
     ];
 
     protected $casts = [
         'status'        => StatusNotaFiscal::class,
+        'padrao'        => PadraoNfse::class,
         'homologacao'   => 'boolean',
         'valor'         => 'decimal:2',
         'consultas'     => 'integer',

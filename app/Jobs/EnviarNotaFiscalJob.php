@@ -32,7 +32,7 @@ class EnviarNotaFiscalJob implements ShouldQueue
             return;
         }
 
-        $resultado = $focus->emitir($nota->referencia, $montar->montar($nota, $clinicaAtual->get()));
+        $resultado = $focus->emitir($nota->padrao, $nota->referencia, $montar->montar($nota, $clinicaAtual->get()));
 
         if ($resultado['status'] === 'erro_autorizacao') {
             $nota->update(['status' => StatusNotaFiscal::Erro, 'mensagem_erro' => $resultado['mensagem'] ?? 'A Focus NFe recusou a nota.']);

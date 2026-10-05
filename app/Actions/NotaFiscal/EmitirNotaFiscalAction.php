@@ -60,6 +60,7 @@ class EmitirNotaFiscalAction
                 'referencia'    => 'nf-' . Str::lower((string) Str::ulid()),
                 'status'        => StatusNotaFiscal::Processando,
                 'homologacao'   => $clinica->nfse_homologacao,
+                'padrao'        => $clinica->nfse_padrao,
                 'valor'         => $transacao->valor_bruto,
                 'discriminacao' => trim($dados['discriminacao']),
                 'tomador_nome'  => trim($dados['tomador_nome']),
