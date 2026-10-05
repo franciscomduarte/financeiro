@@ -97,9 +97,9 @@ class ObrigacaoFiscalIndex extends Component
             $action->execute($this->dadosOb());
             $this->modalCriar  = false;
             $this->resetFormularioOb();
-            $this->flashSucesso = 'Obrigação cadastrada com sucesso!';
+            $this->flashSucesso = 'Obrigação salva.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro ao cadastrar: ' . $e->getMessage();
+            $this->flashErro = 'Não foi possível salvar a obrigação: ' . $e->getMessage();
         }
     }
 
@@ -126,9 +126,9 @@ class ObrigacaoFiscalIndex extends Component
             $action->execute($ob, $this->dadosOb());
             $this->modalEditar  = false;
             $this->resetFormularioOb();
-            $this->flashSucesso = 'Obrigação atualizada com sucesso!';
+            $this->flashSucesso = 'Alterações salvas.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro ao atualizar: ' . $e->getMessage();
+            $this->flashErro = 'Não foi possível salvar as alterações: ' . $e->getMessage();
         }
     }
 
@@ -170,9 +170,9 @@ class ObrigacaoFiscalIndex extends Component
                 'observacoes'     => $this->lancarObs ?: null,
             ]);
             $this->modalLancar  = false;
-            $this->flashSucesso = 'Guia lançada com sucesso!';
+            $this->flashSucesso = 'Guia lançada.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro ao lançar guia: ' . $e->getMessage();
+            $this->flashErro = 'Não foi possível lançar a guia: ' . $e->getMessage();
         }
     }
 
@@ -210,9 +210,9 @@ class ObrigacaoFiscalIndex extends Component
                 'numero_autenticacao' => $this->numeroAutenticacao ?: null,
             ]);
             $this->modalPagar   = false;
-            $this->flashSucesso = 'Guia paga e lançada no financeiro!';
+            $this->flashSucesso = 'Guia paga e lançada no financeiro.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro ao registrar pagamento: ' . $e->getMessage();
+            $this->flashErro = 'Não foi possível registrar o pagamento: ' . $e->getMessage();
         }
     }
 
@@ -235,9 +235,9 @@ class ObrigacaoFiscalIndex extends Component
             $action->execute($lancamento, $this->arquivoGuia);
             $this->modalUploadGuia = false;
             $this->arquivoGuia     = null;
-            $this->flashSucesso    = 'Arquivo enviado com sucesso!';
+            $this->flashSucesso    = 'Arquivo enviado.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro ao enviar arquivo: ' . $e->getMessage();
+            $this->flashErro = 'Não foi possível enviar o arquivo: ' . $e->getMessage();
         }
     }
 
@@ -330,6 +330,6 @@ class ObrigacaoFiscalIndex extends Component
             'lancamentoParaPagar' => $lancamentoParaPagar,
             'tipos'               => TipoTributo::cases(),
             'periodicidades'      => PeriodicidadeFiscal::cases(),
-        ])->layout('layouts.app', ['title' => 'Obrigações Fiscais']);
+        ])->layout('layouts.app', ['title' => 'Obrigações fiscais']);
     }
 }

@@ -287,7 +287,7 @@ class TransacaoIndex extends Component
         $this->modalEnviarAnexo = false;
 
         if (! $paciente) {
-            $this->flashErro = 'Esta transação não tem paciente vinculado.';
+            $this->flashErro = 'Este lançamento não tem paciente vinculado. Vincule um paciente para enviar o documento.';
             return;
         }
 
@@ -306,17 +306,17 @@ class TransacaoIndex extends Component
             if (! empty($sucessos)) {
                 $msg = 'Documento enviado via ' . implode(' e ', $sucessos) . '.';
                 if (! empty($falhas)) {
-                    $msg .= ' Falha em: ' . implode(' e ', $falhas) . '.';
+                    $msg .= ' Não foi possível enviar por ' . implode(' e ', $falhas) . '.';
                 }
                 $this->flashSucesso = $msg;
             } else {
-                $this->flashErro = 'Nenhum envio foi concluído. Verifique os dados do paciente.';
+                $this->flashErro = 'Não foi possível enviar. Confira o e-mail e o telefone do paciente e tente de novo.';
             }
         } catch (RuntimeException $e) {
             $this->flashErro = $e->getMessage();
         } catch (\Throwable $e) {
             Log::error('Erro ao enviar anexo', ['error' => $e->getMessage()]);
-            $this->flashErro = 'Erro ao enviar documento. Tente novamente.';
+            $this->flashErro = 'Não foi possível enviar o documento. Tente de novo em instantes.';
         }
     }
 
@@ -329,12 +329,12 @@ class TransacaoIndex extends Component
             $action = app(CreateTransacaoAction::class);
             $action->execute($this->buildData());
 
-            $this->flashSucesso = 'Transação criada com sucesso.';
+            $this->flashSucesso = 'Lançamento salvo.';
             $this->modalCriar   = false;
             $this->resetFormulario();
         } catch (Throwable $e) {
             Log::error('Erro ao criar transação', ['error' => $e->getMessage()]);
-            $this->flashErro = 'Erro ao criar transação: ' . $e->getMessage();
+            $this->flashErro = 'Não foi possível salvar o lançamento: ' . $e->getMessage();
         }
     }
 
@@ -348,13 +348,13 @@ class TransacaoIndex extends Component
             $action    = app(UpdateTransacaoAction::class);
             $action->execute($transacao, $this->buildData());
 
-            $this->flashSucesso        = 'Transação atualizada com sucesso.';
+            $this->flashSucesso        = 'Alterações salvas.';
             $this->modalEditar         = false;
             $this->transacaoEditandoId = null;
             $this->resetFormulario();
         } catch (Throwable $e) {
             Log::error('Erro ao atualizar transação', ['error' => $e->getMessage()]);
-            $this->flashErro = 'Erro ao atualizar transação: ' . $e->getMessage();
+            $this->flashErro = 'Não foi possível salvar as alterações: ' . $e->getMessage();
         }
     }
 
@@ -366,10 +366,10 @@ class TransacaoIndex extends Component
             $action    = app(UpdateTransacaoAction::class);
             $action->execute($transacao, ['status' => StatusTransacao::Cancelado->value]);
 
-            $this->flashSucesso = 'Transação cancelada.';
+            $this->flashSucesso = 'Lançamento cancelado.';
         } catch (Throwable $e) {
             Log::error('Erro ao cancelar transação', ['error' => $e->getMessage()]);
-            $this->flashErro = 'Erro ao cancelar transação.';
+            $this->flashErro = 'Não foi possível cancelar o lançamento. Tente de novo em instantes.';
         }
     }
 
@@ -379,17 +379,17 @@ class TransacaoIndex extends Component
         try {
             $transacao = Transacao::findOrFail($id);
             if ($transacao->status !== StatusTransacao::Pendente) {
-                $this->flashErro = 'Apenas transações pendentes podem ser marcadas como pagas.';
+                $this->flashErro = 'Só lançamentos pendentes podem ser marcados como pagos.';
                 return;
             }
             app(UpdateTransacaoAction::class)->execute($transacao, [
                 'status'         => StatusTransacao::Pago->value,
                 'data_pagamento' => $transacao->data_pagamento?->toDateString() ?? now()->toDateString(),
             ]);
-            $this->flashSucesso = 'Transação marcada como paga.';
+            $this->flashSucesso = 'Lançamento marcado como pago.';
         } catch (Throwable $e) {
             Log::error('Erro ao marcar transação como paga', ['id' => $id, 'error' => $e->getMessage()]);
-            $this->flashErro = 'Erro ao marcar como pago.';
+            $this->flashErro = 'Não foi possível marcar como pago. Tente de novo em instantes.';
         }
     }
 
@@ -404,10 +404,10 @@ class TransacaoIndex extends Component
             $action->execute($transacao, $this->arquivoBoleto, TipoAnexo::Boleto);
 
             $this->arquivoBoleto = null;
-            $this->flashSucesso  = 'Boleto anexado com sucesso.';
+            $this->flashSucesso  = 'Arquivo anexado.';
         } catch (Throwable $e) {
             Log::error('Erro ao fazer upload de boleto', ['error' => $e->getMessage()]);
-            $this->flashErro = 'Erro ao anexar boleto.';
+            $this->flashErro = 'Não foi possível anexar o arquivo. Tente de novo em instantes.';
         }
     }
 
@@ -423,13 +423,13 @@ class TransacaoIndex extends Component
             $this->arquivoComprovante = null;
 
             if ($result['suggest_mark_paid']) {
-                $this->flashSucesso = 'Comprovante anexado. Deseja marcar como pago?';
+                $this->flashSucesso = 'Comprovante anexado. Quer marcar o lançamento como pago?';
             } else {
-                $this->flashSucesso = 'Comprovante anexado com sucesso.';
+                $this->flashSucesso = 'Comprovante anexado.';
             }
         } catch (Throwable $e) {
             Log::error('Erro ao fazer upload de comprovante', ['error' => $e->getMessage()]);
-            $this->flashErro = 'Erro ao anexar comprovante.';
+            $this->flashErro = 'Não foi possível anexar o comprovante. Tente de novo em instantes.';
         }
     }
 
@@ -439,10 +439,10 @@ class TransacaoIndex extends Component
             $anexo = TransacaoAnexo::where('transacao_id', $this->transacaoDetalheId)->findOrFail($anexoId);
             Storage::disk('local')->delete($anexo->caminho);
             $anexo->delete();
-            $this->flashSucesso = 'Anexo removido.';
+            $this->flashSucesso = 'Anexo excluído.';
         } catch (Throwable $e) {
             Log::error('Erro ao remover anexo', ['error' => $e->getMessage()]);
-            $this->flashErro = 'Erro ao remover anexo.';
+            $this->flashErro = 'Não foi possível excluir o anexo. Tente de novo em instantes.';
         }
     }
 
@@ -484,7 +484,7 @@ class TransacaoIndex extends Component
             'pacienteId'       => 'nullable|uuid|exists:pacientes,id',
             'observacoes'      => 'nullable|string|max:1000',
         ], [
-            'dataPagamento.required_if' => 'Informe a data de pagamento de uma transação paga.',
+            'dataPagamento.required_if' => 'Informe a data de pagamento, já que o lançamento está pago.',
         ]);
     }
 
@@ -645,6 +645,6 @@ class TransacaoIndex extends Component
             'totalEntradas'     => $totalEntradas,
             'totalSaidas'       => $totalSaidas,
             'saldo'             => $saldo,
-        ])->layout('layouts.app', ['title' => 'Transações']);
+        ])->layout('layouts.app', ['title' => 'Lançamentos']);
     }
 }

@@ -145,7 +145,7 @@ class ConfiguracaoClinica extends Component
             app(ClinicaAtual::class)->definir($this->clinica()->fresh());
             $this->flashSucesso = 'Chave removida.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Não foi possível remover a chave.';
+            $this->flashErro = 'Não foi possível remover a chave. Tente de novo em instantes.';
         }
     }
 
@@ -182,10 +182,10 @@ class ConfiguracaoClinica extends Component
         try {
             $clinica = $action->execute($this->clinica(), $dados, $logo);
             app(ClinicaAtual::class)->definir($clinica);
-            $this->flashSucesso = 'Configurações salvas.';
+            $this->flashSucesso = 'Alterações salvas.';
         } catch (Throwable $e) {
             Log::error('[ConfiguracaoClinica] erro ao salvar', ['message' => $e->getMessage()]);
-            $this->flashErro = 'Erro ao salvar as configurações.';
+            $this->flashErro = 'Não foi possível salvar. Tente de novo em instantes.';
         }
     }
 
@@ -194,6 +194,6 @@ class ConfiguracaoClinica extends Component
         return view('livewire.configuracao-clinica', [
             'clinica'    => $this->clinica(),
             'webhookUrl' => route('webhook.asaas'),
-        ])->layout('layouts.app', ['title' => 'Configurações da clínica']);
+        ])->layout('layouts.app', ['title' => 'Dados da clínica']);
     }
 }

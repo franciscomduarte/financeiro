@@ -156,15 +156,16 @@ class EstoqueProdutoIndex extends Component
 
             if ($this->produtoEditandoId) {
                 StockProduct::findOrFail($this->produtoEditandoId)->update($payload);
-                $this->flashSucesso = 'Produto atualizado com sucesso.';
+                $this->flashSucesso = 'Produto salvo.';
             } else {
                 StockProduct::create($payload);
-                $this->flashSucesso = 'Produto cadastrado com sucesso.';
+                $this->flashSucesso = 'Produto cadastrado.';
             }
 
             $this->modalProduto = false;
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro ao salvar produto: ' . $e->getMessage();
+            report($e);
+            $this->flashErro = 'Não foi possível salvar o produto. Tente de novo em instantes.';
         }
     }
 
@@ -211,9 +212,9 @@ class EstoqueProdutoIndex extends Component
                 $this->produtoSelecionadoId = (int) $this->entradaProdutoId;
             }
 
-            $this->flashSucesso = 'Entrada de compra registrada com sucesso.';
+            $this->flashSucesso = 'Entrada registrada.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro ao registrar entrada: ' . $e->getMessage();
+            $this->flashErro = 'Não foi possível registrar a entrada: ' . $e->getMessage();
         }
     }
 
@@ -279,7 +280,7 @@ class EstoqueProdutoIndex extends Component
             );
 
             $this->modalConsumo = false;
-            $this->flashSucesso = 'Consumo registrado com sucesso.';
+            $this->flashSucesso = 'Uso registrado.';
         } catch (Throwable $e) {
             $this->flashErro = $e->getMessage();
         }
@@ -340,6 +341,6 @@ class EstoqueProdutoIndex extends Component
             'unitTypes',
             'movementTypes',
             'pacientesSelect',
-        ))->layout('layouts.app', ['title' => 'Produtos — Estoque']);
+        ))->layout('layouts.app', ['title' => 'Produtos']);
     }
 }

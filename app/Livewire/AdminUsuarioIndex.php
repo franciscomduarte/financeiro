@@ -91,7 +91,7 @@ class AdminUsuarioIndex extends Component
                     'name'  => $this->nome,
                     'email' => $this->email,
                 ], $this->clinica(), RoleUsuario::from($this->role));
-                $this->flashSucesso = 'Usuário atualizado!';
+                $this->flashSucesso = 'Usuário salvo.';
             } else {
                 $resultado = $criar->execute([
                     'name'     => $this->nome,
@@ -100,15 +100,16 @@ class AdminUsuarioIndex extends Component
                     'active'   => true,
                 ], $this->clinica(), RoleUsuario::from($this->role));
                 $this->flashSucesso = $resultado['existente']
-                    ? 'Este e-mail já tinha conta em outra clínica: o acesso a esta clínica foi liberado (a senha dele não mudou).'
-                    : 'Usuário criado!';
+                    ? 'Esse e-mail já tinha conta em outra clínica. Liberamos o acesso a esta, e a senha continua a mesma.'
+                    : 'Usuário criado.';
             }
             $this->modalUsuario = false;
             $this->resetForm();
         } catch (RuntimeException $e) {
             $this->flashErro = $e->getMessage();
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro: ' . $e->getMessage();
+            report($e);
+            $this->flashErro = 'Não foi possível salvar. Tente de novo em instantes.';
         }
     }
 
@@ -139,12 +140,13 @@ class AdminUsuarioIndex extends Component
                 $user->delete();
                 $this->flashSucesso = 'Usuário excluído.';
             } else {
-                $this->flashSucesso = 'Acesso a esta clínica removido (o usuário continua em outras clínicas).';
+                $this->flashSucesso = 'Acesso a esta clínica removido. A pessoa continua nas outras clínicas.';
             }
         } catch (RuntimeException $e) {
             $this->flashErro = $e->getMessage();
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro: ' . $e->getMessage();
+            report($e);
+            $this->flashErro = 'Não foi possível excluir. Tente de novo em instantes.';
         }
         $this->modalDelete     = false;
         $this->usuarioDeleteId = null;
@@ -158,7 +160,7 @@ class AdminUsuarioIndex extends Component
         if ($status === Password::RESET_LINK_SENT) {
             $this->flashSucesso = 'E-mail de redefinição enviado para ' . $user->email . '.';
         } else {
-            $this->flashErro = 'Não foi possível enviar o e-mail de redefinição.';
+            $this->flashErro = 'Não foi possível enviar o e-mail de redefinição. Tente de novo em instantes.';
         }
     }
 

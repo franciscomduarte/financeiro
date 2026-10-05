@@ -116,15 +116,16 @@ class DocumentoIndex extends Component
             ];
             if ($this->categoriaEditandoId) {
                 $atualizar->execute(DocumentoCategoria::findOrFail($this->categoriaEditandoId), $dados);
-                $this->flashSucesso = 'Categoria atualizada!';
+                $this->flashSucesso = 'Categoria salva.';
             } else {
                 $criar->execute($dados);
-                $this->flashSucesso = 'Categoria criada!';
+                $this->flashSucesso = 'Categoria criada.';
             }
             $this->modalCategoria = false;
             $this->resetFormCategoria();
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro: ' . $e->getMessage();
+            report($e);
+            $this->flashErro = 'Não foi possível salvar a categoria. Tente de novo em instantes.';
         }
     }
 
@@ -168,15 +169,16 @@ class DocumentoIndex extends Component
             $arquivo = $this->resolveArquivo($this->docArquivo);
             if ($this->documentoEditandoId) {
                 $atualizar->execute(Documento::findOrFail($this->documentoEditandoId), $dados, $arquivo);
-                $this->flashSucesso = 'Documento atualizado!';
+                $this->flashSucesso = 'Documento salvo.';
             } else {
                 $criar->execute($dados, $arquivo);
-                $this->flashSucesso = 'Documento cadastrado!';
+                $this->flashSucesso = 'Documento cadastrado.';
             }
             $this->modalDocumento = false;
             $this->resetFormDocumento();
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro: ' . $e->getMessage();
+            report($e);
+            $this->flashErro = 'Não foi possível salvar o documento. Tente de novo em instantes.';
         }
     }
 
@@ -209,9 +211,10 @@ class DocumentoIndex extends Component
                 'observacoes'      => $this->renObservacoes ?: null,
             ], $arquivo);
             $this->modalRenovar  = false;
-            $this->flashSucesso  = 'Documento renovado com sucesso!';
+            $this->flashSucesso  = 'Documento renovado.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro ao renovar: ' . $e->getMessage();
+            report($e);
+            $this->flashErro = 'Não foi possível renovar o documento. Tente de novo em instantes.';
         }
     }
 

@@ -79,7 +79,7 @@ class DashboardIndex extends Component
             // Meta
             'mesLabel'         => ucfirst($hoje->isoFormat('MMMM [de] YYYY')),
             'mesAnteriorLabel' => ucfirst($hoje->copy()->subMonth()->isoFormat('MMMM')),
-        ])->layout('layouts.app', ['title' => 'Dashboard']);
+        ])->layout('layouts.app', ['title' => 'Início']);
     }
 
     private function custoMinimoMensal(): array

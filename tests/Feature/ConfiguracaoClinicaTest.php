@@ -165,7 +165,7 @@ class ConfiguracaoClinicaTest extends TestCase
     public function test_so_admin_acessa_as_configuracoes(): void
     {
         $this->actingAs(User::factory()->create(['role' => 'user']))->get('/admin/clinica')->assertForbidden();
-        $this->actingAs(User::factory()->create(['role' => 'admin']))->get('/admin/clinica')->assertOk()->assertSee('Configurações da clínica');
+        $this->actingAs(User::factory()->create(['role' => 'admin']))->get('/admin/clinica')->assertOk()->assertSee('Dados da clínica');
     }
 
     public function test_chave_em_branco_mantem_a_atual_e_nunca_volta_para_a_tela(): void

@@ -76,58 +76,65 @@
     {{-- ─── 2. Alertas — "O que precisa de atenção?" ───────────────── --}}
     {{-- Mesma fonte do resumo diário enviado por e-mail/WhatsApp (AlertasVencimentoService) --}}
     @if ($totalAlertas > 0)
-    <div class="rounded-2xl border border-stone-200 bg-surface shadow-sm overflow-hidden">
+    <div class="card overflow-hidden">
         <div class="px-5 py-4 border-b border-stone-100 flex items-center gap-2">
-            <svg class="w-5 h-5 text-rose-500 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-rose-500 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/>
             </svg>
-            <h2 class="text-sm font-semibold text-stone-800">O que precisa de atenção</h2>
-            <span class="ml-auto text-xs text-stone-400">{{ $totalAlertas }} item{{ $totalAlertas > 1 ? 's' : '' }}</span>
+            <h2 class="text-base font-semibold text-stone-900">O que precisa da sua atenção</h2>
+            <span class="ml-auto text-xs text-stone-500">{{ $totalAlertas }} {{ $totalAlertas > 1 ? 'itens' : 'item' }}</span>
         </div>
-        <div class="divide-y divide-stone-50">
-            @foreach ([['vencidos', 'Já venceram', $alertasVencidos], ['avencer', 'Vencimento próximo', $alertasAVencer]] as [$grupo, $tituloGrupo, $itens])
+        <div class="divide-y divide-stone-100">
+            @foreach ([['vencidos', 'Já venceram', $alertasVencidos], ['avencer', 'Vencem em breve', $alertasAVencer]] as [$grupo, $tituloGrupo, $itens])
                 @continue($itens->isEmpty())
                 @php $urgente = $grupo === 'vencidos'; @endphp
                 <div class="px-5 py-2 flex items-center gap-2 {{ $urgente ? 'bg-red-50' : 'bg-amber-50' }}">
                     <span class="h-1.5 w-1.5 rounded-full shrink-0 {{ $urgente ? 'bg-red-500' : 'bg-amber-500' }}"></span>
-                    <p class="text-xs font-bold uppercase tracking-wider {{ $urgente ? 'text-red-700' : 'text-amber-700' }}">
-                        {{ $tituloGrupo }} · {{ $itens->count() }} item{{ $itens->count() > 1 ? 's' : '' }}
+                    <p class="text-xs font-medium {{ $urgente ? 'text-red-700' : 'text-amber-700' }}">
+                        {{ $tituloGrupo }} · {{ $itens->count() }} {{ $itens->count() > 1 ? 'itens' : 'item' }}
                     </p>
                 </div>
                 @foreach ($itens as $alerta)
                     <a href="{{ route($alerta->tipo->rota()) }}"
-                       class="flex min-h-[56px] items-center gap-3 px-5 py-3 transition {{ $urgente ? 'bg-red-50/30 hover:bg-red-50/60' : 'hover:bg-stone-50/60' }}">
+                       class="flex min-h-[56px] items-center gap-3 px-5 py-3 transition-colors hover:bg-stone-50">
                         <div class="min-w-0 flex-1">
                             <p class="truncate text-sm font-medium text-stone-800">{{ $alerta->titulo }}</p>
-                            <p class="text-xs text-stone-400">
+                            <p class="text-xs text-stone-500">
                                 <span class="sm:hidden">{{ $alerta->tipo->label() }} · </span>{{ $alerta->data->format('d/m/Y') }}
                             </p>
                         </div>
                         <div class="shrink-0 text-right">
                             @if ($alerta->valorFormatado())
-                                <p class="text-sm font-semibold tabular-nums text-stone-800">{{ $alerta->valorFormatado() }}</p>
+                                <p class="text-sm font-semibold tabular-nums text-stone-900">{{ $alerta->valorFormatado() }}</p>
                             @endif
-                            <p class="text-xs font-semibold {{ $urgente ? 'text-red-600' : 'text-amber-600' }}">{{ ucfirst($alerta->prazo($hojeAlertas)) }}</p>
+                            <p class="text-xs font-medium {{ $urgente ? 'text-red-600' : 'text-amber-600' }}">{{ ucfirst($alerta->prazo($hojeAlertas)) }}</p>
                         </div>
-                        <span class="hidden shrink-0 rounded-full px-2 py-0.5 text-xs font-medium sm:inline {{ $urgente ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700' }}">{{ $alerta->tipo->label() }}</span>
+                        <span class="hidden shrink-0 badge sm:inline-flex {{ $urgente ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700' }}">{{ $alerta->tipo->label() }}</span>
                     </a>
                 @endforeach
             @endforeach
         </div>
     </div>
     @else
-    <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 flex items-center gap-3 text-sm text-emerald-800">
-        <svg class="w-5 h-5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+    <div class="rounded-2xl border border-emerald-100 bg-emerald-50 px-5 py-4 flex items-center gap-3 text-sm text-emerald-700">
+        <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>
-        <span><strong>Tudo em dia!</strong> Nenhum vencimento próximo.</span>
+        <span><strong class="font-semibold">Tudo em dia!</strong> Você não tem vencimentos nos próximos dias.</span>
     </div>
     @endif
 
     {{-- ─── 3. Gráficos — "Como estou evoluindo?" ──────────────────── --}}
+    {{-- Cores de texto, grade e borda lidas das variáveis CSS, para acompanhar o modo escuro --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4"
          x-data
          x-init="
+            const corCss = (nome, padrao) => getComputedStyle(document.documentElement).getPropertyValue(nome).trim() || padrao;
+            const corTexto = corCss('--color-stone-500', '#78716c');
+            const corGrade = corCss('--color-stone-100', 'rgba(0,0,0,0.04)');
+            const corSuperficie = corCss('--color-surface', '#fff');
+            Chart.defaults.color = corTexto;
+            Chart.defaults.borderColor = corGrade;
             const ctx1 = document.getElementById('chart-fluxo');
             if (ctx1) {
                 new Chart(ctx1, {
@@ -135,14 +142,14 @@
                     data: {
                         labels: {{ Js::from($fluxo->pluck('label')) }},
                         datasets: [
-                            { label: 'Receita', data: {{ Js::from($fluxo->pluck('receita')) }}, backgroundColor: 'rgba(16,185,129,0.75)', borderRadius: 6, borderSkipped: false },
-                            { label: 'Despesa', data: {{ Js::from($fluxo->pluck('despesa')) }}, backgroundColor: 'rgba(244,63,94,0.75)',  borderRadius: 6, borderSkipped: false }
+                            { label: 'Receitas', data: {{ Js::from($fluxo->pluck('receita')) }}, backgroundColor: 'rgba(16,185,129,0.75)', borderRadius: 6, borderSkipped: false },
+                            { label: 'Despesas', data: {{ Js::from($fluxo->pluck('despesa')) }}, backgroundColor: 'rgba(244,63,94,0.75)',  borderRadius: 6, borderSkipped: false }
                         ]
                     },
                     options: {
                         responsive: true, maintainAspectRatio: false,
-                        plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } }, tooltip: { callbacks: { label: ctx => 'R$ ' + ctx.parsed.y.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) } } },
-                        scales: { x: { grid: { display: false }, ticks: { font: { size: 11 } } }, y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { size: 11 }, callback: v => 'R$ ' + v.toLocaleString('pt-BR') } } }
+                        plugins: { legend: { position: 'top', labels: { color: corTexto, boxWidth: 12, font: { size: 11 } } }, tooltip: { callbacks: { label: ctx => 'R$ ' + ctx.parsed.y.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) } } },
+                        scales: { x: { grid: { display: false }, border: { color: corGrade }, ticks: { color: corTexto, font: { size: 11 } } }, y: { beginAtZero: true, border: { display: false }, grid: { color: corGrade }, ticks: { color: corTexto, font: { size: 11 }, callback: v => 'R$ ' + v.toLocaleString('pt-BR') } } }
                     }
                 });
             }
@@ -152,26 +159,29 @@
                 const cores = ['#f43f5e','#f97316','#eab308','#10b981','#3b82f6','#8b5cf6','#ec4899','#06b6d4'];
                 new Chart(ctx2, {
                     type: 'doughnut',
-                    data: { labels: {{ Js::from($despesasCat->pluck('categoria')) }}, datasets: [{ data: {{ Js::from($despesasCat->pluck('total')->map(fn($v) => (float)$v)) }}, backgroundColor: cores.slice(0, {{ $despesasCat->count() }}), borderWidth: 2, borderColor: '#fff', hoverOffset: 6 }] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 }, padding: 12 } }, tooltip: { callbacks: { label: ctx => ' R$ ' + ctx.parsed.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) } } }, cutout: '68%' }
+                    data: { labels: {{ Js::from($despesasCat->pluck('categoria')) }}, datasets: [{ data: {{ Js::from($despesasCat->pluck('total')->map(fn($v) => (float)$v)) }}, backgroundColor: cores.slice(0, {{ $despesasCat->count() }}), borderWidth: 2, borderColor: corSuperficie, hoverOffset: 6 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: corTexto, boxWidth: 12, font: { size: 11 }, padding: 12 } }, tooltip: { callbacks: { label: ctx => ' R$ ' + ctx.parsed.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) } } }, cutout: '68%' }
                 });
             }
             @endif
          ">
-        <div class="lg:col-span-2 rounded-2xl border border-stone-200 bg-surface p-5 shadow-sm">
-            <h2 class="text-sm font-semibold text-stone-800 mb-0.5">Fluxo de Caixa</h2>
-            <p class="text-xs text-stone-400 mb-4">Últimos 6 meses — receita vs. despesa</p>
-            <div class="relative h-56"><canvas id="chart-fluxo"></canvas></div>
+        <div class="card p-5 lg:col-span-2">
+            <h2 class="text-base font-semibold text-stone-900">Fluxo de caixa</h2>
+            <p class="mt-0.5 mb-4 text-sm text-stone-500">Receitas e despesas dos últimos 6 meses</p>
+            <div class="relative h-56"><canvas id="chart-fluxo" role="img" aria-label="Gráfico de receitas e despesas dos últimos 6 meses"></canvas></div>
         </div>
-        <div class="rounded-2xl border border-stone-200 bg-surface p-5 shadow-sm">
-            <h2 class="text-sm font-semibold text-stone-800 mb-0.5">Despesas por Categoria</h2>
-            <p class="text-xs text-stone-400 mb-4">{{ $mesLabel }}</p>
+        <div class="card p-5">
+            <h2 class="text-base font-semibold text-stone-900">Despesas por categoria</h2>
+            <p class="mt-0.5 mb-4 text-sm text-stone-500">{{ $mesLabel }}</p>
             @if ($despesasCat->isNotEmpty())
-                <div class="relative h-56"><canvas id="chart-categorias"></canvas></div>
+                <div class="relative h-56"><canvas id="chart-categorias" role="img" aria-label="Gráfico de despesas por categoria"></canvas></div>
             @else
-                <div class="flex h-56 items-center justify-center text-sm text-stone-400 flex-col gap-2">
-                    <svg class="w-8 h-8 text-stone-200" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5"/></svg>
-                    Sem despesas registradas
+                <div class="flex h-56 flex-col items-center justify-center gap-3 text-center">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-stone-100 text-stone-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z"/><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z"/></svg>
+                    </div>
+                    <p class="max-w-[16rem] text-sm text-stone-500">Nenhuma despesa lançada neste mês ainda.</p>
+                    <a href="{{ route('transacoes.index') }}" class="btn-secondary">Ver lançamentos</a>
                 </div>
             @endif
         </div>
@@ -179,42 +189,43 @@
 
     {{-- ─── 4. Referência — "Quanto preciso para funcionar?" ──────────── --}}
     @php $cm = $custoMinimo; @endphp
-    <div class="rounded-2xl border border-stone-200 bg-surface shadow-sm overflow-hidden">
+    <div class="card overflow-hidden">
         <div class="px-5 py-4 border-b border-stone-100 flex items-start justify-between gap-4">
             <div>
-                <h2 class="text-sm font-semibold text-stone-800">Custo Mínimo para Operar</h2>
-                <p class="text-xs text-stone-400 mt-0.5">Valor de referência — o piso mensal para manter a operação ativa</p>
+                <h2 class="text-base font-semibold text-stone-900">Custo mínimo para operar</h2>
+                <p class="text-sm text-stone-500 mt-0.5">Quanto a clínica precisa, por mês, para manter as portas abertas.</p>
             </div>
-            <a href="{{ route('web.contratos') }}" class="shrink-0 text-xs text-stone-400 hover:text-rose-600 transition-colors">gerenciar →</a>
+            <a href="{{ route('web.contratos') }}" class="btn-ghost shrink-0 -mr-2 -mt-1">Ver contratos</a>
         </div>
         <div class="px-5 py-5 flex flex-col sm:flex-row sm:items-center gap-6">
             <div class="shrink-0">
-                <p class="text-xs font-semibold uppercase tracking-wide text-stone-400 mb-1">Total Mensal</p>
-                <p class="text-4xl font-bold tabular-nums text-stone-800">R$ {{ number_format($cm['totalMinimo'], 2, ',', '.') }}</p>
-                <p class="text-xs text-stone-400 mt-1">por mês, em condições normais de operação</p>
+                <p class="text-sm text-stone-500 mb-1">Total mensal</p>
+                <p class="text-3xl font-semibold tabular-nums text-stone-900">R$ {{ number_format($cm['totalMinimo'], 2, ',', '.') }}</p>
+                <p class="text-xs text-stone-500 mt-1">por mês, em condições normais de operação</p>
             </div>
             <div class="hidden sm:block self-stretch border-l border-stone-100"></div>
             <div class="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div class="rounded-xl bg-rose-50 border border-rose-100 p-4">
-                    <div class="flex items-center gap-2 mb-2"><span class="h-2 w-2 rounded-full bg-rose-400 shrink-0"></span><p class="text-xs font-semibold text-rose-700 uppercase tracking-wide">Contratos Fixos</p></div>
-                    <p class="text-xl font-bold tabular-nums text-stone-800">R$ {{ number_format($cm['custoContratos'], 2, ',', '.') }}</p>
-                    <p class="text-xs text-stone-400 mt-1">{{ $cm['numContratos'] }} contrato{{ $cm['numContratos'] !== 1 ? 's' : '' }} ativo{{ $cm['numContratos'] !== 1 ? 's' : '' }} · valor exato</p>
+                    <div class="flex items-center gap-2 mb-2"><span class="h-2 w-2 rounded-full bg-rose-400 shrink-0"></span><p class="text-xs font-medium text-rose-700">Contratos fixos</p></div>
+                    <p class="text-xl font-semibold tabular-nums text-stone-900">R$ {{ number_format($cm['custoContratos'], 2, ',', '.') }}</p>
+                    <p class="text-xs text-stone-500 mt-1">{{ $cm['numContratos'] }} contrato{{ $cm['numContratos'] !== 1 ? 's' : '' }} ativo{{ $cm['numContratos'] !== 1 ? 's' : '' }} · valor exato</p>
                 </div>
                 <div class="rounded-xl bg-blue-50 border border-blue-100 p-4">
-                    <div class="flex items-center gap-2 mb-2"><span class="h-2 w-2 rounded-full bg-blue-400 shrink-0"></span><p class="text-xs font-semibold text-blue-700 uppercase tracking-wide">Contas de Consumo</p></div>
-                    <p class="text-xl font-bold tabular-nums text-stone-800">R$ {{ number_format($cm['mediaConsumo'], 2, ',', '.') }}</p>
-                    <p class="text-xs text-stone-400 mt-1">@if($cm['mesesConsumo'] > 0) média de {{ $cm['mesesConsumo'] }} {{ $cm['mesesConsumo'] === 1 ? 'mês' : 'meses' }} · estimado @else sem histórico ainda @endif</p>
+                    <div class="flex items-center gap-2 mb-2"><span class="h-2 w-2 rounded-full bg-blue-400 shrink-0"></span><p class="text-xs font-medium text-blue-700">Contas de consumo</p></div>
+                    <p class="text-xl font-semibold tabular-nums text-stone-900">R$ {{ number_format($cm['mediaConsumo'], 2, ',', '.') }}</p>
+                    <p class="text-xs text-stone-500 mt-1">@if($cm['mesesConsumo'] > 0) Média de {{ $cm['mesesConsumo'] }} {{ $cm['mesesConsumo'] === 1 ? 'mês' : 'meses' }} · estimado @else Ainda sem histórico @endif</p>
                 </div>
                 <div class="rounded-xl bg-orange-50 border border-orange-100 p-4">
-                    <div class="flex items-center gap-2 mb-2"><span class="h-2 w-2 rounded-full bg-orange-400 shrink-0"></span><p class="text-xs font-semibold text-orange-700 uppercase tracking-wide">Fiscal / Tributos</p></div>
-                    <p class="text-xl font-bold tabular-nums text-stone-800">R$ {{ number_format($cm['mediaFiscal'], 2, ',', '.') }}</p>
-                    <p class="text-xs text-stone-400 mt-1">@if($cm['mesesFiscal'] > 0) média de {{ $cm['mesesFiscal'] }} {{ $cm['mesesFiscal'] === 1 ? 'mês' : 'meses' }} · estimado @else sem histórico ainda @endif</p>
+                    <div class="flex items-center gap-2 mb-2"><span class="h-2 w-2 rounded-full bg-orange-400 shrink-0"></span><p class="text-xs font-medium text-orange-700">Impostos e tributos</p></div>
+                    <p class="text-xl font-semibold tabular-nums text-stone-900">R$ {{ number_format($cm['mediaFiscal'], 2, ',', '.') }}</p>
+                    <p class="text-xs text-stone-500 mt-1">@if($cm['mesesFiscal'] > 0) Média de {{ $cm['mesesFiscal'] }} {{ $cm['mesesFiscal'] === 1 ? 'mês' : 'meses' }} · estimado @else Ainda sem histórico @endif</p>
                 </div>
             </div>
         </div>
-        <div class="border-t border-stone-100 bg-stone-50 px-5 py-3 text-xs text-stone-400">
-            Contratos: valor atual dos contratos ativos · Consumo e fiscal: média dos últimos {{ $cm['mesesHistorico'] }} meses com lançamentos registrados
+        <div class="border-t border-stone-100 bg-stone-50 px-5 py-3 text-xs text-stone-500">
+            Contratos: valor atual dos contratos ativos. Consumo e impostos: média dos últimos {{ $cm['mesesHistorico'] }} meses com lançamentos.
         </div>
     </div>
 
+    </div>
 </div>
