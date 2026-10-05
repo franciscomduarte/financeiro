@@ -13,7 +13,7 @@
     $colunas  = 'grid-template-columns: 3.5rem repeat(' . count($calDias) . ', minmax(0, 1fr));';
 @endphp
 
-<div class="rounded-2xl border border-stone-100 bg-white shadow-sm overflow-hidden">
+<div class="rounded-2xl border border-stone-100 bg-surface shadow-sm overflow-hidden">
     <div class="overflow-x-auto">
         <div class="{{ count($calDias) > 1 ? 'min-w-[720px]' : '' }}">
 

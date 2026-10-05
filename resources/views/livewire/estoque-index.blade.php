@@ -17,7 +17,7 @@
 
     {{-- Cards de resumo --}}
     <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div class="rounded-xl border border-stone-100 bg-white p-4 shadow-sm">
+        <div class="rounded-xl border border-stone-100 bg-surface p-4 shadow-sm">
             <p class="text-xs font-medium text-stone-500">Produtos Ativos</p>
             <p class="mt-1 text-2xl font-bold text-stone-800">{{ $totalProdutos }}</p>
             <p class="mt-0.5 text-xs text-stone-400">cadastrados</p>
@@ -48,7 +48,7 @@
         </div>
         <div class="space-y-1.5">
             @foreach ($frascosVencidos as $batch)
-            <div class="flex items-center justify-between rounded-lg bg-white border border-red-100 px-3 py-2">
+            <div class="flex items-center justify-between rounded-lg bg-surface border border-red-100 px-3 py-2">
                 <div class="text-sm">
                     <span class="font-medium text-stone-800">{{ $batch->product?->name ?? '—' }}</span>
                     @if ($batch->lot_number)
@@ -73,7 +73,7 @@
         </div>
         <div class="space-y-1.5">
             @foreach ($frascosVencendo as $batch)
-            <div class="flex items-center justify-between rounded-lg bg-white border border-amber-100 px-3 py-2">
+            <div class="flex items-center justify-between rounded-lg bg-surface border border-amber-100 px-3 py-2">
                 <div class="text-sm">
                     <span class="font-medium text-stone-800">{{ $batch->product?->name ?? '—' }}</span>
                     <span class="text-stone-500 ml-1.5">{{ number_format((float) $batch->quantity_available, 1) }} {{ $batch->product?->unit_type?->value }}</span>
@@ -91,7 +91,7 @@
     @endif
 
     @if ($produtosAbaixoMinimo->isNotEmpty())
-    <div class="rounded-2xl border border-stone-100 bg-white shadow-sm overflow-hidden">
+    <div class="rounded-2xl border border-stone-100 bg-surface shadow-sm overflow-hidden">
         <div class="flex items-center gap-2 border-b border-stone-100 px-5 py-3.5">
             <svg class="h-4 w-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/></svg>
             <h2 class="text-sm font-semibold text-stone-700">Produtos abaixo do estoque mínimo</h2>

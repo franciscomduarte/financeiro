@@ -39,7 +39,7 @@
     </div>
 
     {{-- Filtros --}}
-    <div class="rounded-2xl border border-stone-100 bg-white p-4 shadow-sm">
+    <div class="rounded-2xl border border-stone-100 bg-surface p-4 shadow-sm">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div class="relative flex-1">
                 <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -68,7 +68,7 @@
     <div class="{{ $produtoSelecionadoId ? 'lg:grid lg:grid-cols-5 lg:gap-6' : '' }} space-y-4 lg:space-y-0">
 
         {{-- Tabela de Produtos --}}
-        <div class="{{ $produtoSelecionadoId ? 'lg:col-span-3' : '' }} rounded-2xl border border-stone-100 bg-white shadow-sm overflow-hidden">
+        <div class="{{ $produtoSelecionadoId ? 'lg:col-span-3' : '' }} rounded-2xl border border-stone-100 bg-surface shadow-sm overflow-hidden">
             @if ($produtos->isEmpty())
                 <div class="flex flex-col items-center justify-center py-16 text-center">
                     <svg class="h-10 w-10 text-stone-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -171,7 +171,7 @@
 
         {{-- Painel de Lotes --}}
         @if ($produtoSelecionadoId)
-        <div class="lg:col-span-2 rounded-2xl border border-emerald-200 bg-white shadow-sm overflow-hidden">
+        <div class="lg:col-span-2 rounded-2xl border border-emerald-200 bg-surface shadow-sm overflow-hidden">
             @php $produtoLotes = $produtos->firstWhere('id', $produtoSelecionadoId); @endphp
             <div class="flex items-center justify-between border-b border-stone-100 bg-emerald-50/50 px-4 py-3.5">
                 <div>
@@ -180,7 +180,7 @@
                 </div>
                 <div class="flex gap-1.5">
                     <button wire:click="abrirModalEntrada({{ $produtoSelecionadoId }})"
-                            class="rounded-lg border border-emerald-200 bg-white px-2.5 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-50 transition-colors">
+                            class="rounded-lg border border-emerald-200 bg-surface px-2.5 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-50 transition-colors">
                         + Entrada
                     </button>
                     <button wire:click="selecionarProduto(null)"
@@ -282,10 +282,10 @@
     @if ($modalProduto)
         <div class="fixed inset-0 z-40 flex items-center justify-center p-4">
             <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModais"></div>
-            <div class="relative z-10 w-full max-w-xl rounded-2xl bg-white shadow-xl">
-                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                    <h2 class="text-base font-semibold text-slate-800">{{ $produtoEditandoId ? 'Editar Produto' : 'Novo Produto' }}</h2>
-                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
+            <div class="relative z-10 w-full max-w-xl rounded-2xl bg-surface shadow-xl">
+                <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
+                    <h2 class="text-base font-semibold text-stone-800">{{ $produtoEditandoId ? 'Editar Produto' : 'Novo Produto' }}</h2>
+                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
@@ -367,7 +367,7 @@
 
                     <div class="flex justify-end gap-3 pt-2">
                         <button type="button" wire:click="fecharModais"
-                                class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">Cancelar</button>
+                                class="rounded-lg border border-stone-200 px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-50">Cancelar</button>
                         <button type="submit" wire:loading.attr="disabled"
                                 class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 transition-colors">
                             <span wire:loading.remove wire:target="salvarProduto">{{ $produtoEditandoId ? 'Salvar' : 'Cadastrar' }}</span>
@@ -385,10 +385,10 @@
     @if ($modalEntrada)
         <div class="fixed inset-0 z-40 flex items-center justify-center p-4">
             <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModais"></div>
-            <div class="relative z-10 w-full max-w-lg rounded-2xl bg-white shadow-xl">
-                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                    <h2 class="text-base font-semibold text-slate-800">Entrada de Compra</h2>
-                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
+            <div class="relative z-10 w-full max-w-lg rounded-2xl bg-surface shadow-xl">
+                <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
+                    <h2 class="text-base font-semibold text-stone-800">Entrada de Compra</h2>
+                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
@@ -441,7 +441,7 @@
 
                     <div class="flex justify-end gap-3 pt-2">
                         <button type="button" wire:click="fecharModais"
-                                class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">Cancelar</button>
+                                class="rounded-lg border border-stone-200 px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-50">Cancelar</button>
                         <button type="submit" wire:loading.attr="disabled"
                                 class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 transition-colors">
                             <span wire:loading.remove wire:target="salvarEntrada">Registrar Entrada</span>
@@ -460,10 +460,10 @@
         @php $batchAbrir = $lotesSelecionados->firstWhere('id', $abrirFrascoBatchId); @endphp
         <div class="fixed inset-0 z-40 flex items-center justify-center p-4">
             <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModais"></div>
-            <div class="relative z-10 w-full max-w-sm rounded-2xl bg-white shadow-xl">
-                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                    <h2 class="text-base font-semibold text-slate-800">Abrir Frasco</h2>
-                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
+            <div class="relative z-10 w-full max-w-sm rounded-2xl bg-surface shadow-xl">
+                <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
+                    <h2 class="text-base font-semibold text-stone-800">Abrir Frasco</h2>
+                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
@@ -485,9 +485,9 @@
                         @endif
                     @endif
                 </div>
-                <div class="flex justify-end gap-3 border-t border-slate-100 px-6 py-4">
+                <div class="flex justify-end gap-3 border-t border-stone-100 px-6 py-4">
                     <button wire:click="fecharModais"
-                            class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">Cancelar</button>
+                            class="rounded-lg border border-stone-200 px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-50">Cancelar</button>
                     <button wire:click="confirmarAbrirFrasco" wire:loading.attr="disabled"
                             class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60 transition-colors">
                         <span wire:loading.remove wire:target="confirmarAbrirFrasco">Confirmar Abertura</span>
@@ -505,10 +505,10 @@
         @php $batchConsumo = $lotesSelecionados->firstWhere('id', $consumoBatchId); @endphp
         <div class="fixed inset-0 z-40 flex items-center justify-center p-4">
             <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModais"></div>
-            <div class="relative z-10 w-full max-w-md rounded-2xl bg-white shadow-xl">
-                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                    <h2 class="text-base font-semibold text-slate-800">Registrar Uso</h2>
-                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
+            <div class="relative z-10 w-full max-w-md rounded-2xl bg-surface shadow-xl">
+                <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
+                    <h2 class="text-base font-semibold text-stone-800">Registrar Uso</h2>
+                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
@@ -566,7 +566,7 @@
 
                     <div class="flex justify-end gap-3 pt-2">
                         <button type="button" wire:click="fecharModais"
-                                class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">Cancelar</button>
+                                class="rounded-lg border border-stone-200 px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-50">Cancelar</button>
                         <button type="submit" wire:loading.attr="disabled"
                                 class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 transition-colors">
                             <span wire:loading.remove wire:target="salvarConsumo">Registrar</span>

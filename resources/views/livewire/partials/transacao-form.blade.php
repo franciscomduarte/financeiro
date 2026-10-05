@@ -42,14 +42,14 @@
     <div class="grid grid-cols-2 gap-4">
         <div>
             <label class="block text-xs font-medium text-stone-600 mb-1.5">Tipo <span class="text-red-500">*</span></label>
-            <select wire:model.live="tipo" class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 bg-white @error('tipo') border-red-300 @enderror">
+            <select wire:model.live="tipo" class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 bg-surface @error('tipo') border-red-300 @enderror">
                 <option value="entrada">Entrada</option>
                 <option value="saida">Saída</option>
             </select>
         </div>
         <div>
             <label class="block text-xs font-medium text-stone-600 mb-1.5">Fase <span class="text-red-500">*</span></label>
-            <select wire:model="fase" class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 bg-white @error('fase') border-red-300 @enderror">
+            <select wire:model="fase" class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 bg-surface @error('fase') border-red-300 @enderror">
                 <option value="implantacao">Implantação</option>
                 <option value="operacao">Operação</option>
             </select>
@@ -60,7 +60,7 @@
     <div class="grid grid-cols-2 gap-4">
         <div>
             <label class="block text-xs font-medium text-stone-600 mb-1.5">Categoria <span class="text-red-500">*</span></label>
-            <select wire:model="categoria" class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 bg-white @error('categoria') border-red-300 @enderror">
+            <select wire:model="categoria" class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 bg-surface @error('categoria') border-red-300 @enderror">
                 <option value="">Selecione...</option>
                 @foreach ($this->categorias as $cat)
                     <option value="{{ $cat }}">{{ $cat }}</option>
@@ -94,7 +94,7 @@
                 >
                 @if ($this->pacientesFiltrados->isNotEmpty())
                     <div x-show="aberto"
-                         class="absolute z-20 w-full mt-1 bg-white border border-stone-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                         class="absolute z-20 w-full mt-1 bg-surface border border-stone-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                         @foreach ($this->pacientesFiltrados as $p)
                             <button type="button"
                                     wire:click="selecionarPaciente('{{ $p->id }}', '{{ addslashes($p->nome) }}')"
@@ -132,7 +132,7 @@
         </div>
         <div>
             <label class="block text-xs font-medium text-stone-600 mb-1.5">Forma de Pagamento <span class="text-red-500">*</span></label>
-            <select wire:model.live="formaPagamento" class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 bg-white @error('formaPagamento') border-red-300 @enderror">
+            <select wire:model.live="formaPagamento" class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 bg-surface @error('formaPagamento') border-red-300 @enderror">
                 @foreach ($formasPagamento as $fp)
                     <option value="{{ $fp->value }}">{{ $fp->label() }}</option>
                 @endforeach
@@ -185,7 +185,7 @@
     {{-- Status (recorrência fica oculta até existir geração automática dos lançamentos) --}}
     <div>
         <label class="block text-xs font-medium text-stone-600 mb-1.5">Status <span class="text-red-500">*</span></label>
-        <select wire:model.live="status" class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 bg-white @error('status') border-red-300 @enderror">
+        <select wire:model.live="status" class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 bg-surface @error('status') border-red-300 @enderror">
             @foreach ($statusEnum as $st)
                 <option value="{{ $st->value }}">{{ $st->label() }}</option>
             @endforeach

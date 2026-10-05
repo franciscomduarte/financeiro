@@ -11,7 +11,7 @@
             x-transition:leave-end="opacity-0"
             class="fixed top-4 right-4 z-50 max-w-sm"
         >
-            <div class="bg-white border border-emerald-200 text-emerald-800 rounded-xl px-4 py-3 shadow-xl flex items-center gap-2.5 text-sm">
+            <div class="bg-surface border border-emerald-200 text-emerald-800 rounded-xl px-4 py-3 shadow-xl flex items-center gap-2.5 text-sm">
                 <div class="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
                     <svg class="w-3 h-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -32,7 +32,7 @@
             x-transition:leave-end="opacity-0"
             class="fixed top-4 right-4 z-50 max-w-sm"
         >
-            <div class="bg-white border border-red-200 text-red-800 rounded-xl px-4 py-3 shadow-xl flex items-center gap-2.5 text-sm">
+            <div class="bg-surface border border-red-200 text-red-800 rounded-xl px-4 py-3 shadow-xl flex items-center gap-2.5 text-sm">
                 <div class="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center shrink-0">
                     <svg class="w-3 h-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
@@ -71,7 +71,7 @@
     </div>
 
     @if (count($taxas) === 0)
-        <div class="bg-white rounded-2xl border border-stone-100 shadow-sm p-16 text-center text-stone-400">
+        <div class="bg-surface rounded-2xl border border-stone-100 shadow-sm p-16 text-center text-stone-400">
             <svg class="w-10 h-10 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
             </svg>
@@ -82,7 +82,7 @@
         {{-- ─── Cards grid ────────────────────────────────── --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             @foreach ($taxas as $id => $taxa)
-                <div class="bg-white rounded-2xl border border-stone-100 shadow-sm p-4 flex flex-col gap-3 {{ !$taxa['ativo'] ? 'opacity-60' : '' }}">
+                <div class="bg-surface rounded-2xl border border-stone-100 shadow-sm p-4 flex flex-col gap-3 {{ !$taxa['ativo'] ? 'opacity-60' : '' }}">
 
                     {{-- Card top row: icon + name + toggle --}}
                     <div class="flex items-center gap-3">
@@ -105,7 +105,7 @@
                             role="switch"
                             aria-checked="{{ $taxa['ativo'] ? 'true' : 'false' }}"
                         >
-                            <span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform
+                            <span class="inline-block h-3.5 w-3.5 transform rounded-full bg-surface shadow transition-transform
                                 {{ $taxa['ativo'] ? 'translate-x-[18px]' : 'translate-x-0.5' }}">
                             </span>
                         </button>

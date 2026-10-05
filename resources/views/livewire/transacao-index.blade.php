@@ -11,7 +11,7 @@
             x-transition:leave-end="opacity-0 -translate-y-1"
             class="fixed top-4 right-4 z-50 max-w-sm"
         >
-            <div class="bg-white border border-emerald-200 text-emerald-800 rounded-xl px-4 py-3 shadow-xl flex items-center gap-2.5 text-sm">
+            <div class="bg-surface border border-emerald-200 text-emerald-800 rounded-xl px-4 py-3 shadow-xl flex items-center gap-2.5 text-sm">
                 <div class="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
                     <svg class="w-3 h-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -32,7 +32,7 @@
             x-transition:leave-end="opacity-0"
             class="fixed top-4 right-4 z-50 max-w-sm"
         >
-            <div class="bg-white border border-red-200 text-red-800 rounded-xl px-4 py-3 shadow-xl flex items-center gap-2.5 text-sm">
+            <div class="bg-surface border border-red-200 text-red-800 rounded-xl px-4 py-3 shadow-xl flex items-center gap-2.5 text-sm">
                 <div class="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center shrink-0">
                     <svg class="w-3 h-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
@@ -64,7 +64,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
 
         {{-- Entradas --}}
-        <div class="bg-white rounded-2xl border border-stone-100 p-5 shadow-sm">
+        <div class="bg-surface rounded-2xl border border-stone-100 p-5 shadow-sm">
             <div class="flex items-center justify-between mb-3">
                 <span class="text-xs font-semibold text-stone-500 uppercase tracking-widest">Entradas</span>
                 <div class="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center">
@@ -80,7 +80,7 @@
         </div>
 
         {{-- Saídas --}}
-        <div class="bg-white rounded-2xl border border-stone-100 p-5 shadow-sm">
+        <div class="bg-surface rounded-2xl border border-stone-100 p-5 shadow-sm">
             <div class="flex items-center justify-between mb-3">
                 <span class="text-xs font-semibold text-stone-500 uppercase tracking-widest">Saídas</span>
                 <div class="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center">
@@ -96,7 +96,7 @@
         </div>
 
         {{-- Saldo --}}
-        <div class="bg-white rounded-2xl border border-stone-100 p-5 shadow-sm">
+        <div class="bg-surface rounded-2xl border border-stone-100 p-5 shadow-sm">
             <div class="flex items-center justify-between mb-3">
                 <span class="text-xs font-semibold text-stone-500 uppercase tracking-widest">Saldo</span>
                 <div class="w-8 h-8 rounded-xl {{ $saldo >= 0 ? 'bg-blue-50' : 'bg-orange-50' }} flex items-center justify-center">
@@ -114,7 +114,7 @@
     </div>
 
     {{-- ─── Filters ──────────────────────────────────────── --}}
-    <div class="bg-white rounded-2xl border border-stone-100 shadow-sm mb-4">
+    <div class="bg-surface rounded-2xl border border-stone-100 shadow-sm mb-4">
         <div class="px-4 py-3 flex items-center gap-2 border-b border-stone-50">
             <svg class="w-3.5 h-3.5 text-stone-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" />
@@ -135,7 +135,7 @@
         <div class="px-4 py-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             <div>
                 <label class="block text-xs font-medium text-stone-500 mb-1.5">Tipo</label>
-                <select wire:model.live="filtroTipo" class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 bg-white text-stone-700">
+                <select wire:model.live="filtroTipo" class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 bg-surface text-stone-700">
                     <option value="">Todos</option>
                     @foreach ($tiposEnum as $tipo)
                         <option value="{{ $tipo->value }}">{{ $tipo === \App\Enums\TipoTransacao::Entrada ? 'Entrada' : 'Saída' }}</option>
@@ -144,7 +144,7 @@
             </div>
             <div>
                 <label class="block text-xs font-medium text-stone-500 mb-1.5">Fase</label>
-                <select wire:model.live="filtroFase" class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 bg-white text-stone-700">
+                <select wire:model.live="filtroFase" class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 bg-surface text-stone-700">
                     <option value="">Todas</option>
                     @foreach ($fasesEnum as $fase)
                         <option value="{{ $fase->value }}">{{ $fase->label() }}</option>
@@ -153,7 +153,7 @@
             </div>
             <div>
                 <label class="block text-xs font-medium text-stone-500 mb-1.5">Status</label>
-                <select wire:model.live="filtroStatus" class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 bg-white text-stone-700">
+                <select wire:model.live="filtroStatus" class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 bg-surface text-stone-700">
                     <option value="">Todos</option>
                     @foreach ($statusEnum as $st)
                         <option value="{{ $st->value }}">{{ $st->label() }}</option>
@@ -162,7 +162,7 @@
             </div>
             <div>
                 <label class="block text-xs font-medium text-stone-500 mb-1.5">Categoria</label>
-                <select wire:model.live="filtroCategoria" class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 bg-white text-stone-700">
+                <select wire:model.live="filtroCategoria" class="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 bg-surface text-stone-700">
                     <option value="">Todas</option>
                     @foreach ($todasCategorias as $cat)
                         <option value="{{ $cat }}">{{ $cat }}</option>
@@ -181,7 +181,7 @@
     </div>
 
     {{-- ─── Table ────────────────────────────────────────── --}}
-    <div class="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden">
+    <div class="bg-surface rounded-2xl border border-stone-100 shadow-sm overflow-hidden">
         {{-- Celular: cartões --}}
         <ul class="divide-y divide-stone-100 md:hidden">
             @forelse ($transacoes as $transacao)
@@ -348,7 +348,7 @@
     ═══════════════════════════════════════════════════════════════ --}}
     @if ($modalCriar)
         <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" wire:click.self="fecharModalCriar">
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto animate-[modal-in_0.2s_cubic-bezier(0.16,1,0.3,1)]">
+            <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto animate-[modal-in_0.2s_cubic-bezier(0.16,1,0.3,1)]">
                 <div class="flex items-center justify-between px-6 py-4 border-b border-stone-100">
                     <div>
                         <h2 class="text-base font-semibold text-stone-900">Nova Transação</h2>
@@ -364,7 +364,7 @@
                     @include('livewire.partials.transacao-form')
                 </div>
                 <div class="flex justify-end gap-3 px-6 py-4 border-t border-stone-100 bg-stone-50/50">
-                    <button wire:click="fecharModalCriar" class="px-4 py-2 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 rounded-lg text-sm font-medium transition-colors">
+                    <button wire:click="fecharModalCriar" class="px-4 py-2 bg-surface border border-stone-200 hover:bg-stone-50 text-stone-700 rounded-lg text-sm font-medium transition-colors">
                         Cancelar
                     </button>
                     <button wire:click="salvarNova" wire:loading.attr="disabled" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-sm font-semibold transition-colors disabled:opacity-60 shadow-sm shadow-rose-200">
@@ -381,7 +381,7 @@
     ═══════════════════════════════════════════════════════════════ --}}
     @if ($modalEditar)
         <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" wire:click.self="fecharModalEditar">
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto animate-[modal-in_0.2s_cubic-bezier(0.16,1,0.3,1)]">
+            <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto animate-[modal-in_0.2s_cubic-bezier(0.16,1,0.3,1)]">
                 <div class="flex items-center justify-between px-6 py-4 border-b border-stone-100">
                     <div>
                         <h2 class="text-base font-semibold text-stone-900">Editar Transação</h2>
@@ -397,7 +397,7 @@
                     @include('livewire.partials.transacao-form')
                 </div>
                 <div class="flex justify-end gap-3 px-6 py-4 border-t border-stone-100 bg-stone-50/50">
-                    <button wire:click="fecharModalEditar" class="px-4 py-2 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 rounded-lg text-sm font-medium transition-colors">
+                    <button wire:click="fecharModalEditar" class="px-4 py-2 bg-surface border border-stone-200 hover:bg-stone-50 text-stone-700 rounded-lg text-sm font-medium transition-colors">
                         Cancelar
                     </button>
                     <button wire:click="salvarEdicao" wire:loading.attr="disabled" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-sm font-semibold transition-colors disabled:opacity-60 shadow-sm shadow-rose-200">
@@ -415,7 +415,7 @@
     @if ($modalDetalhe && $this->transacaoDetalhe)
         @php $t = $this->transacaoDetalhe; @endphp
         <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" wire:click.self="fecharModalDetalhe">
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto animate-[modal-in_0.2s_cubic-bezier(0.16,1,0.3,1)]">
+            <div class="bg-surface rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto animate-[modal-in_0.2s_cubic-bezier(0.16,1,0.3,1)]">
 
                 {{-- Header --}}
                 <div class="flex items-start justify-between px-6 py-4 border-b border-stone-100">
@@ -620,7 +620,7 @@
                 </div>
 
                 <div class="flex justify-end px-6 py-4 border-t border-stone-100 bg-stone-50/50">
-                    <button wire:click="fecharModalDetalhe" class="px-4 py-2 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 rounded-lg text-sm font-medium transition-colors">
+                    <button wire:click="fecharModalDetalhe" class="px-4 py-2 bg-surface border border-stone-200 hover:bg-stone-50 text-stone-700 rounded-lg text-sm font-medium transition-colors">
                         Fechar
                     </button>
                 </div>
@@ -638,9 +638,9 @@
             x-data
             x-on:keydown.escape.window="$wire.modalEnviarAnexo = false"
         >
-            <div class="absolute inset-0 bg-stone-900/40 backdrop-blur-sm" wire:click="$set('modalEnviarAnexo', false)"></div>
+            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="$set('modalEnviarAnexo', false)"></div>
 
-            <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-sm">
+            <div class="relative bg-surface rounded-2xl shadow-xl w-full max-w-sm">
                 <div class="flex items-center justify-between px-6 py-4 border-b border-stone-100">
                     <div class="flex items-center gap-2.5">
                         <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
@@ -720,7 +720,7 @@
                 <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-stone-100 bg-stone-50/50">
                     <button
                         wire:click="$set('modalEnviarAnexo', false)"
-                        class="px-4 py-2 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 rounded-lg text-sm font-medium transition-colors"
+                        class="px-4 py-2 bg-surface border border-stone-200 hover:bg-stone-50 text-stone-700 rounded-lg text-sm font-medium transition-colors"
                     >
                         Cancelar
                     </button>

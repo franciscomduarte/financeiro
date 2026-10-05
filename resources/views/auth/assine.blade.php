@@ -48,7 +48,7 @@
             <form method="POST" action="{{ route('cadastro.store') }}" class="mt-6 space-y-4">
                 @csrf
 
-                @php($campo = 'w-full border border-stone-200 bg-white rounded-xl px-4 py-3 text-base sm:text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-transparent')
+                @php($campo = 'w-full border border-stone-200 bg-surface rounded-xl px-4 py-3 text-base sm:text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-transparent')
 
                 <div>
                     <label for="clinica" class="block text-sm font-medium text-stone-700 mb-1.5">Nome da clínica</label>

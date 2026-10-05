@@ -28,7 +28,7 @@
         <div class="flex items-center gap-3">
             <input type="month"
                    wire:model.live="competencia"
-                   class="rounded-lg border border-slate-300 px-3 py-2 text-sm text-stone-700 focus:border-indigo-500 focus:ring-indigo-500">
+                   class="rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-700 focus:border-indigo-500 focus:ring-indigo-500">
             @if($tab === 'contabil')
             <button wire:click="exportarCsv"
                     class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-emerald-700 transition-colors">
@@ -39,7 +39,7 @@
             </button>
             @endif
             <button onclick="window.print()"
-                    class="inline-flex items-center gap-2 rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm font-medium text-stone-600 shadow-sm hover:bg-stone-50 transition-colors">
+                    class="inline-flex items-center gap-2 rounded-lg border border-stone-200 bg-surface px-3 py-2 text-sm font-medium text-stone-600 shadow-sm hover:bg-stone-50 transition-colors">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.75 19.5m10.56-5.671L17.25 19.5m0 0l.75-3.75M17.25 19.5H6.75m0 0l-.75-3.75M3 12.75V8.25A2.25 2.25 0 015.25 6h13.5A2.25 2.25 0 0121 8.25v4.5" />
                 </svg>
@@ -86,12 +86,12 @@
                 Margem: {{ number_format($margem, 1, ',', '.') }}%
             </p>
         </div>
-        <div class="bg-white rounded-xl border border-stone-100 shadow-sm p-5">
+        <div class="bg-surface rounded-xl border border-stone-100 shadow-sm p-5">
             <p class="text-xs font-semibold text-stone-400 uppercase tracking-wide">Receita Total</p>
             <p class="text-2xl font-bold text-emerald-600 mt-1">R$ {{ number_format($totalReceita, 2, ',', '.') }}</p>
             <p class="text-xs text-stone-400 mt-1">efetivamente recebido</p>
         </div>
-        <div class="bg-white rounded-xl border border-stone-100 shadow-sm p-5">
+        <div class="bg-surface rounded-xl border border-stone-100 shadow-sm p-5">
             <p class="text-xs font-semibold text-stone-400 uppercase tracking-wide">Despesa Total</p>
             <p class="text-2xl font-bold text-red-600 mt-1">R$ {{ number_format($totalDespesa, 2, ',', '.') }}</p>
             <p class="text-xs text-stone-400 mt-1">efetivamente pago</p>
@@ -136,7 +136,7 @@
     {{-- DRE + Categorias --}}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        <div class="bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
+        <div class="bg-surface rounded-xl border border-stone-100 shadow-sm overflow-hidden">
             <div class="px-5 py-4 border-b border-stone-100">
                 <h2 class="text-sm font-semibold text-stone-700">Receitas e Despesas do Período</h2>
             </div>
@@ -180,7 +180,7 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
+        <div class="bg-surface rounded-xl border border-stone-100 shadow-sm overflow-hidden">
             <div class="px-5 py-4 border-b border-stone-100">
                 <h2 class="text-sm font-semibold text-stone-700">Despesas por Categoria</h2>
             </div>
@@ -205,7 +205,7 @@
 
     {{-- Top Fornecedores — contexto do que aconteceu --}}
     @if($topFornecedores->isNotEmpty())
-    <div class="bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
+    <div class="bg-surface rounded-xl border border-stone-100 shadow-sm overflow-hidden">
         <div class="px-5 py-4 border-b border-stone-100">
             <h2 class="text-sm font-semibold text-stone-700">Top Fornecedores — Despesas do Período</h2>
         </div>
@@ -250,7 +250,7 @@
         $pv = $previsao;
         $pctBar = min(100, $pv['pctExecutado']);
     @endphp
-    <div class="bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
+    <div class="bg-surface rounded-xl border border-stone-100 shadow-sm overflow-hidden">
         <div class="px-5 py-4 border-b border-stone-100 flex items-center justify-between">
             <div>
                 <h2 class="text-sm font-semibold text-stone-700">Previsão de Gastos do Período</h2>
@@ -394,7 +394,7 @@
                     <tr class="hover:bg-stone-50 transition-colors">
                         <td class="px-5 py-3">
                             <div class="flex items-center gap-2">
-                                <span class="h-2 w-2 rounded-full bg-slate-400 shrink-0"></span>
+                                <span class="h-2 w-2 rounded-full bg-stone-400 shrink-0"></span>
                                 <span class="font-medium text-stone-700">Despesas Avulsas Pendentes</span>
                             </div>
                         </td>
@@ -430,7 +430,7 @@
     @php $totalPendencias = $contratosPendentes->count() + $faturasPendentes->count() + $fiscaisPendentes->count(); @endphp
 
     @if($totalPendencias > 0)
-    <div class="bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
+    <div class="bg-surface rounded-xl border border-stone-100 shadow-sm overflow-hidden">
         <div class="px-5 py-4 border-b border-stone-100 flex items-center justify-between">
             <h2 class="text-sm font-semibold text-stone-700">Pendências do Período</h2>
             <span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800">
@@ -553,23 +553,23 @@
 
     {{-- KPIs contábil --}}
     <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        <div class="bg-white rounded-xl border border-stone-100 shadow-sm p-4">
+        <div class="bg-surface rounded-xl border border-stone-100 shadow-sm p-4">
             <p class="text-xs font-semibold text-stone-400 uppercase tracking-wide">Receitas</p>
             <p class="text-xl font-bold text-emerald-600 mt-1">R$ {{ number_format($totaisContabil['total_receitas'], 2, ',', '.') }}</p>
         </div>
-        <div class="bg-white rounded-xl border border-stone-100 shadow-sm p-4">
+        <div class="bg-surface rounded-xl border border-stone-100 shadow-sm p-4">
             <p class="text-xs font-semibold text-stone-400 uppercase tracking-wide">Despesas</p>
             <p class="text-xl font-bold text-red-600 mt-1">R$ {{ number_format($totaisContabil['total_despesas'], 2, ',', '.') }}</p>
         </div>
-        <div class="bg-white rounded-xl border border-stone-100 shadow-sm p-4">
+        <div class="bg-surface rounded-xl border border-stone-100 shadow-sm p-4">
             <p class="text-xs font-semibold text-stone-400 uppercase tracking-wide">Tributos</p>
             <p class="text-xl font-bold text-orange-600 mt-1">R$ {{ number_format($totaisContabil['total_tributos'], 2, ',', '.') }}</p>
         </div>
-        <div class="bg-white rounded-xl border border-stone-100 shadow-sm p-4">
+        <div class="bg-surface rounded-xl border border-stone-100 shadow-sm p-4">
             <p class="text-xs font-semibold text-stone-400 uppercase tracking-wide">Taxas</p>
             <p class="text-xl font-bold text-blue-600 mt-1">R$ {{ number_format($totaisContabil['total_taxas'], 2, ',', '.') }}</p>
         </div>
-        <div class="bg-white rounded-xl border border-stone-100 shadow-sm p-4 {{ $totaisContabil['resultado'] >= 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200' }}">
+        <div class="bg-surface rounded-xl border border-stone-100 shadow-sm p-4 {{ $totaisContabil['resultado'] >= 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200' }}">
             <p class="text-xs font-semibold text-stone-400 uppercase tracking-wide">Resultado</p>
             <p class="text-xl font-bold mt-1 {{ $totaisContabil['resultado'] >= 0 ? 'text-emerald-700' : 'text-red-700' }}">
                 R$ {{ number_format($totaisContabil['resultado'], 2, ',', '.') }}
@@ -578,7 +578,7 @@
     </div>
 
     {{-- Tabela de lançamentos --}}
-    <div class="bg-white rounded-xl border border-stone-100 shadow-sm overflow-hidden">
+    <div class="bg-surface rounded-xl border border-stone-100 shadow-sm overflow-hidden">
         <div class="px-5 py-4 border-b border-stone-100 flex items-center justify-between">
             <h2 class="text-sm font-semibold text-stone-700">Lançamentos — status Pago</h2>
             <span class="text-xs text-stone-400">{{ $transacoesContabil->count() }} registros</span>
@@ -665,7 +665,7 @@
     </div>
 
     @else
-    <div class="bg-white rounded-xl border border-stone-100 shadow-sm px-5 py-10 text-center text-sm text-stone-400">
+    <div class="bg-surface rounded-xl border border-stone-100 shadow-sm px-5 py-10 text-center text-sm text-stone-400">
         Nenhum dado disponível para o período selecionado.
     </div>
     @endif
@@ -679,7 +679,7 @@
 
         <div class="absolute inset-0 bg-black/40" wire:click="fecharModalPagamento"></div>
 
-        <div class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <div class="relative w-full max-w-md bg-surface rounded-2xl shadow-2xl overflow-hidden">
 
             {{-- Header --}}
             <div class="flex items-start justify-between px-6 py-4 border-b border-stone-100">
@@ -709,7 +709,7 @@
                 <div>
                     <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1">Competência</label>
                     <input type="month" wire:model="pagarCompetencia"
-                           class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                           class="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500">
                     @error('pagarCompetencia') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                 </div>
                 @endif
@@ -719,7 +719,7 @@
                 <div>
                     <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1">Valor (R$)</label>
                     <input type="number" step="0.01" min="0.01" wire:model="pagarValor"
-                           class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                           class="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500">
                     @error('pagarValor') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                 </div>
                 @endif
@@ -730,23 +730,23 @@
                     <div>
                         <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1">Principal (R$)</label>
                         <input type="number" step="0.01" wire:model="pagarValor" readonly
-                               class="w-full rounded-lg border border-slate-200 bg-stone-50 px-3 py-2 text-sm text-stone-500 cursor-not-allowed">
+                               class="w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-sm text-stone-500 cursor-not-allowed">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1">Multa (R$)</label>
                         <input type="number" step="0.01" min="0" wire:model="pagarValorMulta"
-                               class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                               class="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1">Juros (R$)</label>
                         <input type="number" step="0.01" min="0" wire:model="pagarValorJuros"
-                               class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                               class="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500">
                     </div>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1">Nº Autenticação <span class="font-normal normal-case text-stone-400">(opcional)</span></label>
                     <input type="text" wire:model="pagarNumAutenticacao"
-                           class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                           class="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500">
                 </div>
                 @endif
 
@@ -754,7 +754,7 @@
                 <div>
                     <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1">Data de Pagamento</label>
                     <input type="date" wire:model="pagarDataPagamento"
-                           class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                           class="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500">
                     @error('pagarDataPagamento') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                 </div>
 
@@ -762,7 +762,7 @@
                 <div>
                     <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1">Forma de Pagamento</label>
                     <select wire:model="pagarFormaPagamento"
-                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            class="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500">
                         <option value="pix">PIX</option>
                         <option value="boleto">Boleto</option>
                         <option value="transferencia">Transferência</option>
@@ -779,7 +779,7 @@
                 <div>
                     <label class="block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1">Observações <span class="font-normal normal-case text-stone-400">(opcional)</span></label>
                     <textarea wire:model="pagarObservacoes" rows="2"
-                              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500 resize-none"></textarea>
+                              class="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500 resize-none"></textarea>
                 </div>
                 @endif
             </div>
@@ -787,7 +787,7 @@
             {{-- Footer --}}
             <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-stone-100 bg-stone-50">
                 <button wire:click="fecharModalPagamento"
-                        class="rounded-lg border border-stone-200 bg-white px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-50 transition-colors">
+                        class="rounded-lg border border-stone-200 bg-surface px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-50 transition-colors">
                     Cancelar
                 </button>
                 <button wire:click="confirmarPagamento" wire:loading.attr="disabled"

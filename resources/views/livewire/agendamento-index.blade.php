@@ -10,7 +10,7 @@
              x-transition:leave-start="opacity-100 translate-y-0"
              x-transition:leave-end="opacity-0 -translate-y-2"
              class="fixed top-4 right-4 z-[9999] max-w-sm">
-            <div class="bg-white border border-emerald-200 text-emerald-800 rounded-xl px-4 py-3 shadow-xl flex items-center gap-2.5 text-sm">
+            <div class="bg-surface border border-emerald-200 text-emerald-800 rounded-xl px-4 py-3 shadow-xl flex items-center gap-2.5 text-sm">
                 <div class="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
                     <svg class="w-3 h-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
@@ -27,7 +27,7 @@
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0"
              class="fixed top-4 right-4 z-[9999] max-w-sm">
-            <div class="bg-white border border-red-200 text-red-800 rounded-xl px-4 py-3 shadow-xl flex items-center gap-2.5 text-sm">
+            <div class="bg-surface border border-red-200 text-red-800 rounded-xl px-4 py-3 shadow-xl flex items-center gap-2.5 text-sm">
                 <div class="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center shrink-0">
                     <svg class="w-3 h-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
@@ -55,16 +55,16 @@
 
     {{-- ─── Stats ───────────────────────────────────────────────────────── --}}
     <div class="grid grid-cols-3 gap-2 sm:gap-4">
-        <div class="rounded-2xl border border-stone-100 bg-white p-3 shadow-sm sm:p-5">
+        <div class="rounded-2xl border border-stone-100 bg-surface p-3 shadow-sm sm:p-5">
             <p class="text-[10px] font-semibold uppercase tracking-wide text-stone-400 sm:text-xs sm:tracking-widest">Total</p>
             <p class="mt-1 text-xl font-bold text-stone-800 tabular-nums sm:text-2xl">{{ number_format($statsTotal) }}</p>
             <p class="hidden text-xs text-stone-400 mt-0.5 sm:block">{{ $tituloPeriodo }}</p>
         </div>
-        <div class="rounded-2xl border border-stone-100 bg-white p-3 shadow-sm sm:p-5">
+        <div class="rounded-2xl border border-stone-100 bg-surface p-3 shadow-sm sm:p-5">
             <p class="text-[10px] font-semibold uppercase tracking-wide text-stone-400 sm:text-xs sm:tracking-widest">Confirmados</p>
             <p class="mt-1 text-xl font-bold text-emerald-600 tabular-nums sm:text-2xl">{{ $statsConfirmado }}</p>
         </div>
-        <div class="rounded-2xl border border-stone-100 bg-white p-3 shadow-sm sm:p-5">
+        <div class="rounded-2xl border border-stone-100 bg-surface p-3 shadow-sm sm:p-5">
             <p class="text-[10px] font-semibold uppercase tracking-wide text-stone-400 sm:text-xs sm:tracking-widest">Pendentes</p>
             <p class="mt-1 text-xl font-bold text-violet-600 tabular-nums sm:text-2xl">{{ $statsPendente }}</p>
         </div>
@@ -74,16 +74,16 @@
     <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div class="flex items-center gap-2">
             <button type="button" wire:click="irParaHoje"
-                    class="min-h-[44px] rounded-xl border border-stone-200 bg-white px-4 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors">
+                    class="min-h-[44px] rounded-xl border border-stone-200 bg-surface px-4 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors">
                 Hoje
             </button>
             <div class="flex">
                 <button type="button" wire:click="navegar(-1)" title="Anterior"
-                        class="flex h-11 w-11 items-center justify-center rounded-l-xl border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 transition-colors">
+                        class="flex h-11 w-11 items-center justify-center rounded-l-xl border border-stone-200 bg-surface text-stone-600 hover:bg-stone-50 transition-colors">
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
                 </button>
                 <button type="button" wire:click="navegar(1)" title="Próximo"
-                        class="-ml-px flex h-11 w-11 items-center justify-center rounded-r-xl border border-stone-200 bg-white text-stone-600 hover:bg-stone-50 transition-colors">
+                        class="-ml-px flex h-11 w-11 items-center justify-center rounded-r-xl border border-stone-200 bg-surface text-stone-600 hover:bg-stone-50 transition-colors">
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
                 </button>
             </div>
@@ -93,7 +93,7 @@
             @foreach (\App\Enums\VisaoAgenda::cases() as $opcao)
                 <button type="button" wire:click="mudarVisao('{{ $opcao->value }}')"
                         class="min-h-[40px] rounded-lg px-4 text-sm font-semibold transition-colors
-                            {{ $visaoAtual === $opcao ? 'bg-white text-violet-700 shadow-sm' : 'text-stone-500 hover:text-stone-700' }}">
+                            {{ $visaoAtual === $opcao ? 'bg-surface text-violet-700 shadow-sm' : 'text-stone-500 hover:text-stone-700' }}">
                     {{ $opcao->label() }}
                 </button>
             @endforeach
@@ -101,7 +101,7 @@
     </div>
 
     {{-- ─── Filtros ─────────────────────────────────────────────────────── --}}
-    <div class="rounded-2xl border border-stone-100 bg-white p-4 shadow-sm">
+    <div class="rounded-2xl border border-stone-100 bg-surface p-4 shadow-sm">
         <div class="flex flex-wrap items-end gap-3">
             <div class="flex flex-col gap-1">
                 <label class="text-xs font-medium text-stone-500">Data</label>
@@ -152,7 +152,7 @@
         @include('livewire.partials.agenda-legenda')
     @else
     {{-- ─── Tabela ──────────────────────────────────────────────────────── --}}
-    <div class="rounded-2xl border border-stone-100 bg-white shadow-sm overflow-hidden">
+    <div class="rounded-2xl border border-stone-100 bg-surface shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
             <table class="min-w-full">
                 <thead>
@@ -299,7 +299,7 @@
     @if ($modalCriar)
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModalCriar"></div>
-        <div class="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl ring-1 ring-stone-100 overflow-hidden">
+        <div class="relative w-full max-w-lg rounded-2xl bg-surface shadow-2xl ring-1 ring-stone-100 overflow-hidden">
             <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
                 <div>
                     <h2 class="text-base font-bold text-stone-900">Novo Agendamento</h2>
@@ -337,7 +337,7 @@
                              @keydown.enter.prevent="open = !open"
                              @keydown.space.prevent="open = !open"
                              class="w-full flex items-center justify-between rounded-xl border px-3 py-2.5 text-sm cursor-pointer transition-colors
-                                 {{ $criarPacienteId ? 'border-violet-300 bg-violet-50 text-violet-800' : 'border-stone-200 bg-white text-stone-400' }}
+                                 {{ $criarPacienteId ? 'border-violet-300 bg-violet-50 text-violet-800' : 'border-stone-200 bg-surface text-stone-400' }}
                                  @error('criarPacienteId') !border-red-300 @enderror
                                  focus:outline-none focus:ring-2 focus:ring-violet-100">
                             <span class="{{ $criarPacienteId ? 'font-semibold text-violet-800' : '' }}">
@@ -360,7 +360,7 @@
                         <div x-show="open" x-transition:enter="transition ease-out duration-100"
                              x-transition:enter-start="opacity-0 -translate-y-1"
                              x-transition:enter-end="opacity-100 translate-y-0"
-                             class="absolute z-20 mt-1 w-full rounded-xl border border-stone-200 bg-white shadow-xl overflow-hidden">
+                             class="absolute z-20 mt-1 w-full rounded-xl border border-stone-200 bg-surface shadow-xl overflow-hidden">
                             <div class="p-2 border-b border-stone-100">
                                 <input x-model="search"
                                        x-ref="searchInput"
@@ -452,7 +452,7 @@
                                 class="m-0.5 inline-flex cursor-pointer select-none items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-all duration-150
                                     {{ $sel
                                         ? 'bg-violet-600 text-white shadow-sm shadow-violet-200 ring-1 ring-violet-500'
-                                        : 'bg-white text-stone-600 ring-1 ring-inset ring-stone-200 hover:ring-violet-300 hover:text-violet-700' }}">
+                                        : 'bg-surface text-stone-600 ring-1 ring-inset ring-stone-200 hover:ring-violet-300 hover:text-violet-700' }}">
                                 <input type="checkbox"
                                        wire:model.live="criarProcedimentoIds"
                                        value="{{ $proc->id }}"
@@ -484,7 +484,7 @@
                                             class="rounded-xl border px-3.5 py-1.5 text-sm font-semibold tabular-nums transition-colors
                                                 {{ $criarSlot === $slot
                                                     ? 'border-violet-500 bg-violet-600 text-white shadow-sm shadow-violet-200'
-                                                    : 'border-stone-200 bg-white text-stone-700 hover:border-violet-300 hover:text-violet-700' }}">
+                                                    : 'border-stone-200 bg-surface text-stone-700 hover:border-violet-300 hover:text-violet-700' }}">
                                         {{ $slot }}
                                     </button>
                                 @endforeach
@@ -528,7 +528,7 @@
                 @endif
                 <div class="flex justify-end gap-3">
                     <button wire:click="fecharModalCriar" type="button"
-                            class="rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors">
+                            class="rounded-xl border border-stone-200 bg-surface px-4 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors">
                         Cancelar
                     </button>
                     <button wire:click="salvarAgendamento"
@@ -555,7 +555,7 @@
     @if ($modalCancelar)
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModalCancelar"></div>
-        <div class="relative w-full max-w-md rounded-2xl bg-white shadow-2xl ring-1 ring-stone-100 overflow-hidden">
+        <div class="relative w-full max-w-md rounded-2xl bg-surface shadow-2xl ring-1 ring-stone-100 overflow-hidden">
             <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
                 <h2 class="text-base font-bold text-stone-900">Cancelar Agendamento</h2>
                 <button wire:click="fecharModalCancelar" class="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100 transition-colors">
@@ -571,7 +571,7 @@
             </div>
             <div class="flex justify-end gap-3 border-t border-stone-100 px-6 py-4 bg-stone-50/50">
                 <button wire:click="fecharModalCancelar"
-                        class="rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors">
+                        class="rounded-xl border border-stone-200 bg-surface px-4 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors">
                     Voltar
                 </button>
                 <button wire:click="confirmarCancelamento" wire:loading.attr="disabled"
@@ -592,7 +592,7 @@
     @if ($modalReagendar)
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModalReagendar"></div>
-        <div class="relative w-full max-w-md rounded-2xl bg-white shadow-2xl ring-1 ring-stone-100 overflow-hidden">
+        <div class="relative w-full max-w-md rounded-2xl bg-surface shadow-2xl ring-1 ring-stone-100 overflow-hidden">
             <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
                 <div>
                     <h2 class="text-base font-bold text-stone-900">Reagendar</h2>
@@ -620,7 +620,7 @@
                                             class="rounded-xl border px-3.5 py-1.5 text-sm font-semibold tabular-nums transition-colors
                                                 {{ $reagendarSlot === $slot
                                                     ? 'border-violet-500 bg-violet-600 text-white shadow-sm shadow-violet-200'
-                                                    : 'border-stone-200 bg-white text-stone-700 hover:border-violet-300 hover:text-violet-700' }}">
+                                                    : 'border-stone-200 bg-surface text-stone-700 hover:border-violet-300 hover:text-violet-700' }}">
                                         {{ $slot }}
                                     </button>
                                 @endforeach
@@ -638,7 +638,7 @@
             </div>
             <div class="flex justify-end gap-3 border-t border-stone-100 px-6 py-4 bg-stone-50/50">
                 <button wire:click="fecharModalReagendar"
-                        class="rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors">
+                        class="rounded-xl border border-stone-200 bg-surface px-4 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors">
                     Cancelar
                 </button>
                 <button wire:click="confirmarReagendamento" wire:loading.attr="disabled"
@@ -664,7 +664,7 @@
     @endphp
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModalConcluir"></div>
-        <div class="relative w-full max-w-md rounded-2xl bg-white shadow-2xl ring-1 ring-stone-100 overflow-hidden">
+        <div class="relative w-full max-w-md rounded-2xl bg-surface shadow-2xl ring-1 ring-stone-100 overflow-hidden">
             <div class="flex items-start justify-between border-b border-stone-100 px-6 py-4">
                 <div>
                     <h2 class="text-base font-bold text-stone-900">Concluir atendimento</h2>
@@ -721,11 +721,11 @@
                     </div>
                     <div class="grid grid-cols-2 rounded-xl bg-stone-100 p-1">
                         <button type="button" wire:click="$set('concluirPago', true)"
-                                class="min-h-[40px] rounded-lg text-sm font-semibold transition-colors {{ $concluirPago ? 'bg-white text-emerald-700 shadow-sm' : 'text-stone-500' }}">
+                                class="min-h-[40px] rounded-lg text-sm font-semibold transition-colors {{ $concluirPago ? 'bg-surface text-emerald-700 shadow-sm' : 'text-stone-500' }}">
                             Pago agora
                         </button>
                         <button type="button" wire:click="$set('concluirPago', false)"
-                                class="min-h-[40px] rounded-lg text-sm font-semibold transition-colors {{ ! $concluirPago ? 'bg-white text-amber-700 shadow-sm' : 'text-stone-500' }}">
+                                class="min-h-[40px] rounded-lg text-sm font-semibold transition-colors {{ ! $concluirPago ? 'bg-surface text-amber-700 shadow-sm' : 'text-stone-500' }}">
                             A receber
                         </button>
                     </div>
@@ -736,7 +736,7 @@
             </div>
             <div class="flex justify-end gap-3 border-t border-stone-100 px-6 py-4 bg-stone-50/50">
                 <button wire:click="fecharModalConcluir"
-                        class="rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors">
+                        class="rounded-xl border border-stone-200 bg-surface px-4 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors">
                     Voltar
                 </button>
                 <button wire:click="confirmarConclusao" wire:loading.attr="disabled"
@@ -758,7 +758,7 @@
     @php $d = $agendamentoDetalhe; @endphp
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharDetalhe"></div>
-        <div class="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl ring-1 ring-stone-100 overflow-hidden">
+        <div class="relative w-full max-w-lg rounded-2xl bg-surface shadow-2xl ring-1 ring-stone-100 overflow-hidden">
             {{-- Header colorido conforme status --}}
             @php
                 $headerBg = match($d->status) {
@@ -853,23 +853,23 @@
                             </button>
                         @endif
                         <button wire:click="abrirModalConcluir('{{ $d->id }}')" wire:loading.attr="disabled"
-                                class="flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-sky-200 bg-white px-3 text-sm font-semibold text-sky-700 hover:bg-sky-50 transition-colors disabled:opacity-60">
+                                class="flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-sky-200 bg-surface px-3 text-sm font-semibold text-sky-700 hover:bg-sky-50 transition-colors disabled:opacity-60">
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             Realizado
                         </button>
                         <button wire:click="marcarFalta('{{ $d->id }}')" wire:loading.attr="disabled"
                                 wire:confirm="Registrar falta de {{ $d->paciente?->nome ?? 'paciente' }}?"
-                                class="flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-stone-200 bg-white px-3 text-sm font-semibold text-stone-600 hover:bg-stone-100 transition-colors disabled:opacity-60">
+                                class="flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-stone-200 bg-surface px-3 text-sm font-semibold text-stone-600 hover:bg-stone-100 transition-colors disabled:opacity-60">
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
                             Falta
                         </button>
                         <button wire:click="abrirModalReagendar('{{ $d->id }}')"
-                                class="flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-amber-200 bg-white px-3 text-sm font-semibold text-amber-700 hover:bg-amber-50 transition-colors">
+                                class="flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-amber-200 bg-surface px-3 text-sm font-semibold text-amber-700 hover:bg-amber-50 transition-colors">
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                             Reagendar
                         </button>
                         <button wire:click="abrirModalCancelar('{{ $d->id }}')"
-                                class="flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-white px-3 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors">
+                                class="flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-surface px-3 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors">
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                             Cancelar
                         </button>
@@ -877,7 +877,7 @@
                 @endif
                 <div class="flex justify-end">
                     <button wire:click="fecharDetalhe"
-                            class="min-h-[44px] rounded-xl border border-stone-200 bg-white px-4 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors">
+                            class="min-h-[44px] rounded-xl border border-stone-200 bg-surface px-4 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors">
                         Fechar
                     </button>
                 </div>

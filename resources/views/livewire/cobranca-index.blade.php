@@ -54,7 +54,7 @@
     {{-- Stats do mês (apenas aba mensalidades) --}}
     @if ($abaAtiva === 'mensalidades')
     <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-5">
-        <div class="rounded-xl border border-stone-100 bg-white p-4 shadow-sm">
+        <div class="rounded-xl border border-stone-100 bg-surface p-4 shadow-sm">
             <p class="text-xs font-medium text-stone-500">Total (mês)</p>
             <p class="mt-1 text-2xl font-bold text-stone-800">{{ $totalMes }}</p>
         </div>
@@ -70,7 +70,7 @@
             <p class="text-xs font-medium text-red-600">Vencidas</p>
             <p class="mt-1 text-2xl font-bold text-red-700">{{ $vencidosMes }}</p>
         </div>
-        <div class="rounded-xl border border-stone-100 bg-white p-4 shadow-sm col-span-2 sm:col-span-1">
+        <div class="rounded-xl border border-stone-100 bg-surface p-4 shadow-sm col-span-2 sm:col-span-1">
             <p class="text-xs font-medium text-stone-500">Aptos p/ cobrança</p>
             <p class="mt-1 text-2xl font-bold text-stone-800">{{ $pacientesAtivos }}</p>
             <p class="text-xs text-stone-400 mt-0.5">pacientes PIX ativos</p>
@@ -81,11 +81,11 @@
     {{-- Tab bar --}}
     <div class="flex gap-1 rounded-xl bg-stone-100 p-1">
         <button wire:click="$set('abaAtiva', 'mensalidades')"
-                class="{{ $abaAtiva === 'mensalidades' ? 'bg-white shadow-sm text-stone-900 font-semibold' : 'text-stone-500 hover:text-stone-700 font-medium' }} flex-1 rounded-lg px-4 py-2 text-sm transition-all">
+                class="{{ $abaAtiva === 'mensalidades' ? 'bg-surface shadow-sm text-stone-900 font-semibold' : 'text-stone-500 hover:text-stone-700 font-medium' }} flex-1 rounded-lg px-4 py-2 text-sm transition-all">
             Cobranças Mensais
         </button>
         <button wire:click="$set('abaAtiva', 'parcelamentos')"
-                class="{{ $abaAtiva === 'parcelamentos' ? 'bg-white shadow-sm text-stone-900 font-semibold' : 'text-stone-500 hover:text-stone-700 font-medium' }} flex-1 rounded-lg px-4 py-2 text-sm transition-all flex items-center justify-center gap-2">
+                class="{{ $abaAtiva === 'parcelamentos' ? 'bg-surface shadow-sm text-stone-900 font-semibold' : 'text-stone-500 hover:text-stone-700 font-medium' }} flex-1 rounded-lg px-4 py-2 text-sm transition-all flex items-center justify-center gap-2">
             Parcelamentos
             @php $ativos = $parcelamentos->where('status', 'ativo')->count(); @endphp
             @if ($ativos > 0)
@@ -100,7 +100,7 @@
     @if ($abaAtiva === 'mensalidades')
 
     {{-- Filtros --}}
-    <div class="rounded-2xl border border-stone-100 bg-white p-4 shadow-sm">
+    <div class="rounded-2xl border border-stone-100 bg-surface p-4 shadow-sm">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div class="relative flex-1">
                 <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -132,7 +132,7 @@
     </div>
 
     {{-- Tabela de cobranças --}}
-    <div class="rounded-2xl border border-stone-100 bg-white shadow-sm overflow-hidden">
+    <div class="rounded-2xl border border-stone-100 bg-surface shadow-sm overflow-hidden">
         @if ($cobrancas->isEmpty())
             <div class="flex flex-col items-center justify-center py-16 text-center">
                 <svg class="h-10 w-10 text-stone-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -163,7 +163,7 @@
                                     'PENDING'  => ['Pendente',  'text-amber-700 bg-amber-50 border-amber-200'],
                                     'RECEIVED' => ['Pago',      'text-emerald-700 bg-emerald-50 border-emerald-200'],
                                     'OVERDUE'  => ['Vencido',   'text-red-700 bg-red-50 border-red-200'],
-                                    'REFUNDED' => ['Estornado', 'text-slate-600 bg-slate-100 border-slate-200'],
+                                    'REFUNDED' => ['Estornado', 'text-stone-600 bg-stone-100 border-stone-200'],
                                     'DELETED'  => ['Deletado',  'text-stone-500 bg-stone-100 border-stone-200'],
                                 ];
                                 [$statusLabel, $statusCls] = $statusMap[$cobranca->status] ?? ['Desconhecido', 'text-stone-500 bg-stone-100 border-stone-200'];
@@ -269,7 +269,7 @@
     @if ($abaAtiva === 'parcelamentos')
 
     @if ($parcelamentos->isEmpty())
-        <div class="flex flex-col items-center justify-center rounded-2xl border border-stone-100 bg-white py-16 text-center shadow-sm">
+        <div class="flex flex-col items-center justify-center rounded-2xl border border-stone-100 bg-surface py-16 text-center shadow-sm">
             <svg class="h-10 w-10 text-stone-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
             </svg>
@@ -298,7 +298,7 @@
                         default     => 'Cancelado',
                     };
                 @endphp
-                <div class="rounded-2xl border border-stone-100 bg-white p-5 shadow-sm space-y-4">
+                <div class="rounded-2xl border border-stone-100 bg-surface p-5 shadow-sm space-y-4">
 
                     {{-- Cabeçalho do card --}}
                     <div class="flex items-start justify-between gap-2">
@@ -382,10 +382,10 @@
     @if ($modalDispararTodas)
         <div class="fixed inset-0 z-40 flex items-center justify-center p-4">
             <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModais"></div>
-            <div class="relative z-10 w-full max-w-sm rounded-2xl bg-white shadow-xl">
-                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                    <h2 class="text-base font-semibold text-slate-800">Disparar Cobranças</h2>
-                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
+            <div class="relative z-10 w-full max-w-sm rounded-2xl bg-surface shadow-xl">
+                <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
+                    <h2 class="text-base font-semibold text-stone-800">Disparar Cobranças</h2>
+                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
@@ -396,8 +396,8 @@
                     </p>
                     <p class="text-xs text-stone-400">Pacientes que já possuem cobrança para o mês atual serão ignorados.</p>
                 </div>
-                <div class="flex justify-end gap-3 border-t border-slate-100 px-6 py-4">
-                    <button wire:click="fecharModais" class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">Cancelar</button>
+                <div class="flex justify-end gap-3 border-t border-stone-100 px-6 py-4">
+                    <button wire:click="fecharModais" class="rounded-lg border border-stone-200 px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-50">Cancelar</button>
                     <button wire:click="dispararTodas" wire:loading.attr="disabled"
                             class="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-60 transition-colors">
                         <span wire:loading.remove wire:target="dispararTodas">Confirmar e Disparar</span>
@@ -414,10 +414,10 @@
     @if ($modalDisparar)
         <div class="fixed inset-0 z-40 flex items-center justify-center p-4">
             <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModais"></div>
-            <div class="relative z-10 w-full max-w-sm rounded-2xl bg-white shadow-xl">
-                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                    <h2 class="text-base font-semibold text-slate-800">Disparar Cobrança</h2>
-                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
+            <div class="relative z-10 w-full max-w-sm rounded-2xl bg-surface shadow-xl">
+                <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
+                    <h2 class="text-base font-semibold text-stone-800">Disparar Cobrança</h2>
+                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
@@ -435,8 +435,8 @@
                     </div>
                     <p class="text-xs text-stone-400">Se já existe cobrança para o mês atual, o disparo será ignorado.</p>
                 </div>
-                <div class="flex justify-end gap-3 border-t border-slate-100 px-6 py-4">
-                    <button wire:click="fecharModais" class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">Cancelar</button>
+                <div class="flex justify-end gap-3 border-t border-stone-100 px-6 py-4">
+                    <button wire:click="fecharModais" class="rounded-lg border border-stone-200 px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-50">Cancelar</button>
                     <button wire:click="confirmarDisparar" wire:loading.attr="disabled"
                             class="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-60 transition-colors">
                         <span wire:loading.remove wire:target="confirmarDisparar">Disparar</span>
@@ -453,10 +453,10 @@
     @if ($modalReenviar)
         <div class="fixed inset-0 z-40 flex items-center justify-center p-4">
             <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModais"></div>
-            <div class="relative z-10 w-full max-w-sm rounded-2xl bg-white shadow-xl">
-                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                    <h2 class="text-base font-semibold text-slate-800">Reenviar Cobrança</h2>
-                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
+            <div class="relative z-10 w-full max-w-sm rounded-2xl bg-surface shadow-xl">
+                <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
+                    <h2 class="text-base font-semibold text-stone-800">Reenviar Cobrança</h2>
+                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
@@ -473,8 +473,8 @@
                         </label>
                     </div>
                 </div>
-                <div class="flex justify-end gap-3 border-t border-slate-100 px-6 py-4">
-                    <button wire:click="fecharModais" class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">Cancelar</button>
+                <div class="flex justify-end gap-3 border-t border-stone-100 px-6 py-4">
+                    <button wire:click="fecharModais" class="rounded-lg border border-stone-200 px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-50">Cancelar</button>
                     <button wire:click="confirmarReenviar" wire:loading.attr="disabled"
                             class="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-60 transition-colors">
                         <span wire:loading.remove wire:target="confirmarReenviar">Reenviar</span>
@@ -491,10 +491,10 @@
     @if ($modalNovoParcelamento)
         <div class="fixed inset-0 z-40 flex items-center justify-center p-4">
             <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModais"></div>
-            <div class="relative z-10 w-full max-w-lg rounded-2xl bg-white shadow-xl">
-                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                    <h2 class="text-base font-semibold text-slate-800">Novo Parcelamento</h2>
-                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
+            <div class="relative z-10 w-full max-w-lg rounded-2xl bg-surface shadow-xl">
+                <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
+                    <h2 class="text-base font-semibold text-stone-800">Novo Parcelamento</h2>
+                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
@@ -561,7 +561,7 @@
                     </div>
 
                     <div class="flex justify-end gap-3 pt-2">
-                        <button type="button" wire:click="fecharModais" class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">Cancelar</button>
+                        <button type="button" wire:click="fecharModais" class="rounded-lg border border-stone-200 px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-50">Cancelar</button>
                         <button type="submit" wire:loading.attr="disabled"
                                 class="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-60 transition-colors">
                             <span wire:loading.remove wire:target="salvarParcelamento">Cadastrar</span>
@@ -580,10 +580,10 @@
     @if ($modalCancelarParcelamento)
         <div class="fixed inset-0 z-40 flex items-center justify-center p-4">
             <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModais"></div>
-            <div class="relative z-10 w-full max-w-sm rounded-2xl bg-white shadow-xl">
-                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                    <h2 class="text-base font-semibold text-slate-800">Cancelar Parcelamento</h2>
-                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
+            <div class="relative z-10 w-full max-w-sm rounded-2xl bg-surface shadow-xl">
+                <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
+                    <h2 class="text-base font-semibold text-stone-800">Cancelar Parcelamento</h2>
+                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
@@ -592,8 +592,8 @@
                     <p class="rounded-lg bg-stone-50 px-4 py-3 text-sm font-medium text-stone-800">{{ $parcelamentoCancelarNome }}</p>
                     <p class="text-xs text-stone-400">As cobranças já enviadas não serão afetadas.</p>
                 </div>
-                <div class="flex justify-end gap-3 border-t border-slate-100 px-6 py-4">
-                    <button wire:click="fecharModais" class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">Voltar</button>
+                <div class="flex justify-end gap-3 border-t border-stone-100 px-6 py-4">
+                    <button wire:click="fecharModais" class="rounded-lg border border-stone-200 px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-50">Voltar</button>
                     <button wire:click="confirmarCancelarParcelamento" wire:loading.attr="disabled"
                             class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60 transition-colors">
                         <span wire:loading.remove wire:target="confirmarCancelarParcelamento">Cancelar Parcelamento</span>
@@ -610,10 +610,10 @@
     @if ($modalDispararParcela)
         <div class="fixed inset-0 z-40 flex items-center justify-center p-4">
             <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModais"></div>
-            <div class="relative z-10 w-full max-w-sm rounded-2xl bg-white shadow-xl">
-                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                    <h2 class="text-base font-semibold text-slate-800">Enviar Parcela</h2>
-                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
+            <div class="relative z-10 w-full max-w-sm rounded-2xl bg-surface shadow-xl">
+                <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
+                    <h2 class="text-base font-semibold text-stone-800">Enviar Parcela</h2>
+                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
@@ -622,8 +622,8 @@
                     <p class="rounded-lg bg-stone-50 px-4 py-3 text-sm font-medium text-stone-800">{{ $parcelamentoDispararNome }}</p>
                     <p class="text-xs text-stone-400">A cobrança será gerada no Asaas e enviada por WhatsApp.</p>
                 </div>
-                <div class="flex justify-end gap-3 border-t border-slate-100 px-6 py-4">
-                    <button wire:click="fecharModais" class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">Cancelar</button>
+                <div class="flex justify-end gap-3 border-t border-stone-100 px-6 py-4">
+                    <button wire:click="fecharModais" class="rounded-lg border border-stone-200 px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-50">Cancelar</button>
                     <button wire:click="confirmarDispararParcela" wire:loading.attr="disabled"
                             class="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-60 transition-colors">
                         <span wire:loading.remove wire:target="confirmarDispararParcela">Confirmar Envio</span>

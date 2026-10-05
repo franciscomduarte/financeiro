@@ -2,7 +2,7 @@
 @use('App\Enums\StatusAgendamento')
 @use('App\Services\AgendaCalendarioService')
 
-<div class="flex flex-col gap-3 rounded-2xl border border-stone-100 bg-white px-4 py-3 shadow-sm md:flex-row md:items-start md:gap-6">
+<div class="flex flex-col gap-3 rounded-2xl border border-stone-100 bg-surface px-4 py-3 shadow-sm md:flex-row md:items-start md:gap-6">
     <div class="min-w-0">
         <p class="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-stone-400">Profissionais</p>
         <div class="flex flex-wrap gap-1.5">

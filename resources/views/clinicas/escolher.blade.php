@@ -7,7 +7,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-stone-50 flex items-center justify-center p-4">
-    <div class="w-full max-w-sm rounded-2xl border border-stone-100 bg-white p-6 shadow-sm">
+    <div class="w-full max-w-sm rounded-2xl border border-stone-100 bg-surface p-6 shadow-sm">
         <h1 class="text-lg font-bold text-stone-900">Escolha a clínica</h1>
         <p class="mt-1 text-sm text-stone-500">Você tem acesso a mais de uma clínica.</p>
 

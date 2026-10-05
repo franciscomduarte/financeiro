@@ -2,49 +2,49 @@
 
     {{-- Nome --}}
     <div class="sm:col-span-2">
-        <label class="block text-xs font-medium text-slate-600 mb-1">Nome <span class="text-red-500">*</span></label>
+        <label class="block text-xs font-medium text-stone-600 mb-1">Nome <span class="text-red-500">*</span></label>
         <input wire:model="nome" type="text" placeholder="Nome completo do paciente"
-               class="w-full rounded-lg border @error('nome') border-red-400 @else border-slate-200 @enderror px-3 py-2 text-sm text-slate-700 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100">
+               class="w-full rounded-lg border @error('nome') border-red-400 @else border-stone-200 @enderror px-3 py-2 text-sm text-stone-700 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100">
         @error('nome') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
     </div>
 
     {{-- CPF --}}
     <div>
-        <label class="block text-xs font-medium text-slate-600 mb-1">CPF</label>
+        <label class="block text-xs font-medium text-stone-600 mb-1">CPF</label>
         <input wire:model="cpf" type="text" placeholder="000.000.000-00" maxlength="14"
-               class="w-full rounded-lg border @error('cpf') border-red-400 @else border-slate-200 @enderror px-3 py-2 text-sm text-slate-700 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100">
+               class="w-full rounded-lg border @error('cpf') border-red-400 @else border-stone-200 @enderror px-3 py-2 text-sm text-stone-700 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100">
         @error('cpf') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
     </div>
 
     {{-- Data de Nascimento --}}
     <div>
-        <label class="block text-xs font-medium text-slate-600 mb-1">Data de Nascimento</label>
+        <label class="block text-xs font-medium text-stone-600 mb-1">Data de Nascimento</label>
         <input wire:model="dataNascimento" type="date"
-               class="w-full rounded-lg border @error('dataNascimento') border-red-400 @else border-slate-200 @enderror px-3 py-2 text-sm text-slate-700 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100">
+               class="w-full rounded-lg border @error('dataNascimento') border-red-400 @else border-stone-200 @enderror px-3 py-2 text-sm text-stone-700 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100">
         @error('dataNascimento') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
     </div>
 
     {{-- Telefone --}}
     <div>
-        <label class="block text-xs font-medium text-slate-600 mb-1">Telefone</label>
+        <label class="block text-xs font-medium text-stone-600 mb-1">Telefone</label>
         <input wire:model="telefone" type="tel" placeholder="(11) 99999-9999"
-               class="w-full rounded-lg border @error('telefone') border-red-400 @else border-slate-200 @enderror px-3 py-2 text-sm text-slate-700 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100">
+               class="w-full rounded-lg border @error('telefone') border-red-400 @else border-stone-200 @enderror px-3 py-2 text-sm text-stone-700 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100">
         @error('telefone') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
     </div>
 
     {{-- E-mail --}}
     <div>
-        <label class="block text-xs font-medium text-slate-600 mb-1">E-mail</label>
+        <label class="block text-xs font-medium text-stone-600 mb-1">E-mail</label>
         <input wire:model="email" type="email" placeholder="paciente@email.com"
-               class="w-full rounded-lg border @error('email') border-red-400 @else border-slate-200 @enderror px-3 py-2 text-sm text-slate-700 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100">
+               class="w-full rounded-lg border @error('email') border-red-400 @else border-stone-200 @enderror px-3 py-2 text-sm text-stone-700 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100">
         @error('email') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
     </div>
 
     {{-- Status --}}
     <div>
-        <label class="block text-xs font-medium text-slate-600 mb-1">Status <span class="text-red-500">*</span></label>
+        <label class="block text-xs font-medium text-stone-600 mb-1">Status <span class="text-red-500">*</span></label>
         <select wire:model="status"
-                class="w-full rounded-lg border @error('status') border-red-400 @else border-slate-200 @enderror px-3 py-2 text-sm text-slate-700 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100">
+                class="w-full rounded-lg border @error('status') border-red-400 @else border-stone-200 @enderror px-3 py-2 text-sm text-stone-700 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100">
             <option value="ativo">Ativo</option>
             <option value="inativo">Inativo</option>
         </select>
@@ -53,23 +53,23 @@
 
     {{-- Separador cobrança --}}
     <div class="sm:col-span-2 -mx-0 pt-1">
-        <div class="h-px bg-slate-100"></div>
-        <p class="mt-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Cobrança Mensal</p>
+        <div class="h-px bg-stone-100"></div>
+        <p class="mt-3 text-xs font-semibold text-stone-500 uppercase tracking-wider">Cobrança Mensal</p>
     </div>
 
     {{-- Valor da Mensalidade --}}
     <div>
-        <label class="block text-xs font-medium text-slate-600 mb-1">Valor da Mensalidade (R$)</label>
+        <label class="block text-xs font-medium text-stone-600 mb-1">Valor da Mensalidade (R$)</label>
         <input wire:model="valorMensalidade" type="number" min="0" step="0.01" placeholder="0,00"
-               class="w-full rounded-lg border @error('valorMensalidade') border-red-400 @else border-slate-200 @enderror px-3 py-2 text-sm text-slate-700 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100">
+               class="w-full rounded-lg border @error('valorMensalidade') border-red-400 @else border-stone-200 @enderror px-3 py-2 text-sm text-stone-700 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100">
         @error('valorMensalidade') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
     </div>
 
     {{-- Forma de Pagamento --}}
     <div>
-        <label class="block text-xs font-medium text-slate-600 mb-1">Forma de Pagamento <span class="text-red-500">*</span></label>
+        <label class="block text-xs font-medium text-stone-600 mb-1">Forma de Pagamento <span class="text-red-500">*</span></label>
         <select wire:model="formaPagamento"
-                class="w-full rounded-lg border @error('formaPagamento') border-red-400 @else border-slate-200 @enderror px-3 py-2 text-sm text-slate-700 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100">
+                class="w-full rounded-lg border @error('formaPagamento') border-red-400 @else border-stone-200 @enderror px-3 py-2 text-sm text-stone-700 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100">
             <option value="pix">PIX</option>
             <option value="cartao">Cartão</option>
             <option value="dinheiro">Dinheiro</option>
@@ -80,29 +80,29 @@
 
     {{-- Foto de perfil --}}
     <div class="sm:col-span-2">
-        <label class="block text-xs font-medium text-slate-600 mb-1">Foto de Perfil</label>
+        <label class="block text-xs font-medium text-stone-600 mb-1">Foto de Perfil</label>
         <input wire:model="foto" type="file" accept=".jpg,.jpeg,.png,.webp"
-               class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 file:mr-3 file:rounded-md file:border-0 file:bg-rose-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-rose-700 hover:file:bg-rose-100">
-        <p class="mt-1 text-xs text-slate-400">JPG, PNG ou WebP · máx. 2 MB</p>
-        <div wire:loading wire:target="foto" class="mt-1 text-xs text-slate-500">Carregando foto...</div>
+               class="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm text-stone-700 file:mr-3 file:rounded-md file:border-0 file:bg-rose-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-rose-700 hover:file:bg-rose-100">
+        <p class="mt-1 text-xs text-stone-400">JPG, PNG ou WebP · máx. 2 MB</p>
+        <div wire:loading wire:target="foto" class="mt-1 text-xs text-stone-500">Carregando foto...</div>
         @error('foto') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
     </div>
 
     {{-- Anamnese --}}
     <div class="sm:col-span-2">
-        <label class="block text-xs font-medium text-slate-600 mb-1">Anamnese / Notas Clínicas</label>
+        <label class="block text-xs font-medium text-stone-600 mb-1">Anamnese / Notas Clínicas</label>
         <textarea wire:model="anamnese" rows="4"
                   placeholder="Alergias, histórico de procedimentos, contraindicações..."
-                  class="w-full rounded-lg border @error('anamnese') border-red-400 @else border-slate-200 @enderror px-3 py-2 text-sm text-slate-700 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100 resize-none"></textarea>
+                  class="w-full rounded-lg border @error('anamnese') border-red-400 @else border-stone-200 @enderror px-3 py-2 text-sm text-stone-700 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100 resize-none"></textarea>
         @error('anamnese') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
     </div>
 
     {{-- Observações --}}
     <div class="sm:col-span-2">
-        <label class="block text-xs font-medium text-slate-600 mb-1">Observações</label>
+        <label class="block text-xs font-medium text-stone-600 mb-1">Observações</label>
         <textarea wire:model="observacoes" rows="3"
                   placeholder="Notas gerais sobre o paciente..."
-                  class="w-full rounded-lg border @error('observacoes') border-red-400 @else border-slate-200 @enderror px-3 py-2 text-sm text-slate-700 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100 resize-none"></textarea>
+                  class="w-full rounded-lg border @error('observacoes') border-red-400 @else border-stone-200 @enderror px-3 py-2 text-sm text-stone-700 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100 resize-none"></textarea>
         @error('observacoes') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
     </div>
 

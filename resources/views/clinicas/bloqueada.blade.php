@@ -7,7 +7,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-stone-50 flex items-center justify-center p-4">
-    <div class="w-full max-w-sm rounded-2xl border border-stone-100 bg-white p-6 text-center shadow-sm">
+    <div class="w-full max-w-sm rounded-2xl border border-stone-100 bg-surface p-6 text-center shadow-sm">
         <h1 class="text-lg font-bold text-stone-900">{{ $clinica->nome }} está bloqueada</h1>
         <p class="mt-2 text-sm text-stone-500">O acesso a esta clínica está suspenso. Entre em contato com o suporte.</p>
         <div class="mt-6 flex flex-col gap-2">

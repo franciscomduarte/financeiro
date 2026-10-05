@@ -8,7 +8,7 @@
              x-transition:leave-start="opacity-100 translate-y-0"
              x-transition:leave-end="opacity-0 -translate-y-2"
              class="fixed top-4 right-4 z-[9999] max-w-sm">
-            <div class="bg-white border border-emerald-200 text-emerald-800 rounded-xl px-4 py-3 shadow-xl flex items-center gap-2.5 text-sm">
+            <div class="bg-surface border border-emerald-200 text-emerald-800 rounded-xl px-4 py-3 shadow-xl flex items-center gap-2.5 text-sm">
                 <div class="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
                     <svg class="w-3 h-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
@@ -25,7 +25,7 @@
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0"
              class="fixed top-4 right-4 z-[9999] max-w-sm">
-            <div class="bg-white border border-red-200 text-red-800 rounded-xl px-4 py-3 shadow-xl flex items-center gap-2.5 text-sm">
+            <div class="bg-surface border border-red-200 text-red-800 rounded-xl px-4 py-3 shadow-xl flex items-center gap-2.5 text-sm">
                 <div class="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center shrink-0">
                     <svg class="w-3 h-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
@@ -44,7 +44,7 @@
              x-transition:leave-start="opacity-100 translate-y-0"
              x-transition:leave-end="opacity-0 -translate-y-2"
              class="fixed top-4 right-4 z-50 max-w-sm">
-            <div class="bg-white border border-emerald-200 text-emerald-800 rounded-xl px-4 py-3 shadow-xl flex items-center gap-2.5 text-sm">
+            <div class="bg-surface border border-emerald-200 text-emerald-800 rounded-xl px-4 py-3 shadow-xl flex items-center gap-2.5 text-sm">
                 <div class="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
                     <svg class="w-3 h-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
@@ -61,7 +61,7 @@
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0"
              class="fixed top-4 right-4 z-50 max-w-sm">
-            <div class="bg-white border border-red-200 text-red-800 rounded-xl px-4 py-3 shadow-xl flex items-center gap-2.5 text-sm">
+            <div class="bg-surface border border-red-200 text-red-800 rounded-xl px-4 py-3 shadow-xl flex items-center gap-2.5 text-sm">
                 <div class="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center shrink-0">
                     <svg class="w-3 h-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
@@ -82,24 +82,24 @@
     <div class="flex gap-1 overflow-x-auto rounded-2xl border border-stone-100 bg-stone-50 p-1.5 shadow-sm w-fit max-w-full">
         <button wire:click="$set('aba', 'profissionais')"
                 class="rounded-xl px-5 py-2 text-sm font-semibold transition-colors
-                    {{ $aba === 'profissionais' ? 'bg-white text-violet-700 shadow-sm' : 'text-stone-500 hover:text-stone-800' }}">
+                    {{ $aba === 'profissionais' ? 'bg-surface text-violet-700 shadow-sm' : 'text-stone-500 hover:text-stone-800' }}">
             Profissionais
         </button>
         <button wire:click="$set('aba', 'procedimentos')"
                 class="rounded-xl px-5 py-2 text-sm font-semibold transition-colors
-                    {{ $aba === 'procedimentos' ? 'bg-white text-violet-700 shadow-sm' : 'text-stone-500 hover:text-stone-800' }}">
+                    {{ $aba === 'procedimentos' ? 'bg-surface text-violet-700 shadow-sm' : 'text-stone-500 hover:text-stone-800' }}">
             Procedimentos
         </button>
         <button wire:click="$set('aba', 'bloqueios')"
                 class="rounded-xl px-5 py-2 text-sm font-semibold transition-colors
-                    {{ $aba === 'bloqueios' ? 'bg-white text-violet-700 shadow-sm' : 'text-stone-500 hover:text-stone-800' }}">
+                    {{ $aba === 'bloqueios' ? 'bg-surface text-violet-700 shadow-sm' : 'text-stone-500 hover:text-stone-800' }}">
             Bloqueios
         </button>
     </div>
 
     {{-- ════════════════════════ ABA: PROFISSIONAIS ════════════════════════ --}}
     @if ($aba === 'profissionais')
-    <div class="rounded-2xl border border-stone-100 bg-white shadow-sm overflow-hidden">
+    <div class="rounded-2xl border border-stone-100 bg-surface shadow-sm overflow-hidden">
         <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
             <div>
                 <h2 class="text-sm font-bold text-stone-800">Profissionais</h2>
@@ -189,7 +189,7 @@
 
     {{-- ════════════════════════ ABA: PROCEDIMENTOS ════════════════════════ --}}
     @if ($aba === 'procedimentos')
-    <div class="rounded-2xl border border-stone-100 bg-white shadow-sm overflow-hidden">
+    <div class="rounded-2xl border border-stone-100 bg-surface shadow-sm overflow-hidden">
         <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
             <div>
                 <h2 class="text-sm font-bold text-stone-800">Procedimentos</h2>
@@ -265,7 +265,7 @@
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
-        <ul class="mt-3 divide-y divide-amber-100 rounded-xl bg-white ring-1 ring-amber-100">
+        <ul class="mt-3 divide-y divide-amber-100 rounded-xl bg-surface ring-1 ring-amber-100">
             @foreach ($bloqConflitos as $c)
                 <li>
                     <a href="{{ route('agenda.index', ['visao' => 'dia', 'filtroData' => $c['data'], 'filtroProfissionalId' => $c['profissional_id']]) }}"
@@ -283,7 +283,7 @@
     </div>
     @endif
 
-    <div class="rounded-2xl border border-stone-100 bg-white shadow-sm overflow-hidden">
+    <div class="rounded-2xl border border-stone-100 bg-surface shadow-sm overflow-hidden">
         <div class="flex items-center justify-between gap-3 border-b border-stone-100 px-4 py-4 sm:px-6">
             <div>
                 <h2 class="text-sm font-bold text-stone-800">Bloqueios</h2>
@@ -328,7 +328,7 @@
     @if ($modalProfissional)
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModalProfissional"></div>
-        <div class="relative w-full max-w-md rounded-2xl bg-white shadow-2xl ring-1 ring-stone-100 overflow-hidden">
+        <div class="relative w-full max-w-md rounded-2xl bg-surface shadow-2xl ring-1 ring-stone-100 overflow-hidden">
             <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
                 <h2 class="text-base font-bold text-stone-900">
                     {{ $profissionalEditandoId ? 'Editar Profissional' : 'Novo Profissional' }}
@@ -371,7 +371,7 @@
             </div>
             <div class="flex justify-end gap-3 border-t border-stone-100 px-6 py-4 bg-stone-50/50">
                 <button wire:click="fecharModalProfissional"
-                        class="rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors">
+                        class="rounded-xl border border-stone-200 bg-surface px-4 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors">
                     Cancelar
                 </button>
                 <button wire:click="salvarProfissional" wire:loading.attr="disabled"
@@ -391,7 +391,7 @@
     @php $diasNomes = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']; @endphp
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModalGrade"></div>
-        <div class="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl ring-1 ring-stone-100 overflow-hidden">
+        <div class="relative w-full max-w-lg rounded-2xl bg-surface shadow-2xl ring-1 ring-stone-100 overflow-hidden">
             <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
                 <div>
                     <h2 class="text-base font-bold text-stone-900">Grade Horária</h2>
@@ -405,7 +405,7 @@
                 <div class="space-y-2.5">
                     @foreach ($grade as $dia => $config)
                         <div wire:key="grade-dia-{{ $dia }}"
-                             class="space-y-2 rounded-xl border border-stone-100 px-3 py-3 sm:px-4 {{ $config['ativo'] ? 'bg-white' : 'bg-stone-50' }}">
+                             class="space-y-2 rounded-xl border border-stone-100 px-3 py-3 sm:px-4 {{ $config['ativo'] ? 'bg-surface' : 'bg-stone-50' }}">
                             <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
                                 <input type="checkbox"
                                        wire:model.live="grade.{{ $dia }}.ativo"
@@ -463,7 +463,7 @@
             </div>
             <div class="flex justify-end gap-3 border-t border-stone-100 px-6 py-4 bg-stone-50/50">
                 <button wire:click="fecharModalGrade"
-                        class="rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors">
+                        class="rounded-xl border border-stone-200 bg-surface px-4 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors">
                     Cancelar
                 </button>
                 <button wire:click="salvarGrade" wire:loading.attr="disabled"
@@ -482,7 +482,7 @@
     @if ($modalProcedimento)
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModalProcedimento"></div>
-        <div class="relative w-full max-w-md rounded-2xl bg-white shadow-2xl ring-1 ring-stone-100 overflow-hidden">
+        <div class="relative w-full max-w-md rounded-2xl bg-surface shadow-2xl ring-1 ring-stone-100 overflow-hidden">
             <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
                 <h2 class="text-base font-bold text-stone-900">
                     {{ $procedimentoEditandoId ? 'Editar Procedimento' : 'Novo Procedimento' }}
@@ -525,7 +525,7 @@
             </div>
             <div class="flex justify-end gap-3 border-t border-stone-100 px-6 py-4 bg-stone-50/50">
                 <button wire:click="fecharModalProcedimento"
-                        class="rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors">
+                        class="rounded-xl border border-stone-200 bg-surface px-4 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors">
                     Cancelar
                 </button>
                 <button wire:click="salvarProcedimento" wire:loading.attr="disabled"
@@ -544,7 +544,7 @@
     @if ($modalBloqueio)
     <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModalBloqueio"></div>
-        <div class="relative w-full max-w-md rounded-2xl bg-white shadow-2xl ring-1 ring-stone-100 overflow-hidden">
+        <div class="relative w-full max-w-md rounded-2xl bg-surface shadow-2xl ring-1 ring-stone-100 overflow-hidden">
             <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
                 <h2 class="text-base font-bold text-stone-900">Novo Bloqueio</h2>
                 <button wire:click="fecharModalBloqueio" class="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100 transition-colors">
@@ -566,11 +566,11 @@
 
                 <div class="grid grid-cols-2 rounded-xl bg-stone-100 p-1">
                     <button type="button" wire:click="$set('bloqDiaInteiro', true)"
-                            class="min-h-[40px] rounded-lg text-sm font-semibold transition-colors {{ $bloqDiaInteiro ? 'bg-white text-violet-700 shadow-sm' : 'text-stone-500' }}">
+                            class="min-h-[40px] rounded-lg text-sm font-semibold transition-colors {{ $bloqDiaInteiro ? 'bg-surface text-violet-700 shadow-sm' : 'text-stone-500' }}">
                         Dia inteiro
                     </button>
                     <button type="button" wire:click="$set('bloqDiaInteiro', false)"
-                            class="min-h-[40px] rounded-lg text-sm font-semibold transition-colors {{ ! $bloqDiaInteiro ? 'bg-white text-violet-700 shadow-sm' : 'text-stone-500' }}">
+                            class="min-h-[40px] rounded-lg text-sm font-semibold transition-colors {{ ! $bloqDiaInteiro ? 'bg-surface text-violet-700 shadow-sm' : 'text-stone-500' }}">
                         Período de horas
                     </button>
                 </div>
@@ -622,7 +622,7 @@
             </div>
             <div class="flex justify-end gap-3 border-t border-stone-100 px-6 py-4 bg-stone-50/50">
                 <button wire:click="fecharModalBloqueio"
-                        class="rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors">
+                        class="rounded-xl border border-stone-200 bg-surface px-4 py-2.5 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors">
                     Cancelar
                 </button>
                 <button wire:click="salvarBloqueio" wire:loading.attr="disabled"

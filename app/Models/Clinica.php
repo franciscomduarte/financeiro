@@ -51,6 +51,7 @@ class Clinica extends Model
         'asaas_webhook_token' => 'encrypted',
         'aviso_teste_3_dias_em' => 'datetime',
         'aviso_teste_fim_em'    => 'datetime',
+        'primeiros_passos_dispensado_em' => 'datetime',
     ];
 
     public function usuarios(): BelongsToMany

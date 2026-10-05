@@ -38,9 +38,10 @@ class MinhaConta extends Component
         ]);
         try {
             $user->update(['name' => $this->nome, 'email' => $this->email]);
-            $this->flashSucesso = 'Dados atualizados com sucesso!';
+            $this->flashSucesso = 'Dados salvos.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro ao salvar: ' . $e->getMessage();
+            report($e);
+            $this->flashErro = 'Não foi possível salvar. Tente de novo em instantes.';
         }
     }
 
@@ -55,7 +56,7 @@ class MinhaConta extends Component
         $user = auth()->user();
 
         if (! Hash::check($this->senhaAtual, $user->password)) {
-            $this->addError('senhaAtual', 'Senha atual incorreta.');
+            $this->addError('senhaAtual', 'A senha atual não confere. Confira e tente de novo.');
             return;
         }
 
@@ -64,15 +65,16 @@ class MinhaConta extends Component
             $this->senhaAtual     = '';
             $this->novaSenha      = '';
             $this->confirmarSenha = '';
-            $this->flashSucesso   = 'Senha alterada com sucesso!';
+            $this->flashSucesso   = 'Senha alterada.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro ao alterar senha: ' . $e->getMessage();
+            report($e);
+            $this->flashErro = 'Não foi possível alterar a senha. Tente de novo em instantes.';
         }
     }
 
     public function render(): View
     {
         return view('livewire.minha-conta')
-            ->layout('layouts.app', ['title' => 'Minha Conta']);
+            ->layout('layouts.app', ['title' => 'Minha conta']);
     }
 }

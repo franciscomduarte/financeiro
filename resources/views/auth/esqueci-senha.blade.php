@@ -6,7 +6,7 @@
     <title>Esqueci minha senha — {{ config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="h-full bg-white font-sans antialiased">
+<body class="h-full bg-surface font-sans antialiased">
 
 <div class="flex min-h-screen">
 
@@ -99,7 +99,7 @@
                         autocomplete="email"
                         required
                         value="{{ old('email') }}"
-                        class="w-full border border-stone-200 bg-white rounded-xl px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-transparent transition @error('email') border-red-300 focus:ring-red-200 @enderror"
+                        class="w-full border border-stone-200 bg-surface rounded-xl px-4 py-3 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-transparent transition @error('email') border-red-300 focus:ring-red-200 @enderror"
                         placeholder="seu@email.com"
                     >
                 </div>

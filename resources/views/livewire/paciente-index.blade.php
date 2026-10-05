@@ -35,22 +35,22 @@
 
     {{-- Stats --}}
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div class="rounded-xl border border-stone-100 bg-white p-4 shadow-sm">
+        <div class="rounded-xl border border-stone-100 bg-surface p-4 shadow-sm">
             <p class="text-xs font-medium text-stone-500">Total</p>
             <p class="mt-1 text-2xl font-bold text-stone-800">{{ $totalCount }}</p>
         </div>
-        <div class="rounded-xl border border-stone-100 bg-white p-4 shadow-sm">
+        <div class="rounded-xl border border-stone-100 bg-surface p-4 shadow-sm">
             <p class="text-xs font-medium text-stone-500">Ativos</p>
             <p class="mt-1 text-2xl font-bold text-emerald-600">{{ $ativosCount }}</p>
         </div>
-        <div class="rounded-xl border border-stone-100 bg-white p-4 shadow-sm">
+        <div class="rounded-xl border border-stone-100 bg-surface p-4 shadow-sm">
             <p class="text-xs font-medium text-stone-500">Inativos</p>
             <p class="mt-1 text-2xl font-bold text-stone-400">{{ $totalCount - $ativosCount }}</p>
         </div>
     </div>
 
     {{-- Filtros --}}
-    <div class="rounded-2xl border border-stone-100 bg-white p-4 shadow-sm">
+    <div class="rounded-2xl border border-stone-100 bg-surface p-4 shadow-sm">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div class="relative flex-1">
                 <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -77,7 +77,7 @@
     </div>
 
     {{-- Tabela --}}
-    <div class="rounded-2xl border border-stone-100 bg-white shadow-sm overflow-hidden">
+    <div class="rounded-2xl border border-stone-100 bg-surface shadow-sm overflow-hidden">
         @if ($pacientes->isEmpty())
             <div class="flex flex-col items-center justify-center py-16 text-center">
                 <svg class="h-10 w-10 text-stone-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -132,7 +132,7 @@
                                     <div class="flex items-center gap-1.5">
                                         <span class="text-sm font-medium text-stone-700">R$ {{ number_format((float) $paciente->valor_mensalidade, 2, ',', '.') }}</span>
                                         @php
-                                            $badgeMap = ['pix' => ['PIX','text-emerald-700 bg-emerald-50'], 'cartao' => ['Cartão','text-blue-700 bg-blue-50'], 'dinheiro' => ['Dinheiro','text-amber-700 bg-amber-50'], 'boleto' => ['Boleto','text-slate-700 bg-slate-100']];
+                                            $badgeMap = ['pix' => ['PIX','text-emerald-700 bg-emerald-50'], 'cartao' => ['Cartão','text-blue-700 bg-blue-50'], 'dinheiro' => ['Dinheiro','text-amber-700 bg-amber-50'], 'boleto' => ['Boleto','text-stone-700 bg-stone-100']];
                                             [$label, $cls] = $badgeMap[$paciente->forma_pagamento] ?? ['—','text-stone-400 bg-stone-50'];
                                         @endphp
                                         <span class="rounded-full px-1.5 py-0.5 text-xs font-medium {{ $cls }}">{{ $label }}</span>
@@ -183,18 +183,18 @@
     @if ($modalCriar)
         <div class="fixed inset-0 z-40 flex items-center justify-center p-4" x-data x-init="document.body.style.overflow = 'hidden'" x-destroy="document.body.style.overflow = ''">
             <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModais"></div>
-            <div class="relative z-10 w-full max-w-2xl rounded-2xl bg-white shadow-xl animate-[modal-in_0.2s_cubic-bezier(0.16,1,0.3,1)]">
-                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                    <h2 class="text-base font-semibold text-slate-800">Novo Paciente</h2>
-                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 transition-colors">
+            <div class="relative z-10 w-full max-w-2xl rounded-2xl bg-surface shadow-xl animate-[modal-in_0.2s_cubic-bezier(0.16,1,0.3,1)]">
+                <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
+                    <h2 class="text-base font-semibold text-stone-800">Novo Paciente</h2>
+                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100 transition-colors">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
                 <div class="max-h-[70vh] overflow-y-auto p-6 space-y-4">
                     @include('livewire.partials.paciente-form')
                 </div>
-                <div class="flex justify-end gap-3 border-t border-slate-100 px-6 py-4">
-                    <button wire:click="fecharModais" class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">Cancelar</button>
+                <div class="flex justify-end gap-3 border-t border-stone-100 px-6 py-4">
+                    <button wire:click="fecharModais" class="rounded-lg border border-stone-200 px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-50">Cancelar</button>
                     <button wire:click="salvar" wire:loading.attr="disabled"
                             class="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-60 transition-colors">
                         <span wire:loading.remove wire:target="salvar">Cadastrar Paciente</span>
@@ -211,18 +211,18 @@
     @if ($modalEditar)
         <div class="fixed inset-0 z-40 flex items-center justify-center p-4" x-data x-init="document.body.style.overflow = 'hidden'" x-destroy="document.body.style.overflow = ''">
             <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModais"></div>
-            <div class="relative z-10 w-full max-w-2xl rounded-2xl bg-white shadow-xl animate-[modal-in_0.2s_cubic-bezier(0.16,1,0.3,1)]">
-                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                    <h2 class="text-base font-semibold text-slate-800">Editar Paciente</h2>
-                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 transition-colors">
+            <div class="relative z-10 w-full max-w-2xl rounded-2xl bg-surface shadow-xl animate-[modal-in_0.2s_cubic-bezier(0.16,1,0.3,1)]">
+                <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
+                    <h2 class="text-base font-semibold text-stone-800">Editar Paciente</h2>
+                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100 transition-colors">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
                 <div class="max-h-[70vh] overflow-y-auto p-6 space-y-4">
                     @include('livewire.partials.paciente-form')
                 </div>
-                <div class="flex justify-end gap-3 border-t border-slate-100 px-6 py-4">
-                    <button wire:click="fecharModais" class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">Cancelar</button>
+                <div class="flex justify-end gap-3 border-t border-stone-100 px-6 py-4">
+                    <button wire:click="fecharModais" class="rounded-lg border border-stone-200 px-4 py-2 text-sm font-medium text-stone-600 hover:bg-stone-50">Cancelar</button>
                     <button wire:click="atualizar" wire:loading.attr="disabled"
                             class="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-60 transition-colors">
                         <span wire:loading.remove wire:target="atualizar">Salvar Alterações</span>
@@ -240,10 +240,10 @@
         @php $p = $this->pacienteDetalhe; @endphp
         <div class="fixed inset-0 z-40 flex items-center justify-center p-4" x-data x-init="document.body.style.overflow = 'hidden'" x-destroy="document.body.style.overflow = ''">
             <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModais"></div>
-            <div class="relative z-10 w-full max-w-xl rounded-2xl bg-white shadow-xl animate-[modal-in_0.2s_cubic-bezier(0.16,1,0.3,1)]">
-                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                    <h2 class="text-base font-semibold text-slate-800">{{ $p->nome }}</h2>
-                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 transition-colors">
+            <div class="relative z-10 w-full max-w-xl rounded-2xl bg-surface shadow-xl animate-[modal-in_0.2s_cubic-bezier(0.16,1,0.3,1)]">
+                <div class="flex items-center justify-between border-b border-stone-100 px-6 py-4">
+                    <h2 class="text-base font-semibold text-stone-800">{{ $p->nome }}</h2>
+                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100 transition-colors">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
@@ -365,13 +365,13 @@
                         @endif
                     </div>
                 </div>
-                <div class="flex justify-end gap-3 border-t border-slate-100 px-6 py-4 bg-stone-50/50">
+                <div class="flex justify-end gap-3 border-t border-stone-100 px-6 py-4 bg-stone-50/50">
                     <button wire:click="abrirModalEditar('{{ $p->id }}')"
-                            class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+                            class="rounded-lg border border-stone-200 bg-surface px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50 transition-colors">
                         Editar
                     </button>
                     <button wire:click="fecharModais"
-                            class="rounded-lg px-4 py-2 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 text-sm font-medium transition-colors">
+                            class="rounded-lg px-4 py-2 bg-surface border border-stone-200 hover:bg-stone-50 text-stone-700 text-sm font-medium transition-colors">
                         Fechar
                     </button>
                 </div>

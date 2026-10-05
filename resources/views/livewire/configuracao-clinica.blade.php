@@ -2,7 +2,7 @@
     $campo  = 'w-full rounded-xl border border-stone-200 px-3 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100';
     $rotulo = 'mb-1.5 block text-xs font-semibold uppercase tracking-wide text-stone-500';
     $botao  = 'inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-rose-600 px-5 text-sm font-semibold text-white shadow-sm hover:bg-rose-700 transition-colors disabled:opacity-60';
-    $botaoSec = 'inline-flex min-h-[44px] items-center justify-center rounded-xl border border-stone-200 bg-white px-4 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors';
+    $botaoSec = 'inline-flex min-h-[44px] items-center justify-center rounded-xl border border-stone-200 bg-surface px-4 text-sm font-semibold text-stone-700 hover:bg-stone-50 transition-colors';
 @endphp
 
 <div class="mx-auto max-w-3xl space-y-6">
@@ -25,7 +25,7 @@
     <div class="grid grid-cols-3 rounded-xl bg-stone-100 p-1">
         @foreach (['dados' => 'Dados', 'integracoes' => 'Integrações', 'financeiro' => 'Financeiro'] as $chave => $titulo)
             <button type="button" wire:click="$set('aba', '{{ $chave }}')"
-                    class="min-h-[40px] rounded-lg text-sm font-semibold transition-colors {{ $aba === $chave ? 'bg-white text-rose-700 shadow-sm' : 'text-stone-500 hover:text-stone-700' }}">
+                    class="min-h-[40px] rounded-lg text-sm font-semibold transition-colors {{ $aba === $chave ? 'bg-surface text-rose-700 shadow-sm' : 'text-stone-500 hover:text-stone-700' }}">
                 {{ $titulo }}
             </button>
         @endforeach
@@ -33,7 +33,7 @@
 
     {{-- ═══════════════ Dados ═══════════════ --}}
     @if ($aba === 'dados')
-        <form wire:submit="salvarDados" class="space-y-5 rounded-2xl border border-stone-100 bg-white p-5 shadow-sm sm:p-6">
+        <form wire:submit="salvarDados" class="space-y-5 rounded-2xl border border-stone-100 bg-surface p-5 shadow-sm sm:p-6">
             <p class="text-sm text-stone-500">Aparecem no menu, nos e-mails e nas mensagens enviadas aos pacientes.</p>
 
             <div class="flex items-center gap-4">
@@ -98,7 +98,7 @@
     @if ($aba === 'integracoes')
         <form wire:submit="salvarIntegracoes" class="space-y-6">
             {{-- WhatsApp --}}
-            <section class="space-y-4 rounded-2xl border border-stone-100 bg-white p-5 shadow-sm sm:p-6">
+            <section class="space-y-4 rounded-2xl border border-stone-100 bg-surface p-5 shadow-sm sm:p-6">
                 <div class="flex items-center justify-between gap-3">
                     <h2 class="text-sm font-bold text-stone-800">WhatsApp</h2>
                     <span class="rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $clinica->whatsappConfigurado() ? 'bg-emerald-50 text-emerald-700' : 'bg-stone-100 text-stone-500' }}">
@@ -132,7 +132,7 @@
             </section>
 
             {{-- Asaas --}}
-            <section class="space-y-4 rounded-2xl border border-stone-100 bg-white p-5 shadow-sm sm:p-6">
+            <section class="space-y-4 rounded-2xl border border-stone-100 bg-surface p-5 shadow-sm sm:p-6">
                 <div class="flex items-center justify-between gap-3">
                     <h2 class="text-sm font-bold text-stone-800">Asaas (cobranças)</h2>
                     <span class="rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $clinica->asaasConfigurado() ? 'bg-emerald-50 text-emerald-700' : 'bg-stone-100 text-stone-500' }}">
@@ -180,7 +180,7 @@
 
     {{-- ═══════════════ Financeiro ═══════════════ --}}
     @if ($aba === 'financeiro')
-        <form wire:submit="salvarFinanceiro" class="space-y-5 rounded-2xl border border-stone-100 bg-white p-5 shadow-sm sm:p-6">
+        <form wire:submit="salvarFinanceiro" class="space-y-5 rounded-2xl border border-stone-100 bg-surface p-5 shadow-sm sm:p-6">
             <div class="max-w-xs">
                 <label class="{{ $rotulo }}">Alíquota de imposto (%)</label>
                 <input type="text" inputmode="decimal" wire:model="aliquotaImposto" class="{{ $campo }} tabular-nums @error('aliquotaImposto') border-red-300 @enderror">

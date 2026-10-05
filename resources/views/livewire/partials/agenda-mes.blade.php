@@ -5,7 +5,7 @@
     $maxItens = 3;
 @endphp
 
-<div class="rounded-2xl border border-stone-100 bg-white shadow-sm overflow-hidden">
+<div class="rounded-2xl border border-stone-100 bg-surface shadow-sm overflow-hidden">
     <div class="grid grid-cols-7 border-b border-stone-100 bg-stone-50">
         @foreach (['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'] as $nome)
             <div class="py-2 text-center text-[11px] font-semibold uppercase tracking-wide text-stone-400">{{ $nome }}</div>

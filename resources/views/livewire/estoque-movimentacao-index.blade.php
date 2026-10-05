@@ -9,7 +9,7 @@
     </div>
 
     {{-- Filtros --}}
-    <div class="rounded-2xl border border-stone-100 bg-white p-4 shadow-sm">
+    <div class="rounded-2xl border border-stone-100 bg-surface p-4 shadow-sm">
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div class="relative sm:col-span-2 lg:col-span-1">
                 <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -49,7 +49,7 @@
     </div>
 
     {{-- Tabela --}}
-    <div class="rounded-2xl border border-stone-100 bg-white shadow-sm overflow-hidden">
+    <div class="rounded-2xl border border-stone-100 bg-surface shadow-sm overflow-hidden">
         @if ($movimentacoes->isEmpty())
             <div class="flex flex-col items-center justify-center py-16 text-center">
                 <svg class="h-10 w-10 text-stone-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -7,12 +7,12 @@
     <title>{{ config('app.name') }} — gestão completa para clínicas</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-white font-sans antialiased text-stone-800">
+<body class="bg-surface font-sans antialiased text-stone-800">
 
 @php($dias = config('clinica.dias_teste'))
 
 {{-- ─── Topo ─── --}}
-<header class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-stone-100">
+<header class="sticky top-0 z-30 bg-surface/90 backdrop-blur border-b border-stone-100">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
         <a href="{{ route('home') }}" class="flex items-center gap-2.5 min-w-0">
             <span class="w-9 h-9 shrink-0 rounded-xl bg-rose-600 text-white flex items-center justify-center font-bold">{{ mb_substr(config('app.name'), 0, 1) }}</span>
@@ -40,7 +40,7 @@
             <a href="{{ route('cadastro') }}" class="inline-flex justify-center items-center min-h-[52px] px-7 rounded-xl text-base font-semibold bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-200">
                 Testar grátis por {{ $dias }} dias
             </a>
-            <a href="#recursos" class="inline-flex justify-center items-center min-h-[52px] px-7 rounded-xl text-base font-medium text-stone-700 bg-white border border-stone-200 hover:border-stone-300">
+            <a href="#recursos" class="inline-flex justify-center items-center min-h-[52px] px-7 rounded-xl text-base font-medium text-stone-700 bg-surface border border-stone-200 hover:border-stone-300">
                 Ver recursos
             </a>
         </div>
@@ -84,7 +84,7 @@
                 ['Configure do seu jeito', 'Logo, profissionais, procedimentos, taxas da maquininha e WhatsApp.'],
                 ['Use por ' . $dias . ' dias grátis', 'Agende, lance e cobre de verdade. Gostou? É só assinar.'],
             ] as $i => [$titulo, $texto])
-                <li class="bg-white rounded-2xl border border-stone-100 p-6">
+                <li class="bg-surface rounded-2xl border border-stone-100 p-6">
                     <span class="w-8 h-8 rounded-full bg-rose-600 text-white text-sm font-bold flex items-center justify-center">{{ $i + 1 }}</span>
                     <h3 class="mt-4 font-semibold">{{ $titulo }}</h3>
                     <p class="mt-1.5 text-sm text-stone-600">{{ $texto }}</p>
@@ -99,7 +99,7 @@
     <div class="rounded-3xl bg-rose-600 text-white px-6 py-12 md:px-12 text-center">
         <h2 class="text-2xl md:text-3xl font-bold">Vamos organizar sua clínica?</h2>
         <p class="mt-3 text-rose-100">{{ $dias }} dias grátis, sem cartão de crédito.</p>
-        <a href="{{ route('cadastro') }}" class="mt-8 inline-flex justify-center items-center min-h-[52px] px-8 rounded-xl text-base font-semibold bg-white text-rose-700 hover:bg-rose-50">
+        <a href="{{ route('cadastro') }}" class="mt-8 inline-flex justify-center items-center min-h-[52px] px-8 rounded-xl text-base font-semibold bg-surface text-rose-700 hover:bg-rose-50">
             Criar minha conta grátis
         </a>
     </div>
