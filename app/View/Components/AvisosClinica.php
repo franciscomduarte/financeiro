@@ -20,14 +20,17 @@ class AvisosClinica extends Component
     public bool $emailPendente;
     public ?string $whatsapp;
     public ?string $email;
+    public bool $suporte;
 
     public function __construct(ClinicaAtual $clinicaAtual)
     {
         $this->clinica = $clinicaAtual->get();
         $user          = auth()->user();
-        $emTeste       = (bool) $this->clinica?->emTeste();
+        $this->suporte = $clinicaAtual->emSuporte();
+        // No modo suporte só a faixa de suporte aparece (os avisos são para a equipe da clínica)
+        $emTeste       = ! $this->suporte && (bool) $this->clinica?->emTeste();
 
-        $this->somenteLeitura  = $clinicaAtual->somenteLeitura();
+        $this->somenteLeitura  = ! $this->suporte && $clinicaAtual->somenteLeitura();
         $this->diasRestantes   = $this->clinica?->diasRestantesTeste();
         // Contagem regressiva só para quem decide a assinatura (admins da clínica)
         $this->mostrarContagem = $emTeste && ! $this->somenteLeitura && (bool) $user?->isAdmin();
@@ -38,7 +41,7 @@ class AvisosClinica extends Component
 
     public function shouldRender(): bool
     {
-        return $this->somenteLeitura || $this->mostrarContagem || $this->emailPendente;
+        return $this->suporte || $this->somenteLeitura || $this->mostrarContagem || $this->emailPendente;
     }
 
     public function render(): View

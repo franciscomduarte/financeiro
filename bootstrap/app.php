@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin'   => \App\Http\Middleware\EnsureAdmin::class,
             'clinica' => \App\Http\Middleware\DefinirClinicaAtual::class,
+            'super-admin' => \App\Http\Middleware\EnsureSuperAdmin::class,
         ]);
         // Multiclínica: toda requisição web autenticada (inclusive Livewire) tem clínica ativa
         $middleware->web(append: [\App\Http\Middleware\DefinirClinicaAtual::class]);

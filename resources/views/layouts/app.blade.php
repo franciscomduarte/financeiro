@@ -16,15 +16,26 @@
 </head>
 <body class="bg-stone-50 text-stone-800 font-sans antialiased">
 
-<div class="flex h-dvh overflow-hidden" x-data="{ menuAberto: false }" @keydown.escape.window="menuAberto = false">
+<div class="flex h-dvh overflow-hidden"
+     x-data="{
+        menuAberto: false,
+        desktop: window.matchMedia('(min-width: 768px)').matches,
+        recolhido: (() => { try { return localStorage.getItem('menu-recolhido') === '1' } catch (e) { return false } })(),
+        alternarMenu() {
+            this.recolhido = ! this.recolhido;
+            try { localStorage.setItem('menu-recolhido', this.recolhido ? '1' : '0') } catch (e) {}
+        },
+     }"
+     x-init="window.matchMedia('(min-width: 768px)').addEventListener('change', e => { desktop = e.matches; menuAberto = false })"
+     @keydown.escape.window="menuAberto = false">
 
     {{-- Fundo escurecido do menu no celular --}}
     <div x-show="menuAberto" x-cloak x-transition.opacity @click="menuAberto = false"
          class="fixed inset-0 z-30 bg-black/40 md:hidden" aria-hidden="true"></div>
 
     {{-- Menu lateral --}}
-    <aside :class="menuAberto ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
-           class="fixed md:static inset-y-0 left-0 z-40 w-64 shrink-0 bg-surface border-r border-stone-200/70 transform transition-transform duration-200 ease-out">
+    <aside :class="[menuAberto ? 'translate-x-0' : '-translate-x-full md:translate-x-0', recolhido ? 'md:w-[72px]' : 'md:w-64']"
+           class="fixed md:static inset-y-0 left-0 z-40 w-72 md:w-64 shrink-0 bg-surface border-r border-stone-200/70 transform transition-[transform,width] duration-200 ease-out">
         <x-menu-lateral />
     </aside>
 

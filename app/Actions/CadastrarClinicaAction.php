@@ -54,6 +54,13 @@ class CadastrarClinicaAction
 
             $this->padroes->execute($clinica);
 
+            \App\Models\ClinicaEvento::create([
+                'clinica_id' => $clinica->id,
+                'user_id'    => $user->id,
+                'acao'       => \App\Enums\AcaoClinicaEvento::Cadastro,
+                'detalhes'   => ['teste_ate' => $clinica->teste_ate->toDateString()],
+            ]);
+
             return ['clinica' => $clinica, 'user' => $user];
         });
 

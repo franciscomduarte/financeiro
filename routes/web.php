@@ -7,6 +7,7 @@ use App\Http\Controllers\CadastroController;
 use App\Http\Controllers\ClinicaController;
 use App\Http\Controllers\DocumentoDownloadController;
 use App\Http\Controllers\EsqueciSenhaController;
+use App\Http\Controllers\SuporteClinicaController;
 use App\Http\Controllers\VerificacaoEmailController;
 use App\Http\Controllers\VozTransacaoController;
 use App\Livewire\AdminUsuarioIndex;
@@ -27,6 +28,7 @@ use App\Livewire\EstoqueIndex;
 use App\Livewire\EstoqueMovimentacaoIndex;
 use App\Livewire\EstoqueProdutoIndex;
 use App\Livewire\PacienteIndex;
+use App\Livewire\PlataformaIndex;
 use App\Livewire\TransacaoIndex;
 use Illuminate\Support\Facades\Route;
 
@@ -76,6 +78,13 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/voz/transacao', [VozTransacaoController::class, 'processar'])->name('voz.transacao');
 
     Route::get('/minha-conta', MinhaConta::class)->name('minha-conta');
+
+    // Painel do dono da plataforma (super admin): funciona sem clínica ativa
+    Route::middleware('super-admin')->prefix('plataforma')->name('plataforma.')->group(function (): void {
+        Route::get('/', PlataformaIndex::class)->name('index');
+        Route::post('/suporte/sair', [SuporteClinicaController::class, 'sair'])->name('suporte.sair');
+        Route::post('/suporte/{clinica}', [SuporteClinicaController::class, 'entrar'])->name('suporte.entrar');
+    });
 
     Route::middleware('admin')->prefix('admin')->group(function (): void {
         Route::get('/usuarios', AdminUsuarioIndex::class)->name('admin.usuarios');
