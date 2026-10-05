@@ -42,6 +42,8 @@ class EsqueciSenhaController extends Controller
             'password'              => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
+        $request->merge(['email' => mb_strtolower(trim((string) $request->input('email')))]);
+
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function ($user, string $password): void {
@@ -51,6 +53,11 @@ class EsqueciSenhaController extends Controller
 
         if ($status === Password::PASSWORD_RESET) {
             return redirect()->route('login')->with('success', 'Senha redefinida com sucesso. Faça login.');
+        }
+
+        if ($status === Password::INVALID_TOKEN) {
+            // Link vencido (60 min), já usado ou substituído por um pedido mais novo
+            return back()->withInput($request->only('email'))->withErrors(['token' => 'Este link expirou ou já foi usado. Peça um novo link e use o e-mail mais recente.']);
         }
 
         return back()->withErrors(['email' => __($status)]);
