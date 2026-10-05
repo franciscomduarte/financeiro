@@ -4,8 +4,7 @@
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
-@source '../../app/Enums/*.php';
-@source '../../app/View/**/*.php';
+@source '../../app/**/*.php'; /* classes montadas em Enums, Models, Livewire e componentes */
 
 /*
  | Identidade visual — "SaaS limpo": neutro quente (stone) + rosa de destaque.

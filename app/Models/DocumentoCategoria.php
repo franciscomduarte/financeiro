@@ -41,7 +41,7 @@ class DocumentoCategoria extends Model
             'blue'   => 'bg-blue-100 text-blue-700',
             'indigo' => 'bg-indigo-100 text-indigo-700',
             'purple' => 'bg-purple-100 text-purple-700',
-            default  => 'bg-slate-100 text-slate-700',
+            default  => 'bg-stone-100 text-stone-700',
         };
     }
 }

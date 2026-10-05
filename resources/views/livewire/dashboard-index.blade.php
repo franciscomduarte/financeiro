@@ -17,7 +17,8 @@
         @endif
     </x-ui.page-header>
 
-    {{-- Espaço reservado logo abaixo do cabeçalho (ex.: primeiros passos) --}}
+    {{-- Primeiros passos (só para admins de clínicas que ainda estão configurando) --}}
+    <livewire:primeiros-passos />
 
     <div class="space-y-6">
 

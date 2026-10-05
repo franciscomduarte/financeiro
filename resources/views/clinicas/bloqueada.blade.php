@@ -21,7 +21,7 @@
         <h1 class="mt-4 text-xl font-semibold text-stone-900">{{ $clinica->nome }} está bloqueada</h1>
         <p class="mt-2 text-sm text-stone-500">O acesso a esta clínica está suspenso. Fale com o suporte para reativar.</p>
         <div class="mt-6 flex flex-col gap-2">
-            @if (auth()->user()->clinicas()->count() > 1)
+            @if ($temOutrasClinicas ?? false)
                 <a href="{{ route('clinicas.escolher') }}" class="btn-primary w-full">Escolher outra clínica</a>
             @endif
             <form method="POST" action="{{ route('logout') }}">

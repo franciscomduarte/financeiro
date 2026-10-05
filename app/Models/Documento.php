@@ -94,7 +94,7 @@ class Documento extends Model
     public function statusCorClasses(): string
     {
         if ($this->status === StatusDocumento::Arquivado) {
-            return 'bg-slate-100 text-slate-600';
+            return 'bg-stone-100 text-stone-600';
         }
         if ($this->estaVencido()) {
             return 'bg-red-100 text-red-700';

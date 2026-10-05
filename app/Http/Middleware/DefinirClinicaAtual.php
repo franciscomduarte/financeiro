@@ -50,7 +50,10 @@ class DefinirClinicaAtual
         if ($clinica->estaBloqueada() && ! $request->routeIs(...self::ROTAS_LIVRES)) {
             return $request->expectsJson()
                 ? response()->json(['message' => 'Esta clínica está bloqueada.'], 403)
-                : response()->view('clinicas.bloqueada', ['clinica' => $clinica], 403);
+                : response()->view('clinicas.bloqueada', [
+                    'clinica'           => $clinica,
+                    'temOutrasClinicas' => $user->clinicas()->whereKeyNot($clinica->id)->exists(),
+                ], 403);
         }
 
         $this->clinicaAtual->definir($clinica);
