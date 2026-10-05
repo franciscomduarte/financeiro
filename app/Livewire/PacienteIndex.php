@@ -47,6 +47,11 @@ class PacienteIndex extends Component
     public string $formaPagamento   = 'pix';
     public string $anamnese         = '';
     public string $observacoes      = '';
+    public string $sexo             = '';
+    public string $estadoCivil      = '';
+    public string $profissao        = '';
+    public string $endereco         = '';
+    public string $origem           = '';
     public string $status           = 'ativo';
 
     // ─── LGPD ───────────────────────────────────────────────────
@@ -129,6 +134,11 @@ class PacienteIndex extends Component
         $this->formaPagamento     = $paciente->forma_pagamento ?? 'pix';
         $this->anamnese           = $this->veDadosClinicos() ? ($paciente->anamnese ?? '') : '';
         $this->observacoes        = $paciente->observacoes ?? '';
+        $this->sexo               = $paciente->sexo ?? '';
+        $this->estadoCivil        = $paciente->estado_civil ?? '';
+        $this->profissao          = $paciente->profissao ?? '';
+        $this->endereco           = $paciente->endereco ?? '';
+        $this->origem             = $paciente->origem ?? '';
         $this->status             = $paciente->status->value;
         $this->foto               = null;
         $this->consentimento           = $paciente->consentimento_em !== null;
@@ -294,6 +304,11 @@ class PacienteIndex extends Component
             'formaPagamento'   => ['required', 'in:pix,cartao,dinheiro,boleto'],
             'anamnese'         => ['nullable', 'string'],
             'observacoes'      => ['nullable', 'string'],
+            'sexo'             => ['nullable', 'string', 'max:20'],
+            'estadoCivil'      => ['nullable', 'string', 'max:30'],
+            'profissao'        => ['nullable', 'string', 'max:100'],
+            'endereco'         => ['nullable', 'string', 'max:255'],
+            'origem'           => ['nullable', 'string', 'max:50'],
             'status'           => ['required', 'in:ativo,inativo'],
             'foto'             => ['nullable', 'image', 'max:2048', 'mimes:jpg,jpeg,png,webp'],
             'consentimento'           => ['boolean'],
@@ -314,6 +329,11 @@ class PacienteIndex extends Component
             'forma_pagamento'   => $this->formaPagamento,
             'anamnese'          => $this->anamnese ?: null,
             'observacoes'       => $this->observacoes ?: null,
+            'sexo'              => $this->sexo ?: null,
+            'estado_civil'      => $this->estadoCivil ?: null,
+            'profissao'         => trim($this->profissao) ?: null,
+            'endereco'          => trim($this->endereco) ?: null,
+            'origem'            => trim($this->origem) ?: null,
             'status'            => $this->status,
         ];
 
@@ -339,6 +359,11 @@ class PacienteIndex extends Component
         $this->formaPagamento     = 'pix';
         $this->anamnese           = '';
         $this->observacoes        = '';
+        $this->sexo               = '';
+        $this->estadoCivil        = '';
+        $this->profissao          = '';
+        $this->endereco           = '';
+        $this->origem             = '';
         $this->status             = 'ativo';
         $this->foto               = null;
         $this->consentimento           = false;
