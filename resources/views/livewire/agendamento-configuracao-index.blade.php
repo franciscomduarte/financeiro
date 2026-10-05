@@ -74,8 +74,7 @@
 
     {{-- ─── Cabeçalho ───────────────────────────────────────────────────── --}}
     <x-ui.page-header titulo="Profissionais e horários"
-                      subtitulo="Cadastre quem atende, os horários de cada um, os procedimentos e as folgas."
-                      class="!mb-0" />
+                      subtitulo="Cadastre quem atende, os horários de cada um, os procedimentos e as folgas." />
 
     {{-- ─── Abas ────────────────────────────────────────────────────────── --}}
     <div class="flex w-full gap-1 overflow-x-auto rounded-xl bg-stone-100 p-1 sm:w-fit">

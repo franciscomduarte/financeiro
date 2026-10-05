@@ -39,7 +39,7 @@
     @endif
 
     {{-- ─── Cabeçalho ───────────────────────────────────────────────────── --}}
-    <x-ui.page-header titulo="Agenda" subtitulo="Veja os atendimentos do dia e marque novos horários." class="!mb-0">
+    <x-ui.page-header titulo="Agenda" subtitulo="Veja os atendimentos do dia e marque novos horários.">
         <x-slot:acoes>
             <button wire:click="abrirModalCriar" class="btn-primary">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
