@@ -38,6 +38,6 @@ class EstoqueIndex extends Component
             'frascosVencendo',
             'frascosVencendo24h',
             'frascosVencidos',
-        ))->layout('layouts.app', ['title' => 'Estoque']);
+        ))->layout('layouts.app', ['title' => 'Visão geral do estoque']);
     }
 }

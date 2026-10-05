@@ -25,7 +25,7 @@
 <div class="card">
     <div class="header">
         <h2>📅 Resumo de vencimentos</h2>
-        <p>LC Estética · {{ $hoje->translatedFormat('d \d\e F \d\e Y') }}</p>
+        <p>{{ $nomeClinica ?: config('app.name') }} · {{ $hoje->translatedFormat('d \d\e F \d\e Y') }}</p>
     </div>
 
     @foreach ([['vencidos', 'Já venceram', $vencidos], ['avencer', 'A vencer', $aVencer]] as [$classe, $titulo, $itens])

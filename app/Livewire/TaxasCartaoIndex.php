@@ -44,10 +44,10 @@ class TaxasCartaoIndex extends Component
         $this->validate([
             "taxas.{$id}.percentual" => 'required|numeric|min:0|max:100',
         ], [
-            "taxas.{$id}.percentual.required" => 'Percentual obrigatório.',
-            "taxas.{$id}.percentual.numeric"  => 'Percentual deve ser numérico.',
-            "taxas.{$id}.percentual.min"      => 'Percentual deve ser ≥ 0.',
-            "taxas.{$id}.percentual.max"      => 'Percentual deve ser ≤ 100.',
+            "taxas.{$id}.percentual.required" => 'Informe o percentual da taxa.',
+            "taxas.{$id}.percentual.numeric"  => 'Digite só números, por exemplo 2,5.',
+            "taxas.{$id}.percentual.min"      => 'A taxa não pode ser negativa.',
+            "taxas.{$id}.percentual.max"      => 'A taxa pode ser no máximo 100%.',
         ]);
 
         try {
@@ -57,10 +57,10 @@ class TaxasCartaoIndex extends Component
                 'ativo'      => $this->taxas[$id]['ativo'],
             ]);
 
-            $this->flashSucesso = "Taxa de {$taxa->modalidade} salva com sucesso.";
+            $this->flashSucesso = 'Taxa salva.';
         } catch (Throwable $e) {
             Log::error('Erro ao salvar taxa de cartão', ['id' => $id, 'error' => $e->getMessage()]);
-            $this->flashErro = 'Erro ao salvar taxa.';
+            $this->flashErro = 'Não foi possível salvar a taxa. Tente de novo em instantes.';
         }
     }
 
@@ -75,6 +75,7 @@ class TaxasCartaoIndex extends Component
 
         try {
             DB::transaction(function (): void {
+                app(\App\Support\ClinicaAtual::class)->garantirEscrita(); // update em massa não dispara eventos do Model
                 foreach ($this->taxas as $id => $dados) {
                     TaxaCartao::where('id', $id)->update([
                         'percentual' => (float) $dados['percentual'],
@@ -83,10 +84,10 @@ class TaxasCartaoIndex extends Component
                 }
             });
 
-            $this->flashSucesso = 'Todas as taxas foram salvas com sucesso.';
+            $this->flashSucesso = 'Taxas salvas.';
         } catch (Throwable $e) {
             Log::error('Erro ao salvar todas as taxas', ['error' => $e->getMessage()]);
-            $this->flashErro = 'Erro ao salvar taxas.';
+            $this->flashErro = 'Não foi possível salvar as taxas. Tente de novo em instantes.';
         }
     }
 
@@ -98,6 +99,6 @@ class TaxasCartaoIndex extends Component
     public function render(): View
     {
         return view('livewire.taxas-cartao-index')
-            ->layout('layouts.app', ['title' => 'Taxas de Cartão — LC Estética']);
+            ->layout('layouts.app', ['title' => 'Taxas de cartão']);
     }
 }

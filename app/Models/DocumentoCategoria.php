@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToClinica;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DocumentoCategoria extends Model
 {
-    use HasUuids;
+    use BelongsToClinica, HasUuids;
 
     protected $fillable = [
         'nome',
@@ -40,7 +41,7 @@ class DocumentoCategoria extends Model
             'blue'   => 'bg-blue-100 text-blue-700',
             'indigo' => 'bg-indigo-100 text-indigo-700',
             'purple' => 'bg-purple-100 text-purple-700',
-            default  => 'bg-slate-100 text-slate-700',
+            default  => 'bg-stone-100 text-stone-700',
         };
     }
 }

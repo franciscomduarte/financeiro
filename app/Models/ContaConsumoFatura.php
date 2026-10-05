@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToClinica;
 use App\Enums\StatusFatura;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ContaConsumoFatura extends Model
 {
-    use HasFactory, HasUuids;
+    use BelongsToClinica, HasFactory, HasUuids;
 
     protected $table = 'conta_consumo_faturas';
 

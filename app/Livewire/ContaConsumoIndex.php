@@ -23,6 +23,7 @@ use Throwable;
 
 class ContaConsumoIndex extends Component
 {
+    use Concerns\MensagemDeErro;
     use WithFileUploads, WithPagination;
 
     // ─── Filtros ────────────────────────────────────────────────
@@ -97,9 +98,9 @@ class ContaConsumoIndex extends Component
             $action->execute($this->dadosConta());
             $this->modalCriar = false;
             $this->resetFormularioConta();
-            $this->flashSucesso = 'Conta cadastrada com sucesso!';
+            $this->flashSucesso = 'Conta salva.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro ao cadastrar conta: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível salvar a conta');
         }
     }
 
@@ -127,9 +128,9 @@ class ContaConsumoIndex extends Component
             $action->execute($conta, $this->dadosConta());
             $this->modalEditar = false;
             $this->resetFormularioConta();
-            $this->flashSucesso = 'Conta atualizada com sucesso!';
+            $this->flashSucesso = 'Alterações salvas.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro ao atualizar conta: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível salvar as alterações');
         }
     }
 
@@ -167,9 +168,9 @@ class ContaConsumoIndex extends Component
                 'observacoes'    => $this->faturaObs ?: null,
             ]);
             $this->modalFatura  = false;
-            $this->flashSucesso = 'Fatura lançada com sucesso!';
+            $this->flashSucesso = 'Fatura lançada.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro ao lançar fatura: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível lançar a fatura');
         }
     }
 
@@ -200,9 +201,9 @@ class ContaConsumoIndex extends Component
                 'data_pagamento'  => $this->dataPagamento,
             ]);
             $this->modalPagar   = false;
-            $this->flashSucesso = 'Fatura paga e lançada no financeiro!';
+            $this->flashSucesso = 'Fatura paga e lançada no financeiro.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro ao registrar pagamento: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível registrar o pagamento');
         }
     }
 
@@ -225,9 +226,9 @@ class ContaConsumoIndex extends Component
             $action->execute($fatura, $this->arquivoFatura);
             $this->modalUploadFatura = false;
             $this->arquivoFatura     = null;
-            $this->flashSucesso      = 'Arquivo enviado com sucesso!';
+            $this->flashSucesso      = 'Arquivo enviado.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro ao enviar arquivo: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível enviar o arquivo');
         }
     }
 
@@ -324,6 +325,6 @@ class ContaConsumoIndex extends Component
             'fornecedoresAtivos' => $fornecedoresAtivos,
             'faturaParaPagar'    => $faturaParaPagar,
             'tipos'              => TipoContaConsumo::cases(),
-        ])->layout('layouts.app', ['title' => 'Contas de Consumo']);
+        ])->layout('layouts.app', ['title' => 'Contas de consumo']);
     }
 }

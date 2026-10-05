@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\Support\ClinicaAtual;
 use App\Models\Documento;
 use Illuminate\Http\UploadedFile;
 
@@ -14,7 +15,7 @@ class CreateDocumentoAction
         if ($arquivo !== null) {
             $nome      = $arquivo->getClientOriginalName();
             $tamanhoKb = (int) ceil($arquivo->getSize() / 1024);
-            $path      = $arquivo->store('documentos', 'local');
+            $path      = $arquivo->store(app(ClinicaAtual::class)->pasta('documentos'), 'local');
             $data['arquivo_path']       = $path;
             $data['arquivo_nome']       = $nome;
             $data['arquivo_tamanho_kb'] = $tamanhoKb;

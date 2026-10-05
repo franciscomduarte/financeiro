@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToClinica;
 use App\Enums\FaseTransacao;
 use App\Enums\FormaPagamento;
 use App\Enums\RecorrenciaTransacao;
@@ -17,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Transacao extends Model
 {
-    use HasFactory, HasUuids;
+    use BelongsToClinica, HasFactory, HasUuids;
 
     protected $table = 'transacoes';
 

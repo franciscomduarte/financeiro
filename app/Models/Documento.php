@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToClinica;
 use App\Enums\StatusDocumento;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Documento extends Model
 {
-    use HasUuids;
+    use BelongsToClinica, HasUuids;
 
     protected $fillable = [
         'categoria_id',
@@ -93,7 +94,7 @@ class Documento extends Model
     public function statusCorClasses(): string
     {
         if ($this->status === StatusDocumento::Arquivado) {
-            return 'bg-slate-100 text-slate-600';
+            return 'bg-stone-100 text-stone-600';
         }
         if ($this->estaVencido()) {
             return 'bg-red-100 text-red-700';

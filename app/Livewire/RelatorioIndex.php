@@ -24,6 +24,7 @@ use Throwable;
 
 class RelatorioIndex extends Component
 {
+    use Concerns\MensagemDeErro;
     public string $competencia;
     public string $tab = 'gerencial';
 
@@ -62,7 +63,7 @@ class RelatorioIndex extends Component
         return view('livewire.relatorio-index', array_merge($data, [
             'tab'      => $this->tab,
             'mesLabel' => $mesLabel,
-        ]))->layout('layouts.app', ['title' => 'Relatório']);
+        ]))->layout('layouts.app', ['title' => 'Relatórios']);
     }
 
     // ── Pagamento de contratos ───────────────────────────────────
@@ -174,10 +175,10 @@ class RelatorioIndex extends Component
             };
 
             $this->modalPagar   = false;
-            $this->flashSucesso = 'Pagamento registrado com sucesso!';
+            $this->flashSucesso = 'Pagamento registrado.';
             $this->resetPagamento();
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível registrar o pagamento');
         }
     }
 
@@ -567,20 +568,20 @@ class RelatorioIndex extends Component
         $insights = [];
 
         if ($totalReceita === 0.0 && $totalDespesa === 0.0) {
-            $insights[] = ['tipo' => 'info', 'msg' => 'Nenhuma movimentação registrada para este período.'];
+            $insights[] = ['tipo' => 'info', 'msg' => 'Ainda não há movimentações neste mês.'];
             return $insights;
         }
 
         if ($margem >= 20.0) {
-            $insights[] = ['tipo' => 'positivo', 'msg' => sprintf('Margem líquida de %.1f%% — resultado saudável.', $margem)];
+            $insights[] = ['tipo' => 'positivo', 'msg' => sprintf('Margem líquida de %s%%. Resultado saudável.', number_format($margem, 1, ',', '.'))];
         } elseif ($margem >= 0.0) {
-            $insights[] = ['tipo' => 'atencao', 'msg' => sprintf('Margem líquida de %.1f%% — abaixo do ideal. Revise as despesas operacionais.', $margem)];
+            $insights[] = ['tipo' => 'atencao', 'msg' => sprintf('Margem líquida de %s%%, abaixo do ideal. Vale revisar as despesas operacionais.', number_format($margem, 1, ',', '.'))];
         } else {
-            $insights[] = ['tipo' => 'critico', 'msg' => sprintf('Resultado negativo de R$ %s — revise os custos com urgência.', number_format(abs($saldo), 2, ',', '.'))];
+            $insights[] = ['tipo' => 'critico', 'msg' => sprintf('Resultado negativo de R$ %s. Revise os custos o quanto antes.', number_format(abs($saldo), 2, ',', '.'))];
         }
 
         if ($totalReceita === 0.0) {
-            $insights[] = ['tipo' => 'atencao', 'msg' => 'Nenhuma receita registrada para o período.'];
+            $insights[] = ['tipo' => 'atencao', 'msg' => 'Nenhuma receita registrada neste mês.'];
         }
 
         $maiorCat   = $categoriasDespesa->keys()->first();
@@ -588,7 +589,7 @@ class RelatorioIndex extends Component
         if ($maiorCat && $totalDespesa > 0) {
             $pct = ($maiorValor / $totalDespesa) * 100;
             if ($pct > 40) {
-                $insights[] = ['tipo' => 'atencao', 'msg' => sprintf('"%s" representa %.0f%% das despesas — concentração elevada.', $maiorCat, $pct)];
+                $insights[] = ['tipo' => 'atencao', 'msg' => sprintf('"%s" representa %.0f%% das despesas. Vale ficar de olho nessa concentração.', $maiorCat, $pct)];
             }
         }
 

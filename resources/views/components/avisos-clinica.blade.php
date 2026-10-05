@@ -1,0 +1,39 @@
+<div class="shrink-0">
+    @if ($somenteLeitura)
+        <div class="bg-red-50 border-b border-red-100 px-4 py-3 md:px-6 text-sm text-red-800 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between" role="status">
+            <p>
+                <strong>Seu teste grátis terminou em {{ $clinica->teste_ate->format('d/m') }}.</strong>
+                O sistema está em modo somente leitura: dá para consultar tudo, mas não para cadastrar ou alterar.
+            </p>
+            <div class="flex flex-wrap gap-2 shrink-0">
+                @if ($whatsapp)
+                    <a href="{{ $whatsapp }}" target="_blank" rel="noopener" class="inline-flex items-center min-h-[44px] px-4 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold">Quero assinar</a>
+                @endif
+                @if ($email)
+                    <a href="mailto:{{ $email }}" class="inline-flex items-center min-h-[44px] px-3 rounded-lg text-red-700 hover:bg-red-100 font-medium">{{ $email }}</a>
+                @endif
+            </div>
+        </div>
+    @elseif ($mostrarContagem)
+        <div class="bg-rose-50 border-b border-rose-100 px-4 py-2.5 md:px-6 text-sm text-rose-800 flex flex-wrap items-center justify-between gap-2" role="status">
+            <p>
+                <strong>Teste grátis:</strong>
+                {{ $diasRestantes === 1 ? 'hoje é o último dia' : "faltam {$diasRestantes} dias" }}
+                <span class="text-rose-600">(até {{ $clinica->teste_ate->format('d/m') }})</span>
+            </p>
+            @if ($whatsapp)
+                <a href="{{ $whatsapp }}" target="_blank" rel="noopener" class="inline-flex items-center min-h-[44px] px-3 rounded-lg font-semibold text-rose-700 hover:bg-rose-100">Assinar agora →</a>
+            @endif
+        </div>
+    @endif
+
+    @if ($emailPendente)
+        <div class="bg-amber-50 border-b border-amber-100 px-4 py-2.5 md:px-6 text-sm text-amber-800 flex flex-wrap items-center justify-between gap-2" role="status">
+            <p>Confirme seu e-mail <strong>{{ auth()->user()->email }}</strong> pelo link que enviamos.</p>
+            <form method="POST" action="{{ route('verificacao.reenviar') }}">
+                @csrf
+                <button type="submit" class="min-h-[44px] px-3 rounded-lg font-semibold text-amber-800 hover:bg-amber-100">Reenviar link</button>
+            </form>
+        </div>
+    @endif
+</div>

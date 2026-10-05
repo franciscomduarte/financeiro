@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToClinica;
 use App\Enums\IndiceReajuste;
 use App\Enums\PeriodicidadeReajuste;
 use App\Enums\RiscoContrato;
@@ -17,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Contrato extends Model
 {
-    use HasFactory, HasUuids;
+    use BelongsToClinica, HasFactory, HasUuids;
 
     protected $table = 'contratos';
 

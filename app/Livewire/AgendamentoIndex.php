@@ -29,6 +29,7 @@ use Throwable;
 
 class AgendamentoIndex extends Component
 {
+    use Concerns\MensagemDeErro;
     use WithPagination;
 
     // ─── Visão (calendário dia/semana/mês ou lista) ────────────────
@@ -289,7 +290,7 @@ class AgendamentoIndex extends Component
                 'observacoes'       => $this->criarObservacoes ?: null,
             ]);
 
-            $this->flashSucesso = 'Agendamento criado com sucesso.';
+            $this->flashSucesso = 'Agendamento criado.';
             $this->modalCriar   = false;
             $this->resetCriarForm();
             $this->resetPage();
@@ -300,7 +301,7 @@ class AgendamentoIndex extends Component
                 'message' => $e->getMessage(),
                 'trace'   => $e->getTraceAsString(),
             ]);
-            $this->flashErro = 'Erro ao criar agendamento: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível criar o agendamento');
         }
     }
 
@@ -339,7 +340,7 @@ class AgendamentoIndex extends Component
     {
         $this->validate(['cancelarMotivo' => 'required|string|min:5|max:500'], [
             'cancelarMotivo.required' => 'Informe o motivo do cancelamento.',
-            'cancelarMotivo.min'      => 'Mínimo 5 caracteres.',
+            'cancelarMotivo.min'      => 'Escreva o motivo com pelo menos 5 caracteres.',
         ]);
 
         try {
@@ -348,10 +349,10 @@ class AgendamentoIndex extends Component
             $this->flashSucesso = 'Agendamento cancelado.';
             $this->fecharModalCancelar();
         } catch (RuntimeException $e) {
-            $this->flashErro = $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e);
             $this->fecharModalCancelar();
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro ao cancelar: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível cancelar');
             $this->fecharModalCancelar();
         }
     }
@@ -394,13 +395,13 @@ class AgendamentoIndex extends Component
         try {
             $agendamento = Agendamento::findOrFail($this->reagendarId);
             $service->reagendar($agendamento, $this->reagendarData, $this->reagendarSlot);
-            $this->flashSucesso = 'Agendamento reagendado com sucesso.';
+            $this->flashSucesso = 'Agendamento reagendado.';
             $this->fecharModalReagendar();
         } catch (RuntimeException $e) {
-            $this->flashErro = $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e);
             $this->fecharModalReagendar();
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro ao reagendar: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível reagendar');
             $this->fecharModalReagendar();
         }
     }
@@ -447,7 +448,7 @@ class AgendamentoIndex extends Component
             ], [
                 'concluirValor.required'     => 'Informe o valor.',
                 'concluirValor.min'          => 'O valor deve ser maior que zero.',
-                'concluirCategoria.required' => 'Escolha a categoria.',
+                'concluirCategoria.required' => 'Escolha a categoria da receita.',
             ]);
         }
 
@@ -461,14 +462,14 @@ class AgendamentoIndex extends Component
 
             $this->flashSucesso = $this->concluirLancarReceita
                 ? 'Atendimento concluído e receita lançada no financeiro.'
-                : 'Atendimento concluído (sem lançamento no financeiro).';
+                : 'Atendimento concluído, sem lançar receita.';
             $this->fecharModalConcluir();
         } catch (RuntimeException $e) {
-            $this->flashErro = $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e);
             $this->fecharModalConcluir();
         } catch (Throwable $e) {
             Log::error('[AgendamentoIndex] confirmarConclusao erro', ['id' => $this->concluirId, 'message' => $e->getMessage()]);
-            $this->flashErro = 'Erro ao concluir atendimento: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível concluir o atendimento');
         }
     }
 
@@ -476,9 +477,9 @@ class AgendamentoIndex extends Component
     {
         try {
             $service->marcarFalta(Agendamento::findOrFail($id));
-            $this->flashSucesso = 'Marcado como falta.';
+            $this->flashSucesso = 'Falta registrada.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível registrar a falta');
         }
     }
 
@@ -487,13 +488,13 @@ class AgendamentoIndex extends Component
         try {
             $agendamento = Agendamento::findOrFail($id);
             if ($agendamento->status !== StatusAgendamento::Agendado) {
-                $this->flashErro = 'Apenas agendamentos com status "Agendado" podem ser confirmados.';
+                $this->flashErro = 'Só dá para confirmar agendamentos com status "Agendado".';
                 return;
             }
             $agendamento->update(['status' => StatusAgendamento::Confirmado->value]);
             $this->flashSucesso = 'Agendamento confirmado.';
         } catch (Throwable $e) {
-            $this->flashErro = 'Erro: ' . $e->getMessage();
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível confirmar');
         }
     }
 

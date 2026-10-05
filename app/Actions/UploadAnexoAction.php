@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\Support\ClinicaAtual;
 use App\Enums\TipoAnexo;
 use App\Models\Transacao;
 use App\Models\TransacaoAnexo;
@@ -16,7 +17,7 @@ class UploadAnexoAction
     public function execute(Transacao $transacao, UploadedFile $arquivo, TipoAnexo $tipo): array
     {
         return DB::transaction(function () use ($transacao, $arquivo, $tipo): array {
-            $diretorio = "anexos/transacoes/{$transacao->id}";
+            $diretorio = app(ClinicaAtual::class)->pasta("anexos/transacoes/{$transacao->id}");
             $caminho   = Storage::disk('local')->putFile($diretorio, $arquivo);
 
             $anexo = TransacaoAnexo::create([

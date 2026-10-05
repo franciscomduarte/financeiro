@@ -19,7 +19,7 @@
 <div class="card">
     <div class="header">
         <h2>🔄 Reagendamento Confirmado</h2>
-        <p>LC Estética</p>
+        @include('emails.partials.nome-clinica')
     </div>
 
     <p style="font-size:15px">Olá, <strong>{{ $agendamento->paciente->nome }}</strong>!</p>
@@ -46,7 +46,7 @@
 
     <div class="footer">
         Em caso de dúvidas, entre em contato conosco.<br>
-        LC Estética — sua beleza em boas mãos.
+        @include('emails.partials.rodape-clinica')
     </div>
 </div>
 </body>

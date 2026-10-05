@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mail;
 
+use App\Support\ClinicaAtual;
 use App\Models\Paciente;
 use App\Models\TransacaoAnexo;
 use Illuminate\Bus\Queueable;
@@ -26,7 +27,7 @@ class AnexoTransacaoMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: '📎 Documento — LC Estética',
+            subject: '📎 Documento — ' . app(ClinicaAtual::class)->nome(),
         );
     }
 

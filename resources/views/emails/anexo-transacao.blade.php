@@ -20,7 +20,8 @@
 <div class="card">
     <div class="header">
         <h2>📎 Documento Anexo</h2>
-        <p>LC Estética — {{ now()->translatedFormat('d \d\e F \d\e Y') }}</p>
+        @include('emails.partials.nome-clinica')
+        <p>{{ now()->translatedFormat('d \d\e F \d\e Y') }}</p>
     </div>
 
     <p style="font-size:15px">Olá, <strong>{{ $paciente->nome }}</strong>!</p>
@@ -41,7 +42,8 @@
 
     <div class="footer">
         Em caso de dúvidas, entre em contato conosco.<br>
-        Este e-mail foi enviado automaticamente pelo sistema LC Estética.
+        Este e-mail foi enviado automaticamente.<br>
+        @include('emails.partials.rodape-clinica')
     </div>
 </div>
 </body>

@@ -78,6 +78,6 @@ class EstoqueMovimentacaoIndex extends Component
             'movimentacoes',
             'produtos',
             'tiposMovimento',
-        ))->layout('layouts.app', ['title' => 'Movimentações — Estoque']);
+        ))->layout('layouts.app', ['title' => 'Movimentações']);
     }
 }

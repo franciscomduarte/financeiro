@@ -1,106 +1,157 @@
 <div class="space-y-6">
 
-    {{-- Flash: Sucesso --}}
+    {{-- Aviso: sucesso --}}
     @if ($flashSucesso)
         <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)"
              x-transition:leave="transition ease-in duration-300" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-2"
-             class="fixed top-4 right-4 z-50 flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-3 text-sm font-medium text-white shadow-lg">
-            <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            {{ $flashSucesso }}
+             class="fixed top-4 right-4 left-4 z-[60] sm:left-auto sm:max-w-sm" role="status">
+            <div class="flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-surface px-4 py-3 text-sm text-emerald-800 shadow-lg">
+                <div class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100">
+                    <svg class="h-3 w-3 text-emerald-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                </div>
+                {{ $flashSucesso }}
+            </div>
         </div>
     @endif
 
-    {{-- Flash: Erro --}}
+    {{-- Aviso: erro --}}
     @if ($flashErro)
         <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 6000)"
              x-transition:leave="transition ease-in duration-300" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-             class="fixed top-4 right-4 z-50 flex items-center gap-2 rounded-lg bg-red-600 px-4 py-3 text-sm font-medium text-white shadow-lg">
-            <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            {{ $flashErro }}
+             class="fixed top-4 right-4 left-4 z-[60] sm:left-auto sm:max-w-sm" role="alert">
+            <div class="flex items-center gap-2.5 rounded-xl border border-red-200 bg-surface px-4 py-3 text-sm text-red-800 shadow-lg">
+                <div class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-100">
+                    <svg class="h-3 w-3 text-red-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
+                </div>
+                {{ $flashErro }}
+            </div>
         </div>
     @endif
 
-    {{-- Header --}}
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-xl font-bold text-stone-900">Pacientes</h1>
-            <p class="text-sm text-stone-500 mt-0.5">Gerencie os pacientes da clínica</p>
-        </div>
-        <button wire:click="abrirModalCriar"
-                class="flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-rose-700 transition-colors">
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            Novo Paciente
-        </button>
-    </div>
+    {{-- Cabeçalho --}}
+    <x-ui.page-header titulo="Pacientes" subtitulo="Cadastre e acompanhe seus pacientes." class="!mb-0">
+        <x-slot:acoes>
+            <button wire:click="abrirModalCriar" class="btn-primary">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                Novo paciente
+            </button>
+        </x-slot:acoes>
+    </x-ui.page-header>
 
-    {{-- Stats --}}
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div class="rounded-xl border border-stone-100 bg-white p-4 shadow-sm">
-            <p class="text-xs font-medium text-stone-500">Total</p>
-            <p class="mt-1 text-2xl font-bold text-stone-800">{{ $totalCount }}</p>
+    {{-- Indicadores --}}
+    <div class="grid grid-cols-3 gap-2 sm:gap-4">
+        <div class="card p-3 sm:p-5">
+            <p class="text-xs text-stone-500 sm:text-sm">Total</p>
+            <p class="mt-1 text-xl font-semibold text-stone-900 tabular-nums sm:text-2xl">{{ $totalCount }}</p>
         </div>
-        <div class="rounded-xl border border-stone-100 bg-white p-4 shadow-sm">
-            <p class="text-xs font-medium text-stone-500">Ativos</p>
-            <p class="mt-1 text-2xl font-bold text-emerald-600">{{ $ativosCount }}</p>
+        <div class="card p-3 sm:p-5">
+            <p class="text-xs text-stone-500 sm:text-sm">Ativos</p>
+            <p class="mt-1 text-xl font-semibold text-emerald-700 tabular-nums sm:text-2xl">{{ $ativosCount }}</p>
         </div>
-        <div class="rounded-xl border border-stone-100 bg-white p-4 shadow-sm">
-            <p class="text-xs font-medium text-stone-500">Inativos</p>
-            <p class="mt-1 text-2xl font-bold text-stone-400">{{ $totalCount - $ativosCount }}</p>
+        <div class="card p-3 sm:p-5">
+            <p class="text-xs text-stone-500 sm:text-sm">Inativos</p>
+            <p class="mt-1 text-xl font-semibold text-stone-900 tabular-nums sm:text-2xl">{{ $totalCount - $ativosCount }}</p>
         </div>
     </div>
 
     {{-- Filtros --}}
-    <div class="rounded-2xl border border-stone-100 bg-white p-4 shadow-sm">
+    <div class="card p-4">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div class="relative flex-1">
-                <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                <svg class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
                 </svg>
                 <input wire:model.live.debounce.400ms="busca"
-                       type="text"
-                       placeholder="Buscar por nome, CPF, telefone..."
-                       class="w-full rounded-lg border border-stone-200 py-2 pl-9 pr-3 text-sm text-stone-700 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100">
+                       type="search"
+                       aria-label="Buscar paciente"
+                       placeholder="Buscar por nome, CPF ou telefone"
+                       class="input !pl-10">
             </div>
-            <select wire:model.live="filtroStatus"
-                    class="rounded-lg border border-stone-200 px-3 py-2 text-sm text-stone-700 focus:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-100 sm:w-44">
+            <select wire:model.live="filtroStatus" aria-label="Filtrar por status" class="input sm:!w-44">
                 <option value="">Todos os status</option>
-                <option value="ativo">Ativo</option>
-                <option value="inativo">Inativo</option>
+                <option value="ativo">Ativos</option>
+                <option value="inativo">Inativos</option>
             </select>
             @if ($busca || $filtroStatus)
-                <button wire:click="$set('busca', ''); $set('filtroStatus', '')"
-                        class="text-sm text-rose-600 hover:text-rose-700 font-medium whitespace-nowrap">
+                <button wire:click="$set('busca', ''); $set('filtroStatus', '')" class="btn-ghost whitespace-nowrap">
                     Limpar filtros
                 </button>
             @endif
         </div>
     </div>
 
-    {{-- Tabela --}}
-    <div class="rounded-2xl border border-stone-100 bg-white shadow-sm overflow-hidden">
+    {{-- Lista --}}
+    <div class="card overflow-hidden">
         @if ($pacientes->isEmpty())
-            <div class="flex flex-col items-center justify-center py-16 text-center">
-                <svg class="h-10 w-10 text-stone-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
-                <p class="text-stone-500 font-medium">Nenhum paciente encontrado</p>
-                <p class="text-stone-400 text-sm mt-1">Cadastre o primeiro paciente clicando em "Novo Paciente"</p>
-            </div>
+            @if ($busca || $filtroStatus)
+                <x-ui.empty-state
+                    titulo="Nada encontrado com esses filtros"
+                    texto="Confira se o nome, CPF ou telefone está certo, ou limpe os filtros para ver todos os pacientes."
+                    icone="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z">
+                    <button wire:click="$set('busca', ''); $set('filtroStatus', '')" class="btn-secondary">Limpar filtros</button>
+                </x-ui.empty-state>
+            @else
+                <x-ui.empty-state
+                    titulo="Nenhum paciente ainda"
+                    texto="Cadastre o primeiro paciente para agendar e cobrar por aqui."
+                    icone="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z">
+                    <button wire:click="abrirModalCriar" class="btn-primary">Cadastrar paciente</button>
+                </x-ui.empty-state>
+            @endif
         @else
-            <table class="w-full text-sm">
+            @php
+                $badgeMap = [
+                    'pix'      => ['PIX', 'bg-emerald-50 text-emerald-700'],
+                    'cartao'   => ['Cartão', 'bg-blue-50 text-blue-700'],
+                    'dinheiro' => ['Dinheiro', 'bg-amber-50 text-amber-700'],
+                    'boleto'   => ['Boleto', 'bg-stone-100 text-stone-600'],
+                ];
+            @endphp
+
+            {{-- Celular: lista de cartões --}}
+            <ul class="divide-y divide-stone-100 md:hidden">
+                @foreach ($pacientes as $paciente)
+                    <li wire:key="pac-cel-{{ $paciente->id }}">
+                        <button type="button" wire:click="abrirDetalhe('{{ $paciente->id }}')"
+                                class="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-stone-50 transition-colors">
+                            @if ($paciente->foto_path)
+                                <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($paciente->foto_path) }}"
+                                     class="h-10 w-10 shrink-0 rounded-full object-cover"
+                                     loading="lazy" alt="">
+                            @else
+                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-50">
+                                    <span class="text-sm font-semibold text-rose-700">{{ strtoupper(substr($paciente->nome, 0, 1)) }}</span>
+                                </div>
+                            @endif
+                            <div class="min-w-0 flex-1">
+                                <p class="truncate text-sm font-medium text-stone-900">{{ $paciente->nome }}</p>
+                                <p class="truncate text-xs text-stone-500">{{ $paciente->telefone ?? $paciente->email ?? 'Sem contato' }}</p>
+                            </div>
+                            @if ($paciente->status->value === 'ativo')
+                                <span class="badge shrink-0 bg-emerald-50 text-emerald-700">Ativo</span>
+                            @else
+                                <span class="badge shrink-0 bg-stone-100 text-stone-600">Inativo</span>
+                            @endif
+                        </button>
+                    </li>
+                @endforeach
+            </ul>
+
+            {{-- Desktop: tabela --}}
+            <table class="hidden w-full text-sm md:table">
                 <thead>
-                    <tr class="border-b border-stone-100 bg-stone-50/60">
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-500">Paciente</th>
-                        <th class="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-500 sm:table-cell">CPF</th>
-                        <th class="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-500 md:table-cell">Telefone</th>
-                        <th class="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-500 lg:table-cell">Mensalidade</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-500">Status</th>
-                        <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-stone-500">Ações</th>
+                    <tr class="border-b border-stone-100 bg-stone-50">
+                        <th class="px-4 py-3 text-left text-xs font-medium text-stone-500">Paciente</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-stone-500">CPF</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-stone-500">Telefone</th>
+                        <th class="hidden px-4 py-3 text-right text-xs font-medium text-stone-500 lg:table-cell">Mensalidade</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-stone-500">Status</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-stone-500"><span class="sr-only">Ações</span></th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-stone-50">
+                <tbody class="divide-y divide-stone-100">
                     @foreach ($pacientes as $paciente)
-                        <tr class="group hover:bg-stone-50/50 transition-colors">
+                        <tr class="hover:bg-stone-50 transition-colors">
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-3">
                                     {{-- Avatar --}}
@@ -109,33 +160,33 @@
                                              class="h-9 w-9 rounded-full object-cover shrink-0"
                                              loading="lazy" alt="">
                                     @else
-                                        <div class="h-9 w-9 rounded-full bg-rose-100 flex items-center justify-center shrink-0">
-                                            <span class="text-sm font-bold text-rose-600">{{ strtoupper(substr($paciente->nome, 0, 1)) }}</span>
+                                        <div class="h-9 w-9 rounded-full bg-rose-50 flex items-center justify-center shrink-0">
+                                            <span class="text-sm font-semibold text-rose-700">{{ strtoupper(substr($paciente->nome, 0, 1)) }}</span>
                                         </div>
                                     @endif
                                     <div class="min-w-0">
-                                        <p class="font-medium text-stone-800 truncate">{{ $paciente->nome }}</p>
+                                        <button type="button" wire:click="abrirDetalhe('{{ $paciente->id }}')"
+                                                class="block max-w-full truncate text-left font-medium text-stone-900 hover:text-rose-700 transition-colors">
+                                            {{ $paciente->nome }}
+                                        </button>
                                         @if ($paciente->email)
-                                            <p class="text-xs text-stone-400 truncate hidden sm:block">{{ $paciente->email }}</p>
+                                            <p class="text-xs text-stone-500 truncate">{{ $paciente->email }}</p>
                                         @endif
                                     </div>
                                 </div>
                             </td>
-                            <td class="hidden px-4 py-3 text-stone-600 sm:table-cell">
+                            <td class="px-4 py-3 text-stone-600 tabular-nums">
                                 {{ $paciente->cpf ?? '—' }}
                             </td>
-                            <td class="hidden px-4 py-3 text-stone-600 md:table-cell">
+                            <td class="px-4 py-3 text-stone-600 tabular-nums">
                                 {{ $paciente->telefone ?? '—' }}
                             </td>
-                            <td class="hidden px-4 py-3 lg:table-cell">
+                            <td class="hidden px-4 py-3 text-right lg:table-cell">
                                 @if ($paciente->valor_mensalidade > 0)
-                                    <div class="flex items-center gap-1.5">
-                                        <span class="text-sm font-medium text-stone-700">R$ {{ number_format((float) $paciente->valor_mensalidade, 2, ',', '.') }}</span>
-                                        @php
-                                            $badgeMap = ['pix' => ['PIX','text-emerald-700 bg-emerald-50'], 'cartao' => ['Cartão','text-blue-700 bg-blue-50'], 'dinheiro' => ['Dinheiro','text-amber-700 bg-amber-50'], 'boleto' => ['Boleto','text-slate-700 bg-slate-100']];
-                                            [$label, $cls] = $badgeMap[$paciente->forma_pagamento] ?? ['—','text-stone-400 bg-stone-50'];
-                                        @endphp
-                                        <span class="rounded-full px-1.5 py-0.5 text-xs font-medium {{ $cls }}">{{ $label }}</span>
+                                    @php [$label, $cls] = $badgeMap[$paciente->forma_pagamento] ?? ['—', 'bg-stone-100 text-stone-500']; @endphp
+                                    <div class="flex items-center justify-end gap-2">
+                                        <span class="badge {{ $cls }}">{{ $label }}</span>
+                                        <span class="font-medium text-stone-900 tabular-nums">R$ {{ number_format((float) $paciente->valor_mensalidade, 2, ',', '.') }}</span>
                                     </div>
                                 @else
                                     <span class="text-stone-400">—</span>
@@ -143,24 +194,20 @@
                             </td>
                             <td class="px-4 py-3">
                                 @if ($paciente->status->value === 'ativo')
-                                    <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
-                                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> Ativo
-                                    </span>
+                                    <span class="badge bg-emerald-50 text-emerald-700">Ativo</span>
                                 @else
-                                    <span class="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-500">
-                                        <span class="h-1.5 w-1.5 rounded-full bg-stone-400"></span> Inativo
-                                    </span>
+                                    <span class="badge bg-stone-100 text-stone-600">Inativo</span>
                                 @endif
                             </td>
                             <td class="px-4 py-3 text-right">
-                                <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div class="flex items-center justify-end gap-0.5">
                                     <button wire:click="abrirDetalhe('{{ $paciente->id }}')"
-                                            class="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-colors" title="Ver detalhes">
-                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                            class="rounded-lg p-2 text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-colors" title="Ver detalhes" aria-label="Ver detalhes de {{ $paciente->nome }}">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                     </button>
                                     <button wire:click="abrirModalEditar('{{ $paciente->id }}')"
-                                            class="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-colors" title="Editar">
-                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                            class="rounded-lg p-2 text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-colors" title="Editar" aria-label="Editar {{ $paciente->nome }}">
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg>
                                     </button>
                                 </div>
                             </td>
@@ -178,26 +225,29 @@
     </div>
 
     {{-- ════════════════════════════════════════════════════════════
-         MODAL: CRIAR PACIENTE
+         MODAL: NOVO PACIENTE
     ════════════════════════════════════════════════════════════ --}}
     @if ($modalCriar)
-        <div class="fixed inset-0 z-40 flex items-center justify-center p-4" x-data x-init="document.body.style.overflow = 'hidden'" x-destroy="document.body.style.overflow = ''">
-            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModais"></div>
-            <div class="relative z-10 w-full max-w-2xl rounded-2xl bg-white shadow-xl animate-[modal-in_0.2s_cubic-bezier(0.16,1,0.3,1)]">
-                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                    <h2 class="text-base font-semibold text-slate-800">Novo Paciente</h2>
-                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 transition-colors">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        <div class="fixed inset-0 z-40 flex items-end justify-center sm:items-center sm:p-4" x-data x-init="document.body.style.overflow = 'hidden'" x-destroy="document.body.style.overflow = ''">
+            <div class="absolute inset-0 bg-black/40" wire:click="fecharModais"></div>
+            <div class="relative z-10 flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl bg-surface shadow-xl animate-modal-in sm:rounded-2xl">
+                <div class="flex items-start justify-between gap-4 border-b border-stone-100 px-5 py-4 sm:px-6">
+                    <div>
+                        <h2 class="text-lg font-semibold text-stone-900">Novo paciente</h2>
+                        <p class="mt-0.5 text-sm text-stone-500">Só o nome é obrigatório. O resto você completa depois.</p>
+                    </div>
+                    <button wire:click="fecharModais" aria-label="Fechar"
+                            class="-mr-2 -mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-colors">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
-                <div class="max-h-[70vh] overflow-y-auto p-6 space-y-4">
+                <div class="flex-1 overflow-y-auto px-5 py-5 sm:px-6">
                     @include('livewire.partials.paciente-form')
                 </div>
-                <div class="flex justify-end gap-3 border-t border-slate-100 px-6 py-4">
-                    <button wire:click="fecharModais" class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">Cancelar</button>
-                    <button wire:click="salvar" wire:loading.attr="disabled"
-                            class="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-60 transition-colors">
-                        <span wire:loading.remove wire:target="salvar">Cadastrar Paciente</span>
+                <div class="flex flex-col-reverse gap-2 border-t border-stone-100 px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
+                    <button wire:click="fecharModais" class="btn-secondary">Cancelar</button>
+                    <button wire:click="salvar" wire:loading.attr="disabled" class="btn-primary">
+                        <span wire:loading.remove wire:target="salvar">Salvar paciente</span>
                         <span wire:loading wire:target="salvar">Salvando...</span>
                     </button>
                 </div>
@@ -209,23 +259,23 @@
          MODAL: EDITAR PACIENTE
     ════════════════════════════════════════════════════════════ --}}
     @if ($modalEditar)
-        <div class="fixed inset-0 z-40 flex items-center justify-center p-4" x-data x-init="document.body.style.overflow = 'hidden'" x-destroy="document.body.style.overflow = ''">
-            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModais"></div>
-            <div class="relative z-10 w-full max-w-2xl rounded-2xl bg-white shadow-xl animate-[modal-in_0.2s_cubic-bezier(0.16,1,0.3,1)]">
-                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                    <h2 class="text-base font-semibold text-slate-800">Editar Paciente</h2>
-                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 transition-colors">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        <div class="fixed inset-0 z-40 flex items-end justify-center sm:items-center sm:p-4" x-data x-init="document.body.style.overflow = 'hidden'" x-destroy="document.body.style.overflow = ''">
+            <div class="absolute inset-0 bg-black/40" wire:click="fecharModais"></div>
+            <div class="relative z-10 flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl bg-surface shadow-xl animate-modal-in sm:rounded-2xl">
+                <div class="flex items-start justify-between gap-4 border-b border-stone-100 px-5 py-4 sm:px-6">
+                    <h2 class="text-lg font-semibold text-stone-900">Editar paciente</h2>
+                    <button wire:click="fecharModais" aria-label="Fechar"
+                            class="-mr-2 -mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-colors">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
-                <div class="max-h-[70vh] overflow-y-auto p-6 space-y-4">
+                <div class="flex-1 overflow-y-auto px-5 py-5 sm:px-6">
                     @include('livewire.partials.paciente-form')
                 </div>
-                <div class="flex justify-end gap-3 border-t border-slate-100 px-6 py-4">
-                    <button wire:click="fecharModais" class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">Cancelar</button>
-                    <button wire:click="atualizar" wire:loading.attr="disabled"
-                            class="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-60 transition-colors">
-                        <span wire:loading.remove wire:target="atualizar">Salvar Alterações</span>
+                <div class="flex flex-col-reverse gap-2 border-t border-stone-100 px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
+                    <button wire:click="fecharModais" class="btn-secondary">Cancelar</button>
+                    <button wire:click="atualizar" wire:loading.attr="disabled" class="btn-primary">
+                        <span wire:loading.remove wire:target="atualizar">Salvar alterações</span>
                         <span wire:loading wire:target="atualizar">Salvando...</span>
                     </button>
                 </div>
@@ -234,98 +284,95 @@
     @endif
 
     {{-- ════════════════════════════════════════════════════════════
-         MODAL: DETALHE PACIENTE
+         MODAL: DETALHE DO PACIENTE
     ════════════════════════════════════════════════════════════ --}}
     @if ($modalDetalhe && $this->pacienteDetalhe)
         @php $p = $this->pacienteDetalhe; @endphp
-        <div class="fixed inset-0 z-40 flex items-center justify-center p-4" x-data x-init="document.body.style.overflow = 'hidden'" x-destroy="document.body.style.overflow = ''">
-            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" wire:click="fecharModais"></div>
-            <div class="relative z-10 w-full max-w-xl rounded-2xl bg-white shadow-xl animate-[modal-in_0.2s_cubic-bezier(0.16,1,0.3,1)]">
-                <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                    <h2 class="text-base font-semibold text-slate-800">{{ $p->nome }}</h2>
-                    <button wire:click="fecharModais" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 transition-colors">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </button>
-                </div>
-                <div class="max-h-[75vh] overflow-y-auto p-6 space-y-5">
-                    {{-- Avatar + dados básicos --}}
-                    <div class="flex items-start gap-4">
+        <div class="fixed inset-0 z-40 flex items-end justify-center sm:items-center sm:p-4" x-data x-init="document.body.style.overflow = 'hidden'" x-destroy="document.body.style.overflow = ''">
+            <div class="absolute inset-0 bg-black/40" wire:click="fecharModais"></div>
+            <div class="relative z-10 flex max-h-[92vh] w-full max-w-xl flex-col overflow-hidden rounded-t-2xl bg-surface shadow-xl animate-modal-in sm:rounded-2xl">
+                <div class="flex items-start justify-between gap-4 border-b border-stone-100 px-5 py-4 sm:px-6">
+                    <div class="flex min-w-0 items-center gap-3">
                         @if ($p->foto_path)
                             <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($p->foto_path) }}"
-                                 class="h-16 w-16 rounded-2xl object-cover shrink-0" alt="">
+                                 class="h-12 w-12 shrink-0 rounded-xl object-cover" alt="">
                         @else
-                            <div class="h-16 w-16 rounded-2xl bg-rose-100 flex items-center justify-center shrink-0">
-                                <span class="text-xl font-bold text-rose-600">{{ strtoupper(substr($p->nome, 0, 1)) }}</span>
+                            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-rose-50">
+                                <span class="text-lg font-semibold text-rose-700">{{ strtoupper(substr($p->nome, 0, 1)) }}</span>
                             </div>
                         @endif
                         <div class="min-w-0">
-                            <p class="font-semibold text-stone-900 text-base">{{ $p->nome }}</p>
+                            <h2 class="truncate text-lg font-semibold text-stone-900">{{ $p->nome }}</h2>
                             @if ($p->status->value === 'ativo')
-                                <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 mt-1">
-                                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> Ativo
-                                </span>
+                                <span class="badge mt-0.5 bg-emerald-50 text-emerald-700">Ativo</span>
                             @else
-                                <span class="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-500 mt-1">
-                                    <span class="h-1.5 w-1.5 rounded-full bg-stone-400"></span> Inativo
-                                </span>
+                                <span class="badge mt-0.5 bg-stone-100 text-stone-600">Inativo</span>
                             @endif
                         </div>
                     </div>
+                    <button wire:click="fecharModais" aria-label="Fechar"
+                            class="-mr-2 -mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-colors">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <div class="flex-1 space-y-6 overflow-y-auto px-5 py-5 sm:px-6">
 
                     {{-- Dados de contato --}}
-                    <div class="grid grid-cols-2 gap-4 bg-stone-50 rounded-xl p-4">
-                        @if ($p->cpf)
-                            <div>
-                                <p class="text-xs text-stone-400">CPF</p>
-                                <p class="text-sm font-medium text-stone-700">{{ $p->cpf }}</p>
-                            </div>
-                        @endif
-                        @if ($p->data_nascimento)
-                            <div>
-                                <p class="text-xs text-stone-400">Data de Nascimento</p>
-                                <p class="text-sm font-medium text-stone-700">{{ $p->data_nascimento->format('d/m/Y') }}</p>
-                            </div>
-                        @endif
-                        @if ($p->telefone)
-                            <div>
-                                <p class="text-xs text-stone-400">Telefone</p>
-                                <p class="text-sm font-medium text-stone-700">{{ $p->telefone }}</p>
-                            </div>
-                        @endif
-                        @if ($p->email)
-                            <div>
-                                <p class="text-xs text-stone-400">E-mail</p>
-                                <p class="text-sm font-medium text-stone-700 truncate">{{ $p->email }}</p>
-                            </div>
-                        @endif
-                    </div>
+                    @if ($p->cpf || $p->data_nascimento || $p->telefone || $p->email)
+                        <dl class="grid grid-cols-2 gap-4 rounded-xl bg-stone-50 p-4">
+                            @if ($p->cpf)
+                                <div>
+                                    <dt class="text-xs text-stone-500">CPF</dt>
+                                    <dd class="text-sm font-medium text-stone-800 tabular-nums">{{ $p->cpf }}</dd>
+                                </div>
+                            @endif
+                            @if ($p->data_nascimento)
+                                <div>
+                                    <dt class="text-xs text-stone-500">Data de nascimento</dt>
+                                    <dd class="text-sm font-medium text-stone-800 tabular-nums">{{ $p->data_nascimento->format('d/m/Y') }}</dd>
+                                </div>
+                            @endif
+                            @if ($p->telefone)
+                                <div>
+                                    <dt class="text-xs text-stone-500">Telefone</dt>
+                                    <dd class="text-sm font-medium text-stone-800 tabular-nums">{{ $p->telefone }}</dd>
+                                </div>
+                            @endif
+                            @if ($p->email)
+                                <div class="min-w-0">
+                                    <dt class="text-xs text-stone-500">E-mail</dt>
+                                    <dd class="truncate text-sm font-medium text-stone-800">{{ $p->email }}</dd>
+                                </div>
+                            @endif
+                        </dl>
+                    @endif
 
                     {{-- Cobrança --}}
                     @if ($p->valor_mensalidade > 0 || $p->forma_pagamento)
                         <div>
-                            <p class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-2">Cobrança Mensal</p>
-                            <div class="grid grid-cols-2 gap-4 bg-emerald-50 border border-emerald-100 rounded-xl p-4">
+                            <h3 class="mb-2 text-sm font-semibold text-stone-900">Cobrança mensal</h3>
+                            <dl class="grid grid-cols-2 gap-4 rounded-xl border border-stone-200 p-4">
                                 <div>
-                                    <p class="text-xs text-stone-400">Mensalidade</p>
-                                    <p class="text-sm font-semibold text-emerald-700">R$ {{ number_format((float) $p->valor_mensalidade, 2, ',', '.') }}</p>
+                                    <dt class="text-xs text-stone-500">Mensalidade</dt>
+                                    <dd class="text-sm font-semibold text-stone-900 tabular-nums">R$ {{ number_format((float) $p->valor_mensalidade, 2, ',', '.') }}</dd>
                                 </div>
                                 <div>
-                                    <p class="text-xs text-stone-400">Forma de Pagamento</p>
+                                    <dt class="text-xs text-stone-500">Forma de pagamento</dt>
                                     @php
                                         $labelMap = ['pix' => 'PIX', 'cartao' => 'Cartão', 'dinheiro' => 'Dinheiro', 'boleto' => 'Boleto'];
                                     @endphp
-                                    <p class="text-sm font-medium text-stone-700">{{ $labelMap[$p->forma_pagamento] ?? '—' }}</p>
+                                    <dd class="text-sm font-medium text-stone-800">{{ $labelMap[$p->forma_pagamento] ?? '—' }}</dd>
                                 </div>
-                            </div>
+                            </dl>
                         </div>
                     @endif
 
                     {{-- Anamnese --}}
                     @if ($p->anamnese)
                         <div>
-                            <p class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-2">Anamnese / Notas Clínicas</p>
-                            <div class="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
-                                <p class="text-sm text-stone-700 whitespace-pre-line">{{ $p->anamnese }}</p>
+                            <h3 class="mb-2 text-sm font-semibold text-stone-900">Anamnese e notas clínicas</h3>
+                            <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                                <p class="text-sm text-stone-800 whitespace-pre-line">{{ $p->anamnese }}</p>
                             </div>
                         </div>
                     @endif
@@ -333,46 +380,44 @@
                     {{-- Observações --}}
                     @if ($p->observacoes)
                         <div>
-                            <p class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-2">Observações</p>
+                            <h3 class="mb-2 text-sm font-semibold text-stone-900">Observações</h3>
                             <p class="text-sm text-stone-600 whitespace-pre-line">{{ $p->observacoes }}</p>
                         </div>
                     @endif
 
-                    {{-- Histórico de transações --}}
+                    {{-- Histórico de lançamentos --}}
                     <div>
-                        <p class="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-2">Histórico de Transações</p>
+                        <h3 class="mb-2 text-sm font-semibold text-stone-900">Histórico de lançamentos</h3>
                         @if ($p->transacoes->isEmpty())
-                            <p class="text-sm text-stone-400">Nenhuma transação vinculada.</p>
+                            <p class="rounded-xl border border-dashed border-stone-200 px-4 py-6 text-center text-sm text-stone-500">Nenhum lançamento ligado a este paciente ainda.</p>
                         @else
-                            <div class="space-y-2">
+                            <ul class="divide-y divide-stone-100 overflow-hidden rounded-xl border border-stone-200">
                                 @foreach ($p->transacoes as $t)
-                                    <div class="flex items-center justify-between rounded-xl bg-stone-50 px-3 py-2">
+                                    <li class="flex items-center justify-between gap-3 px-3 py-2.5">
                                         <div class="min-w-0">
-                                            <p class="text-sm text-stone-700 font-medium truncate">{{ $t->descricao }}</p>
-                                            <p class="text-xs text-stone-400">{{ $t->data_competencia->format('d/m/Y') }}</p>
+                                            <p class="truncate text-sm font-medium text-stone-800">{{ $t->descricao }}</p>
+                                            <p class="text-xs text-stone-500 tabular-nums">{{ $t->data_competencia->format('d/m/Y') }}</p>
                                         </div>
-                                        <div class="text-right shrink-0 ml-3">
-                                            <p class="text-sm font-semibold {{ $t->tipo->value === 'entrada' ? 'text-emerald-600' : 'text-rose-600' }}">
-                                                {{ $t->tipo->value === 'entrada' ? '+' : '-' }} R$ {{ number_format((float) $t->valor_liquido, 2, ',', '.') }}
+                                        <div class="shrink-0 text-right">
+                                            <p class="text-sm font-semibold tabular-nums {{ $t->tipo->value === 'entrada' ? 'text-emerald-700' : 'text-red-700' }}">
+                                                {{ $t->tipo->value === 'entrada' ? '+' : '−' }} R$ {{ number_format((float) $t->valor_liquido, 2, ',', '.') }}
                                             </p>
-                                            <span class="text-xs {{ $t->status->value === 'pago' ? 'text-emerald-600' : ($t->status->value === 'cancelado' ? 'text-stone-400' : 'text-amber-600') }}">
-                                                {{ ucfirst($t->status->value) }}
+                                            <span class="text-xs {{ $t->status->value === 'pago' ? 'text-emerald-700' : ($t->status->value === 'cancelado' ? 'text-stone-500' : 'text-amber-700') }}">
+                                                {{ $t->status->label() }}
                                             </span>
                                         </div>
-                                    </div>
+                                    </li>
                                 @endforeach
-                            </div>
+                            </ul>
                         @endif
                     </div>
                 </div>
-                <div class="flex justify-end gap-3 border-t border-slate-100 px-6 py-4 bg-stone-50/50">
-                    <button wire:click="abrirModalEditar('{{ $p->id }}')"
-                            class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
-                        Editar
-                    </button>
-                    <button wire:click="fecharModais"
-                            class="rounded-lg px-4 py-2 bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 text-sm font-medium transition-colors">
+                <div class="flex flex-col-reverse gap-2 border-t border-stone-100 px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
+                    <button wire:click="fecharModais" class="btn-secondary">
                         Fechar
+                    </button>
+                    <button wire:click="abrirModalEditar('{{ $p->id }}')" class="btn-primary">
+                        Editar paciente
                     </button>
                 </div>
             </div>

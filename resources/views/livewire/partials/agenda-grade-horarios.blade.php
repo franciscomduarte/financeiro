@@ -13,7 +13,7 @@
     $colunas  = 'grid-template-columns: 3.5rem repeat(' . count($calDias) . ', minmax(0, 1fr));';
 @endphp
 
-<div class="rounded-2xl border border-stone-100 bg-white shadow-sm overflow-hidden">
+<div class="card overflow-hidden">
     <div class="overflow-x-auto">
         <div class="{{ count($calDias) > 1 ? 'min-w-[720px]' : '' }}">
 
@@ -22,9 +22,9 @@
                 <div></div>
                 @foreach ($calDias as $dia)
                     <button type="button" wire:click="irParaDia('{{ $dia->toDateString() }}')"
-                            class="flex min-h-[44px] flex-col items-center justify-center py-2 border-l border-stone-100 hover:bg-violet-50 transition-colors">
-                        <span class="text-[11px] font-semibold uppercase tracking-wide {{ $dia->isToday() ? 'text-violet-600' : 'text-stone-400' }}">{{ $nomesDia[$dia->dayOfWeekIso] }}</span>
-                        <span class="mt-0.5 flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold tabular-nums {{ $dia->isToday() ? 'bg-violet-600 text-white' : 'text-stone-800' }}">{{ $dia->day }}</span>
+                            class="flex min-h-[44px] flex-col items-center justify-center py-2 border-l border-stone-100 hover:bg-rose-50 transition-colors">
+                        <span class="text-[11px] font-semibold uppercase tracking-wide {{ $dia->isToday() ? 'text-rose-700' : 'text-stone-500' }}">{{ $nomesDia[$dia->dayOfWeekIso] }}</span>
+                        <span class="mt-0.5 flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold tabular-nums {{ $dia->isToday() ? 'bg-rose-600 text-white' : 'text-stone-800' }}">{{ $dia->day }}</span>
                     </button>
                 @endforeach
             </div>
@@ -34,7 +34,7 @@
                 {{-- Coluna de horas --}}
                 <div class="relative" style="height: {{ $alturaPx }}px">
                     @for ($m = $faixaIni + 60; $m < $faixaFim; $m += 60)
-                        <span class="absolute right-2 -translate-y-1/2 text-[11px] tabular-nums text-stone-400"
+                        <span class="absolute right-2 -translate-y-1/2 text-[11px] tabular-nums text-stone-500"
                               style="top: {{ ($m - $faixaIni) * $pxPorMin }}px">{{ sprintf('%02d:00', intdiv($m, 60)) }}</span>
                     @endfor
                 </div>
@@ -50,7 +50,7 @@
                             || ($intervaloDia && $m < $intervaloDia[1] && $m + $minSlot > $intervaloDia[0])
                         );
                     @endphp
-                    <div class="relative border-l border-stone-100 {{ $dia->isToday() ? 'bg-violet-50/30' : '' }}"
+                    <div class="relative border-l border-stone-100 {{ $dia->isToday() ? 'bg-rose-50/40' : '' }}"
                          style="height: {{ $alturaPx }}px" wire:key="cal-dia-{{ $chave }}">
 
                         {{-- Slots: clicar num horário livre abre "Novo agendamento" já preenchido --}}
@@ -65,9 +65,9 @@
                             @else
                                 <button type="button" wire:click="novoNoHorario('{{ $chave }}', '{{ $hora }}')"
                                         title="Novo agendamento às {{ $hora }}"
-                                        class="group block w-full border-t {{ $linha }} text-left hover:bg-violet-50 transition-colors"
+                                        class="group block w-full border-t {{ $linha }} text-left hover:bg-rose-50 transition-colors"
                                         style="height: {{ $slotPx }}px">
-                                    <span class="hidden pl-2 text-[11px] font-semibold text-violet-500 group-hover:inline">+ {{ $hora }}</span>
+                                    <span class="hidden pl-2 text-[11px] font-medium text-rose-700 group-hover:inline">+ {{ $hora }}</span>
                                 </button>
                             @endif
                         @endfor
@@ -77,7 +77,7 @@
                             @php [$intIni, $intFim] = [max($intervaloDia[0], $faixaIni), min($intervaloDia[1], $faixaFim)]; @endphp
                             <div class="pointer-events-none absolute inset-x-0 z-[4] flex items-center justify-center border-y border-dashed border-stone-200 bg-stone-100/70"
                                  style="top: {{ ($intIni - $faixaIni) * $pxPorMin }}px; height: {{ ($intFim - $intIni) * $pxPorMin }}px;">
-                                <span class="text-[11px] font-semibold uppercase tracking-wide text-stone-400">Intervalo</span>
+                                <span class="text-[11px] font-medium text-stone-500">Intervalo</span>
                             </div>
                         @endif
 
@@ -91,7 +91,7 @@
                             @if ($fimSeg > $ini)
                                 <div wire:key="cal-bloq-{{ $chave }}-{{ $b['id'] }}"
                                      class="pointer-events-none absolute inset-x-0 z-[5] flex flex-col overflow-hidden border-y border-stone-300/70 px-2 py-1 {{ $b['dia_inteiro'] ? 'justify-start' : 'justify-end' }}"
-                                     style="top: {{ ($ini - $faixaIni) * $pxPorMin }}px; height: {{ ($fimSeg - $ini) * $pxPorMin }}px; background-color: rgb(245 245 244 / 0.85); background-image: repeating-linear-gradient(135deg, rgb(214 211 209 / 0.55) 0 6px, transparent 6px 12px);">
+                                     style="top: {{ ($ini - $faixaIni) * $pxPorMin }}px; height: {{ ($fimSeg - $ini) * $pxPorMin }}px; background-color: color-mix(in srgb, var(--color-stone-100) 85%, transparent); background-image: repeating-linear-gradient(135deg, color-mix(in srgb, var(--color-stone-300) 55%, transparent) 0 6px, transparent 6px 12px);">
                                     <p class="truncate text-[11px] font-semibold text-stone-600"
                                        style="{{ $b['dia_inteiro'] ? 'margin-top' : 'margin-bottom' }}: {{ $i * 16 }}px">
                                         <span class="mr-1 inline-block h-1.5 w-1.5 rounded-full align-middle" style="background-color: {{ $b['cor'] }}"></span>Bloqueado{{ $b['motivo'] ? ' · ' . $b['motivo'] : '' }}
@@ -125,7 +125,7 @@
                                     wire:click="abrirDetalhe('{{ $ag->id }}')"
                                     title="{{ $ag->inicio_em->format('H:i') }} · {{ $ag->paciente?->nome ?? '—' }} · {{ $ag->profissional?->nome ?? '—' }} · {{ $ag->status->label() }}"
                                     class="absolute z-10 flex flex-col justify-start overflow-hidden rounded-lg px-2 py-1 text-left shadow-sm ring-1 ring-black/5 hover:z-30 hover:shadow-md transition-shadow {{ $inativo ? 'opacity-60' : '' }}"
-                                    style="top: {{ ($iniMin - $faixaIni) * $pxPorMin + 1 }}px; height: {{ $altura }}px; left: calc({{ $item['coluna'] * $largura }}% + 2px); width: calc({{ $largura }}% - 4px); background-color: color-mix(in srgb, {{ $cor }} 14%, white); border-left: 3px solid {{ $cor }};">
+                                    style="top: {{ ($iniMin - $faixaIni) * $pxPorMin + 1 }}px; height: {{ $altura }}px; left: calc({{ $item['coluna'] * $largura }}% + 2px); width: calc({{ $largura }}% - 4px); background-color: color-mix(in srgb, {{ $cor }} 14%, var(--color-surface)); border-left: 3px solid {{ $cor }};">
                                 <span class="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full {{ $ag->status->corPonto() }}"></span>
                                 <p class="truncate pr-2 text-[11px] font-semibold tabular-nums text-stone-600">
                                     {{ $ag->inicio_em->format('H:i') }}<span class="hidden sm:inline">–{{ $ag->fim_em->format('H:i') }}</span>

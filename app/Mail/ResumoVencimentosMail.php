@@ -25,6 +25,7 @@ class ResumoVencimentosMail extends Mailable
         public readonly Collection $vencidos,
         public readonly Collection $aVencer,
         public readonly CarbonImmutable $hoje,
+        public readonly string $nomeClinica = '',
     ) {}
 
     public function envelope(): Envelope

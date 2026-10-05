@@ -30,7 +30,7 @@ enum StockBatchStatusEnum: string
             self::Open      => 'text-emerald-700 bg-emerald-50 border-emerald-200',
             self::Empty     => 'text-stone-500 bg-stone-100 border-stone-200',
             self::Expired   => 'text-red-700 bg-red-50 border-red-200',
-            self::Discarded => 'text-slate-500 bg-slate-100 border-slate-200',
+            self::Discarded => 'text-stone-500 bg-stone-100 border-stone-200',
         };
     }
 

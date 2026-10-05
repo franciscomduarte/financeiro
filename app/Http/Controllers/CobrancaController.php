@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\Clinica;
+use App\Models\Scopes\ClinicaScope;
+use App\Support\ClinicaAtual;
 use App\Jobs\DisparadorCobrancaMensalJob;
 use App\Mail\CobrancaMensalMail;
 use App\Models\Cobranca;
@@ -13,6 +16,7 @@ use App\Services\WhatsAppService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class CobrancaController extends Controller
@@ -100,12 +104,6 @@ class CobrancaController extends Controller
 
     public function webhook(Request $request): JsonResponse
     {
-        $tokenEsperado = config('asaas.webhook_token');
-
-        if ($tokenEsperado && $request->header('asaas-access-token') !== $tokenEsperado) {
-            return response()->json(['error' => 'Unauthorized'], 401);
-        }
-
         $evento      = (string) $request->input('event', '');
         $pagamentoId = (string) $request->input('payment.id', '');
 
@@ -122,17 +120,30 @@ class CobrancaController extends Controller
         ];
 
         if (isset($statusMap[$evento])) {
-            $cobranca = Cobranca::with('parcelamento')->where('asaas_id', $pagamentoId)->first();
+            // Webhook não tem usuário logado: a clínica vem da própria cobrança
+            $tenantId = Cobranca::withoutGlobalScope(ClinicaScope::class)->where('asaas_id', $pagamentoId)->value('tenant_id');
+            $clinica  = $tenantId ? Clinica::find($tenantId) : null;
 
-            if ($cobranca) {
-                $cobranca->update([
-                    'status'  => $statusMap[$evento],
-                    'pago_em' => in_array($evento, ['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED'], true) ? now() : null,
-                ]);
+            // Cada clínica configura o webhook na própria conta Asaas, com o próprio token
+            $tokenEsperado = $clinica?->asaas_webhook_token;
+            if ($clinica && filled($tokenEsperado) && ! hash_equals($tokenEsperado, (string) $request->header('asaas-access-token'))) {
+                Log::warning('[Asaas] webhook com token inválido', ['tenant_id' => $clinica->id, 'ip' => $request->ip()]);
 
-                if (in_array($evento, ['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED'], true)) {
-                    $cobranca->parcelamento?->verificarConclusao();
-                }
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            if ($clinica) {
+                app(ClinicaAtual::class)->executarComo($clinica, function () use ($pagamentoId, $evento, $statusMap): void {
+                    $cobranca = Cobranca::with('parcelamento')->where('asaas_id', $pagamentoId)->firstOrFail();
+                    $cobranca->update([
+                        'status'  => $statusMap[$evento],
+                        'pago_em' => in_array($evento, ['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED'], true) ? now() : null,
+                    ]);
+
+                    if (in_array($evento, ['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED'], true)) {
+                        $cobranca->parcelamento?->verificarConclusao();
+                    }
+                });
             }
         }
 
