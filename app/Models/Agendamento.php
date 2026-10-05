@@ -54,6 +54,11 @@ class Agendamento extends Model
         'status'              => StatusAgendamento::class,
     ];
 
+    public function pesquisa(): HasOne
+    {
+        return $this->hasOne(PesquisaSatisfacao::class, 'agendamento_id');
+    }
+
     public function paciente(): BelongsTo
     {
         return $this->belongsTo(Paciente::class, 'paciente_id');

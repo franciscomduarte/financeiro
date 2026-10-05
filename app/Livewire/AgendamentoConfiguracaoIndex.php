@@ -49,6 +49,7 @@ class AgendamentoConfiguracaoIndex extends Component
     public string  $procDescricao = '';
     public string  $procDuracao   = '60';
     public string  $procValor     = '';
+    public string  $procRetornoDias = '';
     public bool    $procAtivo     = true;
 
     // ─── Modal: Bloqueio ──────────────────────────────────────────
@@ -266,6 +267,7 @@ class AgendamentoConfiguracaoIndex extends Component
         $this->procDescricao = $p->descricao ?? '';
         $this->procDuracao  = (string) $p->duracao_minutos;
         $this->procValor    = (string) $p->valor;
+        $this->procRetornoDias = $p->retorno_dias ? (string) $p->retorno_dias : '';
         $this->procAtivo    = $p->ativo;
         $this->modalProcedimento = true;
     }
@@ -282,6 +284,9 @@ class AgendamentoConfiguracaoIndex extends Component
             'procNome'    => 'required|string|max:150',
             'procDuracao' => 'required|integer|min:15|max:480',
             'procValor'   => 'required|numeric|min:0',
+            'procRetornoDias' => 'nullable|integer|min:1|max:730',
+        ], [
+            'procRetornoDias.max' => 'Use no máximo 730 dias (2 anos).',
         ]);
 
         try {
@@ -290,6 +295,7 @@ class AgendamentoConfiguracaoIndex extends Component
                 'descricao'       => $this->procDescricao ?: null,
                 'duracao_minutos' => (int) $this->procDuracao,
                 'valor'           => (float) str_replace(',', '.', $this->procValor),
+                'retorno_dias'    => $this->procRetornoDias !== '' ? (int) $this->procRetornoDias : null,
                 'ativo'           => $this->procAtivo,
             ];
 
@@ -313,6 +319,7 @@ class AgendamentoConfiguracaoIndex extends Component
         $this->procDescricao = '';
         $this->procDuracao   = '60';
         $this->procValor     = '';
+        $this->procRetornoDias = '';
         $this->procAtivo     = true;
         $this->resetErrorBag();
     }
