@@ -320,7 +320,7 @@
                 <div class="flex-1 space-y-6 overflow-y-auto px-5 py-5 sm:px-6">
 
                     {{-- Dados de contato --}}
-                    @if ($p->cpf || $p->data_nascimento || $p->telefone || $p->email)
+                    @if ($p->cpf || $p->data_nascimento || $p->telefone || $p->email || $p->endereco || $p->profissao || $p->origem)
                         <dl class="grid grid-cols-2 gap-4 rounded-xl bg-stone-50 p-4">
                             @if ($p->cpf)
                                 <div>
@@ -344,6 +344,20 @@
                                 <div class="min-w-0">
                                     <dt class="text-xs text-stone-500">E-mail</dt>
                                     <dd class="truncate text-sm font-medium text-stone-800">{{ $p->email }}</dd>
+                                </div>
+                            @endif
+                            @foreach (['Sexo' => $p->sexo, 'Estado civil' => $p->estado_civil, 'Profissão' => $p->profissao, 'Como conheceu' => $p->origem] as $rotulo => $valor)
+                                @if ($valor)
+                                    <div class="min-w-0">
+                                        <dt class="text-xs text-stone-500">{{ $rotulo }}</dt>
+                                        <dd class="truncate text-sm font-medium text-stone-800">{{ $valor }}</dd>
+                                    </div>
+                                @endif
+                            @endforeach
+                            @if ($p->endereco)
+                                <div class="col-span-2 min-w-0">
+                                    <dt class="text-xs text-stone-500">Endereço</dt>
+                                    <dd class="text-sm font-medium text-stone-800">{{ $p->endereco }}</dd>
                                 </div>
                             @endif
                         </dl>

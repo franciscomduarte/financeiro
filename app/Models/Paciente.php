@@ -37,7 +37,17 @@ class Paciente extends Model
         'status',
         'aceita_whatsapp_marketing',
         'aceita_email_marketing',
+        'sexo',
+        'estado_civil',
+        'profissao',
+        'endereco',
+        'origem',
     ];
+
+    /** Opções sugeridas na ficha (o campo aceita outros valores vindos de importação). */
+    public const SEXOS = ['Feminino', 'Masculino', 'Outro'];
+    public const ESTADOS_CIVIS = ['Solteiro(a)', 'Casado(a)', 'União estável', 'Divorciado(a)', 'Viúvo(a)'];
+    public const ORIGENS = ['Instagram', 'Indicação', 'Facebook', 'Google', 'WhatsApp', 'Passou na frente', 'Outro'];
 
     protected $casts = [
         'status'             => StatusPaciente::class,

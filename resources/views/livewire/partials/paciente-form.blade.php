@@ -40,6 +40,47 @@
         @error('email') <p class="field-error">{{ $message }}</p> @enderror
     </div>
 
+    <div>
+        <label for="paciente-sexo" class="label">Sexo</label>
+        <select id="paciente-sexo" wire:model="sexo" class="input">
+            <option value="">Não informado</option>
+            @foreach (array_unique([...\App\Models\Paciente::SEXOS, ...array_filter([$sexo])]) as $opcao)
+                <option value="{{ $opcao }}">{{ $opcao }}</option>
+            @endforeach
+        </select>
+    </div>
+
+    <div>
+        <label for="paciente-estado-civil" class="label">Estado civil</label>
+        <select id="paciente-estado-civil" wire:model="estadoCivil" class="input">
+            <option value="">Não informado</option>
+            @foreach (array_unique([...\App\Models\Paciente::ESTADOS_CIVIS, ...array_filter([$estadoCivil])]) as $opcao)
+                <option value="{{ $opcao }}">{{ $opcao }}</option>
+            @endforeach
+        </select>
+    </div>
+
+    <div>
+        <label for="paciente-profissao" class="label">Profissão</label>
+        <input id="paciente-profissao" wire:model="profissao" type="text" maxlength="100" placeholder="Ex.: Professora" class="input">
+    </div>
+
+    <div>
+        <label for="paciente-origem" class="label">Como conheceu a clínica</label>
+        <input id="paciente-origem" wire:model="origem" type="text" maxlength="50" list="origens-paciente" placeholder="Ex.: Instagram" class="input">
+        <datalist id="origens-paciente">
+            @foreach (\App\Models\Paciente::ORIGENS as $opcao)
+                <option value="{{ $opcao }}"></option>
+            @endforeach
+        </datalist>
+    </div>
+
+    <div class="sm:col-span-2">
+        <label for="paciente-endereco" class="label">Endereço</label>
+        <input id="paciente-endereco" wire:model="endereco" type="text" maxlength="255" autocomplete="street-address"
+               placeholder="Ex.: Rua 12, 300, apto 101, Águas Claras, Brasília/DF" class="input">
+    </div>
+
     {{-- Status --}}
     <div>
         <label for="paciente-status" class="label">Status <span class="text-rose-600">*</span></label>
