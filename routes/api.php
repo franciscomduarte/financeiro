@@ -19,6 +19,9 @@ use Illuminate\Support\Facades\Route;
 Route::post('/whatsapp/webhook', [WhatsAppWebhookController::class, 'handle'])
     ->name('whatsapp.webhook');
 
+Route::post('/webhooks/brevo/{token}', \App\Http\Controllers\BrevoWebhookController::class)
+    ->middleware('throttle:600,1')->name('webhook.brevo');
+
 Route::post('/webhook/asaas', [CobrancaController::class, 'webhook'])
     ->name('webhook.asaas');
 

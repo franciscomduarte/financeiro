@@ -87,16 +87,21 @@ class CobrancaController extends Controller
         ];
 
         if ($request->boolean('whatsapp') && $cobranca->paciente?->telefone) {
-            app(WhatsAppService::class)->enviarCobranca(
+            $whatsapp = app(WhatsAppService::class);
+            $ok = $whatsapp->enviarCobranca(
                 $cobranca->paciente->telefone,
                 $dados,
                 $cobranca->paciente->nome,
             );
+            app(\App\Services\NotificacaoService::class)->registrar(\App\Enums\TipoNotificacao::Cobranca, \App\Enums\CanalNotificacao::WhatsApp, $cobranca->paciente, (string) $cobranca->paciente->telefone, 'Cobrança (reenvio)',
+                'Cobrança de R$ ' . number_format((float) $cobranca->valor, 2, ',', '.') . ' com vencimento em ' . $dados['vencimento'], $ok, $cobranca, $whatsapp->ultimoIdMensagem);
         }
 
         if ($request->boolean('email') && $cobranca->paciente?->email) {
             Mail::to($cobranca->paciente->email)
                 ->send(new CobrancaMensalMail($cobranca->paciente, $dados));
+            app(\App\Services\NotificacaoService::class)->registrar(\App\Enums\TipoNotificacao::Cobranca, \App\Enums\CanalNotificacao::Email, $cobranca->paciente, (string) $cobranca->paciente->email, 'Cobrança (reenvio)',
+                'Cobrança de R$ ' . number_format((float) $cobranca->valor, 2, ',', '.') . ' com vencimento em ' . $dados['vencimento'], true, $cobranca);
         }
 
         return response()->json(['mensagem' => 'Cobrança reenviada com sucesso.']);

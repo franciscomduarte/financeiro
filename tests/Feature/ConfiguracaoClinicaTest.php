@@ -6,7 +6,10 @@ namespace Tests\Feature;
 
 use App\Actions\CreateTransacaoAction;
 use App\Livewire\ConfiguracaoClinica;
-use App\Mail\AgendamentoCriadoMail;
+use App\Actions\Notificacoes\MontarMensagemAgendamento;
+use App\Enums\TipoNotificacao;
+use App\Mail\NotificacaoMail;
+use App\Services\NotificacaoService;
 use App\Models\Agendamento;
 use App\Models\Clinica;
 use App\Models\Cobranca;
@@ -151,8 +154,11 @@ class ConfiguracaoClinicaTest extends TestCase
 
     public function test_email_ao_paciente_usa_a_identidade_da_clinica(): void
     {
-        $html = $this->naOutra(fn () => (new AgendamentoCriadoMail($this->agendamento()))->render());
-        $assunto = $this->naOutra(fn () => (new AgendamentoCriadoMail($this->agendamento()))->envelope()->subject);
+        $msg = $this->naOutra(fn () => app(MontarMensagemAgendamento::class)->montar(
+            $this->agendamento(), app(NotificacaoService::class)->configuracao(TipoNotificacao::AgendamentoConfirmado),
+        ));
+        $html    = $this->naOutra(fn () => (new NotificacaoMail('id', $msg['assunto'], $msg['texto']))->render());
+        $assunto = $msg['assunto'];
 
         $this->assertStringContainsString('Clínica Bem Estar — cuidando de você', $html);
         $this->assertStringContainsString('(61) 3333-4444', $html);

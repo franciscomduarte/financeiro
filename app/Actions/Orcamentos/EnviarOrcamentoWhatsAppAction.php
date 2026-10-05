@@ -27,9 +27,11 @@ class EnviarOrcamentoWhatsAppAction
             throw new RuntimeException('Cadastre o telefone do paciente para enviar por WhatsApp.');
         }
 
-        if (! $this->whatsApp->enviarTextoParaTelefone($telefone, self::mensagem($orcamento, $this->clinicaAtual->nome()))) {
+        $texto = self::mensagem($orcamento, $this->clinicaAtual->nome());
+        if (! $this->whatsApp->enviarTextoParaTelefone($telefone, $texto)) {
             throw new RuntimeException('O WhatsApp não respondeu. Confira a conexão nas configurações da clínica e tente de novo.');
         }
+        app(\App\Services\NotificacaoService::class)->registrar(\App\Enums\TipoNotificacao::Orcamento, \App\Enums\CanalNotificacao::WhatsApp, $orcamento->paciente, $telefone, 'Orçamento ' . $orcamento->codigo(), $texto, true, $orcamento, $this->whatsApp->ultimoIdMensagem);
 
         $orcamento->update(['enviado_em' => now()]);
     }

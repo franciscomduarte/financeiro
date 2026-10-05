@@ -13,6 +13,7 @@ use App\Livewire\RelacionamentoIndex;
 use App\Http\Controllers\PacienteExportacaoController;
 use App\Livewire\ComissaoIndex;
 use App\Livewire\NotaFiscalIndex;
+use App\Livewire\NotificacaoIndex;
 use App\Livewire\OrcamentoIndex;
 use App\Livewire\PacoteIndex;
 use App\Http\Controllers\ProntuarioArquivoController;
@@ -108,6 +109,7 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/orcamentos/{id}/pdf', OrcamentoPdfController::class)->name('orcamentos.pdf');
         Route::get('/pacotes', PacoteIndex::class)->name('pacotes.index');
     });
+    Route::get('/notificacoes', NotificacaoIndex::class)->name('notificacoes.index')->middleware('modulo:notificacoes');
     Route::get('/comissoes', ComissaoIndex::class)->name('comissoes.index')->middleware('modulo:relatorios');
     Route::middleware('modulo:lancamentos')->group(function (): void {
         Route::get('/transacoes', TransacaoIndex::class)->name('transacoes.index');

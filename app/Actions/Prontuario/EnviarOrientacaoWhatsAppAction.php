@@ -31,6 +31,7 @@ class EnviarOrientacaoWhatsAppAction
         if (! $this->whatsApp->enviarTextoParaTelefone($paciente->telefone, $mensagem)) {
             throw new RuntimeException('O WhatsApp não respondeu. Confira a conexão nas configurações da clínica e tente de novo.');
         }
+        app(\App\Services\NotificacaoService::class)->registrar(\App\Enums\TipoNotificacao::Orientacao, \App\Enums\CanalNotificacao::WhatsApp, $paciente, (string) $paciente->telefone, (string) $orientacao->titulo, $mensagem, true, $orientacao, $this->whatsApp->ultimoIdMensagem);
 
         $orientacao->update(['enviada_whatsapp_em' => now()]);
     }

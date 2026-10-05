@@ -56,6 +56,7 @@ class EnviarPesquisaAction
             if (! $this->whatsApp->enviarTextoParaTelefone($telefone, $mensagem)) {
                 throw new RuntimeException('O WhatsApp não respondeu. Confira a conexão nas configurações da clínica e tente de novo.');
             }
+            app(\App\Services\NotificacaoService::class)->registrar(\App\Enums\TipoNotificacao::Pesquisa, \App\Enums\CanalNotificacao::WhatsApp, $agendamento->paciente, $telefone, 'Pesquisa de satisfação', $mensagem, true, $pesquisa, $this->whatsApp->ultimoIdMensagem);
 
             return $pesquisa;
         });

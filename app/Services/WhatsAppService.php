@@ -15,6 +15,9 @@ class WhatsAppService
 {
     private string $baseUrl;
 
+    /** Id da última mensagem aceita pela Evolution (para acompanhar entrega e leitura). */
+    public ?string $ultimoIdMensagem = null;
+
     /** Servidor Evolution é único; instância e chave são de cada clínica. */
     public function __construct(private readonly ClinicaAtual $clinicaAtual)
     {
@@ -251,15 +254,23 @@ class WhatsAppService
     /** POST na instância da clínica ativa, com 2 novas tentativas em erro de conexão/5xx. Null = sem credenciais. */
     private function enviar(string $acao, array $payload): ?Response
     {
+        $this->ultimoIdMensagem = null;
         $credenciais = $this->credenciais();
         if ($credenciais === null) {
             return null;
         }
         [$instancia, $chave] = $credenciais;
 
-        return Http::withHeaders(['apikey' => $chave])
+        $resposta = Http::withHeaders(['apikey' => $chave])
             ->retry(3, 500, fn ($e) => ! $e instanceof RequestException || $e->response->serverError(), throw: false)
             ->post("{$this->baseUrl}/message/{$acao}/" . rawurlencode($instancia), $payload);
+
+        if ($resposta->successful()) {
+            $id = $resposta->json('key.id');
+            $this->ultimoIdMensagem = is_string($id) && $id !== '' ? $id : null;
+        }
+
+        return $resposta;
     }
 
     private function formatarTelefone(string $telefone): string

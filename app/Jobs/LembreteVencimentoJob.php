@@ -31,12 +31,15 @@ class LembreteVencimentoJob implements ShouldQueue
                 continue;
             }
 
-            $whatsapp->enviarLembrete(
+            $vencimento = Carbon::parse($cobranca->vencimento)->format('d/m/Y');
+            $ok = $whatsapp->enviarLembrete(
                 telefone: $cobranca->paciente->telefone,
                 nomePaciente: $cobranca->paciente->nome,
                 valor: (float) $cobranca->valor,
-                vencimento: Carbon::parse($cobranca->vencimento)->format('d/m/Y'),
+                vencimento: $vencimento,
             );
+            app(\App\Services\NotificacaoService::class)->registrar(\App\Enums\TipoNotificacao::LembretePagamento, \App\Enums\CanalNotificacao::WhatsApp, $cobranca->paciente, (string) $cobranca->paciente->telefone, 'Lembrete de pagamento',
+                'Cobrança de R$ ' . number_format((float) $cobranca->valor, 2, ',', '.') . ' com vencimento em ' . $vencimento, $ok, $cobranca, $whatsapp->ultimoIdMensagem);
         }
     }
 }

@@ -45,6 +45,8 @@ class EnviarAnexoAction
                 Log::error("EnviarAnexo: falha no email", ['anexo' => $anexo->id, 'error' => $e->getMessage()]);
                 $resultado['email'] = false;
             }
+            app(\App\Services\NotificacaoService::class)->registrar(\App\Enums\TipoNotificacao::Documento, \App\Enums\CanalNotificacao::Email, $paciente, (string) $paciente->email, 'Documento: ' . $anexo->nome_arquivo,
+                'Arquivo enviado: ' . $anexo->nome_arquivo, (bool) $resultado['email'], $anexo);
         }
 
         if ($viaWhatsapp && $paciente->telefone) {
@@ -62,6 +64,8 @@ class EnviarAnexoAction
                 );
 
                 $resultado['whatsapp'] = $ok;
+                app(\App\Services\NotificacaoService::class)->registrar(\App\Enums\TipoNotificacao::Documento, \App\Enums\CanalNotificacao::WhatsApp, $paciente, (string) $paciente->telefone, 'Documento: ' . $anexo->nome_arquivo,
+                    $caption, $ok, $anexo, $this->whatsapp->ultimoIdMensagem);
                 if (! $ok) {
                     Log::warning("EnviarAnexo: WhatsApp retornou erro", ['anexo' => $anexo->id]);
                 }
