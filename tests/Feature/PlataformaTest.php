@@ -158,7 +158,7 @@ class PlataformaTest extends TestCase
     {
         app(ClinicaAtual::class)->executarComo($this->outra, fn () => Paciente::create(['nome' => 'Paciente da Bem Estar']));
 
-        $this->actingAs($this->dono)->post(route('plataforma.suporte.entrar', $this->outra->id))->assertRedirect(route('dashboard'));
+        $this->actingAs($this->dono)->post(route('plataforma.suporte.entrar', $this->outra->id))->assertRedirect(route('inicio'));
         $this->assertTrue(ClinicaEvento::where('acao', 'suporte_entrada')->where('clinica_id', $this->outra->id)->exists());
 
         $this->get('/pacientes')->assertOk()->assertSee('Paciente da Bem Estar')->assertSee('Modo suporte');

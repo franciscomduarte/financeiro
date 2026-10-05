@@ -11,7 +11,7 @@ return [
         'agendamentos', 'bloqueios_agenda', 'cobrancas', 'conta_consumo_faturas', 'contas_consumo',
         'contrato_pagamentos', 'contratos', 'contratos_reajustes', 'documento_categorias', 'documento_versoes',
         'documentos', 'fornecedores', 'grade_horarios', 'obrigacao_fiscal_lancamentos', 'obrigacoes_fiscais',
-        'pacientes', 'parcelamentos', 'procedimentos', 'profissionais', 'recorrencias', 'stock_batches', 'stock_categories',
+        'paciente_acessos', 'pacientes', 'parcelamentos', 'procedimentos', 'profissionais', 'recorrencias', 'stock_batches', 'stock_categories',
         'stock_movements', 'stock_products', 'taxas_cartao', 'transacao_anexos', 'transacoes',
     ],
 

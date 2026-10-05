@@ -150,12 +150,12 @@ class MulticlinicaIsolamentoTest extends TestCase
     public function test_usuario_com_duas_clinicas_escolhe_e_troca(): void
     {
         $user = User::factory()->create();
-        $user->clinicas()->attach($this->outra->id, ['papel' => 'user']);
+        $user->clinicas()->attach($this->outra->id, ['papel' => 'financeiro']);
         $this->naOutra(fn () => $this->transacao('Lançamento da outra'));
 
         $this->actingAs($user)->get('/dashboard')->assertRedirect(route('clinicas.escolher'));
 
-        $this->actingAs($user)->post(route('clinicas.ativar', $this->outra->id))->assertRedirect(route('dashboard'));
+        $this->actingAs($user)->post(route('clinicas.ativar', $this->outra->id))->assertRedirect(route('inicio'));
         $this->actingAs($user)->get('/transacoes')->assertOk()->assertSee('Lançamento da outra');
     }
 
@@ -184,7 +184,7 @@ class MulticlinicaIsolamentoTest extends TestCase
 
     public function test_papel_de_admin_e_por_clinica(): void
     {
-        $user = User::factory()->create(['role' => 'user']);
+        $user = User::factory()->create(['role' => 'recepcao']);
         $user->clinicas()->attach($this->outra->id, ['papel' => 'admin']);
 
         $this->assertFalse($user->isAdmin());
@@ -210,14 +210,14 @@ class MulticlinicaIsolamentoTest extends TestCase
     {
         $admin = User::factory()->create(['role' => 'admin']);
         $dela  = User::factory()->semClinica()->create(['email' => 'contadora@exemplo.com']);
-        $dela->clinicas()->attach($this->outra->id, ['papel' => 'user']);
+        $dela->clinicas()->attach($this->outra->id, ['papel' => 'recepcao']);
 
         $this->actingAs($admin);
         Livewire::test(AdminUsuarioIndex::class)
             ->set('nome', 'Contadora')
             ->set('email', 'contadora@exemplo.com')
             ->set('senha', 'outra-senha-123')
-            ->set('role', 'user')
+            ->set('role', 'recepcao')
             ->call('salvarUsuario')
             ->assertHasNoErrors();
 

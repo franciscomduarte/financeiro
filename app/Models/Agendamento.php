@@ -17,6 +17,12 @@ class Agendamento extends Model
 {
     use BelongsToClinica, HasUuids;
 
+    protected static function booted(): void
+    {
+        // Perfil Profissional: só a própria agenda e os próprios pacientes
+        static::addGlobalScope(new \App\Models\Scopes\ProfissionalScope());
+    }
+
     protected $table = 'agendamentos';
 
     protected $fillable = [

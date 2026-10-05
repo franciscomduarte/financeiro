@@ -18,7 +18,7 @@ class VerificacaoEmailController extends Controller
     public function aviso(Request $request): View|RedirectResponse
     {
         return $request->user()->hasVerifiedEmail()
-            ? redirect()->route('dashboard')
+            ? redirect()->route('inicio')
             : view('auth.confirmar-email');
     }
 
@@ -34,6 +34,6 @@ class VerificacaoEmailController extends Controller
         $user = User::findOrFail($id);
         abort_unless($verificacao->confirmar($user, $hash), 403, 'Link de confirmação inválido.');
 
-        return redirect()->route(Auth::check() ? 'dashboard' : 'login')->with('success', 'E-mail confirmado. Obrigado!');
+        return redirect()->route(Auth::check() ? 'inicio' : 'login')->with('success', 'E-mail confirmado. Obrigado!');
     }
 }

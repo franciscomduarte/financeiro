@@ -16,7 +16,7 @@
         @if ($whatsapp)
             <a class="btn" href="{{ $whatsapp }}">Quero assinar</a>
         @else
-            <a class="btn" href="{{ route('dashboard') }}">Abrir o sistema</a>
+            <a class="btn" href="{{ route('inicio') }}">Abrir o sistema</a>
         @endif
     </div>
     @if ($email = \App\Support\Plataforma::email())

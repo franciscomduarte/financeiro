@@ -164,7 +164,7 @@ class ConfiguracaoClinicaTest extends TestCase
 
     public function test_so_admin_acessa_as_configuracoes(): void
     {
-        $this->actingAs(User::factory()->create(['role' => 'user']))->get('/admin/clinica')->assertForbidden();
+        $this->actingAs(User::factory()->create(['role' => 'recepcao']))->get('/admin/clinica')->assertRedirect(route('agenda.index'));
         $this->actingAs(User::factory()->create(['role' => 'admin']))->get('/admin/clinica')->assertOk()->assertSee('Dados da clínica');
     }
 

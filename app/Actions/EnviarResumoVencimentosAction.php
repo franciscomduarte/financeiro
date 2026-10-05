@@ -96,7 +96,7 @@ class EnviarResumoVencimentosAction
         }
 
         $linhas[] = '';
-        $linhas[] = 'Detalhes no sistema: ' . route('dashboard');
+        $linhas[] = 'Detalhes no sistema: ' . route('inicio');
 
         return implode("\n", $linhas);
     }

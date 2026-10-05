@@ -7,6 +7,7 @@ use App\Http\Controllers\CadastroController;
 use App\Http\Controllers\ClinicaController;
 use App\Http\Controllers\DocumentoDownloadController;
 use App\Http\Controllers\EsqueciSenhaController;
+use App\Http\Controllers\PacienteExportacaoController;
 use App\Http\Controllers\SuporteClinicaController;
 use App\Http\Controllers\VerificacaoEmailController;
 use App\Http\Controllers\VozTransacaoController;
@@ -34,7 +35,7 @@ use App\Livewire\TransacaoIndex;
 use Illuminate\Support\Facades\Route;
 
 // Página do produto (visitante) ou sistema (logado)
-Route::get('/', fn () => auth()->check() ? redirect()->route('dashboard') : view('welcome'))->name('home');
+Route::get('/', fn () => auth()->check() ? redirect()->route('inicio') : view('welcome'))->name('home');
 
 // ─── "Assine já": autocadastro com teste grátis ─────────────────
 Route::get('/assine', [CadastroController::class, 'create'])->name('cadastro');
@@ -65,19 +66,35 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/clinicas/escolher', [ClinicaController::class, 'escolher'])->name('clinicas.escolher');
     Route::post('/clinicas/{clinica}/ativar', [ClinicaController::class, 'ativar'])->name('clinicas.ativar');
 
-    Route::get('/dashboard', DashboardIndex::class)->name('dashboard');
-    Route::get('/relatorio', RelatorioIndex::class)->name('web.relatorio');
-    Route::get('/pacientes', PacienteIndex::class)->name('pacientes.index');
-    Route::get('/cobrancas', CobrancaIndex::class)->name('cobrancas.index');
-    Route::get('/transacoes', TransacaoIndex::class)->name('transacoes.index');
-    Route::get('/transacoes/recorrencias', RecorrenciaIndex::class)->name('transacoes.recorrencias');
-    Route::get('/taxas-cartao', TaxasCartaoIndex::class)->name('taxas-cartao.index');
-    Route::get('/fornecedores', FornecedorIndex::class)->name('web.fornecedores');
-    Route::get('/contratos', ContratoIndex::class)->name('web.contratos');
-    Route::get('/contas-consumo', ContaConsumoIndex::class)->name('web.contas-consumo');
-    Route::get('/obrigacoes-fiscais', ObrigacaoFiscalIndex::class)->name('web.obrigacoes-fiscais');
+    // Tela inicial conforme o perfil (admin/financeiro: Início; recepção/profissional: Agenda)
+    Route::get('/inicio', fn () => redirect()->route(auth()->user()->paginaInicial()))->name('inicio');
 
-    Route::post('/voz/transacao', [VozTransacaoController::class, 'processar'])->name('voz.transacao');
+    // Cada área só abre para os perfis com acesso (RoleUsuario::modulos())
+    Route::get('/dashboard', DashboardIndex::class)->name('dashboard')->middleware('modulo:inicio');
+    Route::get('/relatorio', RelatorioIndex::class)->name('web.relatorio')->middleware('modulo:relatorios');
+    Route::middleware('modulo:pacientes')->group(function (): void {
+        Route::get('/pacientes', PacienteIndex::class)->name('pacientes.index');
+        Route::get('/pacientes/{id}/exportar', PacienteExportacaoController::class)->name('pacientes.exportar');
+    });
+    Route::get('/cobrancas', CobrancaIndex::class)->name('cobrancas.index')->middleware('modulo:cobrancas');
+    Route::middleware('modulo:lancamentos')->group(function (): void {
+        Route::get('/transacoes', TransacaoIndex::class)->name('transacoes.index');
+        Route::get('/transacoes/recorrencias', RecorrenciaIndex::class)->name('transacoes.recorrencias');
+        Route::post('/voz/transacao', [VozTransacaoController::class, 'processar'])->name('voz.transacao');
+    });
+    Route::get('/taxas-cartao', TaxasCartaoIndex::class)->name('taxas-cartao.index')->middleware('modulo:taxas');
+    Route::middleware('modulo:administrativo')->group(function (): void {
+        Route::get('/fornecedores', FornecedorIndex::class)->name('web.fornecedores');
+        Route::get('/contratos', ContratoIndex::class)->name('web.contratos');
+        Route::get('/contas-consumo', ContaConsumoIndex::class)->name('web.contas-consumo');
+        Route::get('/obrigacoes-fiscais', ObrigacaoFiscalIndex::class)->name('web.obrigacoes-fiscais');
+        Route::get('/documentos', DocumentoIndex::class)->name('web.documentos');
+        Route::get('/documentos/{id}/download', [DocumentoDownloadController::class, 'download'])->name('documentos.download');
+        Route::get('/documentos/versao/{id}/download', [DocumentoDownloadController::class, 'downloadVersao'])->name('documentos.versao.download');
+        Route::get('/faturas/{id}/arquivo', [ArquivoDownloadController::class, 'downloadFatura'])->name('faturas.arquivo.download');
+        Route::get('/lancamentos-fiscais/{id}/arquivo', [ArquivoDownloadController::class, 'downloadGuiaFiscal'])->name('lancamentos-fiscais.arquivo.download');
+        Route::get('/contratos/{id}/arquivo', [ArquivoDownloadController::class, 'downloadContrato'])->name('contratos.arquivo.download');
+    });
 
     Route::get('/minha-conta', MinhaConta::class)->name('minha-conta');
 
@@ -88,26 +105,24 @@ Route::middleware('auth')->group(function (): void {
         Route::post('/suporte/{clinica}', [SuporteClinicaController::class, 'entrar'])->name('suporte.entrar');
     });
 
-    Route::middleware('admin')->prefix('admin')->group(function (): void {
-        Route::get('/usuarios', AdminUsuarioIndex::class)->name('admin.usuarios');
-        Route::get('/clinica', ConfiguracaoClinica::class)->name('admin.clinica');
+    Route::prefix('admin')->group(function (): void {
+        Route::get('/usuarios', AdminUsuarioIndex::class)->name('admin.usuarios')->middleware('modulo:usuarios');
+        Route::get('/clinica', ConfiguracaoClinica::class)->name('admin.clinica')->middleware('modulo:dados_clinica');
     });
 
-    Route::get('/documentos', DocumentoIndex::class)->name('web.documentos');
-    Route::get('/documentos/{id}/download', [DocumentoDownloadController::class, 'download'])->name('documentos.download');
-    Route::get('/documentos/versao/{id}/download', [DocumentoDownloadController::class, 'downloadVersao'])->name('documentos.versao.download');
 
-    Route::get('/agenda', AgendamentoIndex::class)->name('agenda.index');
-    Route::get('/agenda/configuracao', AgendamentoConfiguracaoIndex::class)->name('agenda.configuracao');
-    Route::get('/agenda/google/auth/{profissional}', [GoogleCalendarController::class, 'authorize'])->name('agenda.google.auth');
-    Route::get('/auth/google/callback', [GoogleCalendarController::class, 'callback'])->name('agenda.google.callback');
-    Route::post('/agenda/google/desconectar/{profissional}', [GoogleCalendarController::class, 'desconectar'])->name('agenda.google.desconectar');
+    Route::get('/agenda', AgendamentoIndex::class)->name('agenda.index')->middleware('modulo:agenda');
+    Route::middleware('modulo:configuracao_agenda')->group(function (): void {
+        Route::get('/agenda/configuracao', AgendamentoConfiguracaoIndex::class)->name('agenda.configuracao');
+        Route::get('/agenda/google/auth/{profissional}', [GoogleCalendarController::class, 'authorize'])->name('agenda.google.auth');
+        Route::get('/auth/google/callback', [GoogleCalendarController::class, 'callback'])->name('agenda.google.callback');
+        Route::post('/agenda/google/desconectar/{profissional}', [GoogleCalendarController::class, 'desconectar'])->name('agenda.google.desconectar');
+    });
 
-    Route::get('/estoque', EstoqueIndex::class)->name('estoque.index');
-    Route::get('/estoque/produtos', EstoqueProdutoIndex::class)->name('estoque.produtos');
-    Route::get('/estoque/movimentacoes', EstoqueMovimentacaoIndex::class)->name('estoque.movimentacoes');
+    Route::middleware('modulo:estoque')->group(function (): void {
+        Route::get('/estoque', EstoqueIndex::class)->name('estoque.index');
+        Route::get('/estoque/produtos', EstoqueProdutoIndex::class)->name('estoque.produtos');
+        Route::get('/estoque/movimentacoes', EstoqueMovimentacaoIndex::class)->name('estoque.movimentacoes');
+    });
 
-    Route::get('/faturas/{id}/arquivo', [ArquivoDownloadController::class, 'downloadFatura'])->name('faturas.arquivo.download');
-    Route::get('/lancamentos-fiscais/{id}/arquivo', [ArquivoDownloadController::class, 'downloadGuiaFiscal'])->name('lancamentos-fiscais.arquivo.download');
-    Route::get('/contratos/{id}/arquivo', [ArquivoDownloadController::class, 'downloadContrato'])->name('contratos.arquivo.download');
 });

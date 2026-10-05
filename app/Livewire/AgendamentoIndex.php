@@ -89,8 +89,15 @@ class AgendamentoIndex extends Component
     public ?string $detalheId    = null;
 
     // ─── Boot ─────────────────────────────────────────────────────
+    /** Perfil Profissional: a agenda fica presa ao próprio profissional. */
+    private function profissionalFixo(): ?string
+    {
+        return app(\App\Support\EscopoProfissional::class)->profissionalId();
+    }
+
     public function mount(): void
     {
+        $this->filtroProfissionalId = $this->profissionalFixo() ?? $this->filtroProfissionalId;
         if (empty($this->filtroData)) {
             $this->filtroData = now()->toDateString();
         }
@@ -108,7 +115,9 @@ class AgendamentoIndex extends Component
     #[Computed]
     public function profissionais(): Collection
     {
-        return Profissional::where('ativo', true)->orderBy('nome')->get(['id', 'nome', 'cor_agenda']);
+        return Profissional::where('ativo', true)
+            ->when($this->profissionalFixo(), fn ($q, string $id) => $q->whereKey($id))
+            ->orderBy('nome')->get(['id', 'nome', 'cor_agenda']);
     }
 
     #[Computed]
@@ -253,6 +262,7 @@ class AgendamentoIndex extends Component
 
     public function salvarAgendamento(AgendamentoService $service): void
     {
+        $this->criarProfissionalId = $this->profissionalFixo() ?? $this->criarProfissionalId;
         Log::info('[AgendamentoIndex] salvarAgendamento chamado', [
             'pacienteId'       => $this->criarPacienteId,
             'profissionalId'   => $this->criarProfissionalId,
@@ -627,6 +637,7 @@ class AgendamentoIndex extends Component
     // ─── Render ───────────────────────────────────────────────────
     public function render(): View
     {
+        $this->filtroProfissionalId = $this->profissionalFixo() ?? $this->filtroProfissionalId;
         $visao = $this->visaoAtual();
 
         if ($visao->isCalendario()) {

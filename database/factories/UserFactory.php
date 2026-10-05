@@ -34,13 +34,13 @@ class UserFactory extends Factory
         ];
     }
 
-    /** Vincula o usuário à clínica ativa (se houver), com o papel do campo role. */
+    /** Vincula o usuário à clínica ativa (se houver), com o papel do campo role (sem role: administrador). */
     public function configure(): static
     {
         return $this->afterCreating(function (User $user): void {
             $clinica = app(ClinicaAtual::class)->get();
             if ($clinica && ! $user->clinicas()->whereKey($clinica->id)->exists()) {
-                $user->clinicas()->attach($clinica->id, ['papel' => $user->role?->value ?? 'user']);
+                $user->clinicas()->attach($clinica->id, ['papel' => $user->getRawOriginal('role') ? $user->role->value : 'admin']);
             }
         });
     }

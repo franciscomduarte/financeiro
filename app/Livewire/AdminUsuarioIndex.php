@@ -35,8 +35,10 @@ class AdminUsuarioIndex extends Component
     public string $nome  = '';
     public string $email = '';
     public string $senha = '';
-    public string $role  = 'user';
+    public string $role  = 'recepcao';
     public bool   $ativo = true;
+    /** Perfil profissional: qual cadastro da agenda é esta pessoa */
+    public string $profissionalId = '';
 
     public ?string $flashSucesso = null;
     public ?string $flashErro    = null;
@@ -80,10 +82,11 @@ class AdminUsuarioIndex extends Component
         $this->email = $user->email;
         $this->role  = $user->pivot->papel;
         $this->ativo = $user->active;
+        $this->profissionalId = (string) \App\Models\Profissional::query()->where('user_id', $user->id)->value('id');
         $this->modalUsuario = true;
     }
 
-    public function salvarUsuario(CreateUsuarioAction $criar, UpdateUsuarioAction $atualizar): void
+    public function salvarUsuario(CreateUsuarioAction $criar, UpdateUsuarioAction $atualizar, \App\Actions\VincularProfissionalAction $vincular): void
     {
         $this->validate($this->rules());
         try {
@@ -92,6 +95,7 @@ class AdminUsuarioIndex extends Component
                     'name'  => $this->nome,
                     'email' => $this->email,
                 ], $this->clinica(), RoleUsuario::from($this->role));
+                $vincular->execute((int) $this->usuarioEditandoId, $this->role === RoleUsuario::Profissional->value ? $this->profissionalId : null);
                 $this->flashSucesso = 'Usuário salvo.';
             } else {
                 $resultado = $criar->execute([
@@ -100,6 +104,7 @@ class AdminUsuarioIndex extends Component
                     'password' => $this->senha,
                     'active'   => true,
                 ], $this->clinica(), RoleUsuario::from($this->role));
+                $vincular->execute($resultado['user']->id, $this->role === RoleUsuario::Profissional->value ? $this->profissionalId : null);
                 $this->flashSucesso = $resultado['existente']
                     ? 'Esse e-mail já tinha conta em outra clínica. Liberamos o acesso a esta, e a senha continua a mesma.'
                     : 'Usuário criado.';
@@ -208,7 +213,8 @@ class AdminUsuarioIndex extends Component
         $rules = [
             'nome'  => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', $emailRule],
-            'role'  => ['required', Rule::in(['admin', 'user'])],
+            'role'  => ['required', Rule::enum(RoleUsuario::class)],
+            'profissionalId' => [Rule::requiredIf($this->role === RoleUsuario::Profissional->value), 'nullable', 'uuid', 'exists:profissionais,id'],
             'ativo' => ['boolean'],
         ];
 
@@ -225,7 +231,8 @@ class AdminUsuarioIndex extends Component
         $this->nome              = '';
         $this->email             = '';
         $this->senha             = '';
-        $this->role              = 'user';
+        $this->role              = RoleUsuario::Recepcao->value;
+        $this->profissionalId    = '';
         $this->ativo             = true;
     }
 
@@ -250,6 +257,7 @@ class AdminUsuarioIndex extends Component
             'totalAdmins'   => $base()->wherePivot('papel', RoleUsuario::Admin->value)->count(),
             'totalInativos' => $base()->where('users.active', false)->count(),
             'roleOpcoes'    => RoleUsuario::cases(),
+            'profissionais' => \App\Models\Profissional::query()->select(['id', 'nome'])->where('ativo', true)->orderBy('nome')->limit(200)->get(),
         ])->layout('layouts.app', ['title' => 'Usuários']);
     }
 }

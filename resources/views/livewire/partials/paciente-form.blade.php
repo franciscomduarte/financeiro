@@ -52,6 +52,7 @@
     </div>
 
     {{-- Separador: cobrança --}}
+    @if ($veFinanceiro)
     <div class="sm:col-span-2 border-t border-stone-100 pt-4">
         <h3 class="text-sm font-semibold text-stone-900">Cobrança mensal</h3>
         <p class="mt-0.5 text-xs text-stone-500">Preencha se o paciente paga mensalidade. Deixe o valor em branco se não pagar.</p>
@@ -77,6 +78,7 @@
         </select>
         @error('formaPagamento') <p class="field-error">{{ $message }}</p> @enderror
     </div>
+    @endif
 
     {{-- Foto --}}
     <div class="sm:col-span-2 border-t border-stone-100 pt-4">
@@ -88,7 +90,8 @@
         @error('foto') <p class="field-error">{{ $message }}</p> @enderror
     </div>
 
-    {{-- Anamnese --}}
+    {{-- Anamnese (só perfis com acesso a dados clínicos) --}}
+    @if ($veDadosClinicos)
     <div class="sm:col-span-2">
         <label for="paciente-anamnese" class="label">Anamnese e notas clínicas</label>
         <textarea id="paciente-anamnese" wire:model="anamnese" rows="4"
@@ -96,6 +99,7 @@
                   class="input resize-none @error('anamnese') !border-red-300 @enderror"></textarea>
         @error('anamnese') <p class="field-error">{{ $message }}</p> @enderror
     </div>
+    @endif
 
     {{-- Observações --}}
     <div class="sm:col-span-2">
@@ -106,4 +110,22 @@
         @error('observacoes') <p class="field-error">{{ $message }}</p> @enderror
     </div>
 
+
+    {{-- Privacidade (LGPD) --}}
+    <div class="sm:col-span-2 border-t border-stone-100 pt-4 space-y-2">
+        <h3 class="text-sm font-semibold text-stone-900">Privacidade (LGPD)</h3>
+        <label class="flex min-h-[44px] items-start gap-3 cursor-pointer">
+            <input type="checkbox" wire:model="consentimento" class="mt-1 w-4 h-4 rounded border-stone-300 text-rose-600 focus:ring-rose-300">
+            <span class="text-sm text-stone-700">O paciente autorizou o uso dos dados para o atendimento
+                <span class="block text-xs text-stone-500">Guardamos a data e quem registrou.</span></span>
+        </label>
+        <label class="flex min-h-[44px] items-start gap-3 cursor-pointer">
+            <input type="checkbox" wire:model="aceitaWhatsappMarketing" class="mt-1 w-4 h-4 rounded border-stone-300 text-rose-600 focus:ring-rose-300">
+            <span class="text-sm text-stone-700">Aceita receber novidades e promoções por WhatsApp</span>
+        </label>
+        <label class="flex min-h-[44px] items-start gap-3 cursor-pointer">
+            <input type="checkbox" wire:model="aceitaEmailMarketing" class="mt-1 w-4 h-4 rounded border-stone-300 text-rose-600 focus:ring-rose-300">
+            <span class="text-sm text-stone-700">Aceita receber novidades e promoções por e-mail</span>
+        </label>
+    </div>
 </div>

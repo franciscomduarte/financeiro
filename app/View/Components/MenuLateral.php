@@ -40,6 +40,30 @@ class MenuLateral extends Component
         'plataforma' => 'M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21',
     ];
 
+    /** Módulo exigido por cada rota do menu (itens sem acesso não aparecem). */
+    private const MODULO_DA_ROTA = [
+        'dashboard'             => 'inicio',
+        'agenda.index'          => 'agenda',
+        'pacientes.index'       => 'pacientes',
+        'cobrancas.index'       => 'cobrancas',
+        'transacoes.index'      => 'lancamentos',
+        'web.relatorio'         => 'relatorios',
+        'taxas-cartao.index'    => 'taxas',
+        'estoque.index'         => 'estoque',
+        'estoque.produtos'      => 'estoque',
+        'estoque.movimentacoes' => 'estoque',
+        'web.fornecedores'      => 'administrativo',
+        'web.contratos'         => 'administrativo',
+        'web.contas-consumo'    => 'administrativo',
+        'web.obrigacoes-fiscais' => 'administrativo',
+        'web.documentos'        => 'administrativo',
+        'agenda.configuracao'   => 'configuracao_agenda',
+        'admin.clinica'         => 'dados_clinica',
+        'admin.usuarios'        => 'usuarios',
+    ];
+
+    private ?\App\Models\User $usuario = null;
+
     public ?Clinica $clinica;
     public bool $suporte;
     /** @var array<int, array{rotulo: string, rota: string, ativo: bool, icone: string}> */
@@ -58,7 +82,7 @@ class MenuLateral extends Component
             ? $user->clinicas()->select(['clinicas.id', 'clinicas.nome'])->where('clinicas.id', '!=', $this->clinica?->id)->limit(20)->get()
             : collect();
 
-        $admin         = (bool) $user?->isAdmin();
+        $this->usuario = $user;
         $this->suporte = $clinicaAtual->emSuporte();
         $temClinica    = $this->clinica !== null;
         if ($this->suporte) {
@@ -66,7 +90,7 @@ class MenuLateral extends Component
         }
 
         // Navegação do dia a dia (grupos recolhíveis); configurações e conta ficam no menu do usuário
-        $this->grupos = ! $temClinica ? [] : array_values(array_filter([
+        $this->grupos = ! $temClinica ? [] : array_values(array_filter(array_map(fn (array $g) => $g['itens'] ? $g : null, [
             $this->grupo(null, [
                 ['Início', 'dashboard', 'dashboard', 'inicio'],
             ]),
@@ -92,13 +116,13 @@ class MenuLateral extends Component
                 ['Obrigações fiscais', 'web.obrigacoes-fiscais', 'web.obrigacoes-fiscais', 'fiscal'],
                 ['Documentos', 'web.documentos', 'web.documentos', 'documentos'],
             ]),
-        ]));
+        ])));
 
         $this->menuUsuario = $this->itens(array_filter([
             $temClinica && ! $this->suporte ? ['Minha conta', 'minha-conta', 'minha-conta', 'conta'] : null,
             $temClinica ? ['Profissionais e horários', 'agenda.configuracao', 'agenda.configuracao', 'horarios'] : null,
-            $admin ? ['Dados da clínica', 'admin.clinica', 'admin.clinica', 'clinica'] : null,
-            $admin ? ['Usuários', 'admin.usuarios', 'admin.usuarios', 'usuarios'] : null,
+            $temClinica ? ['Dados da clínica', 'admin.clinica', 'admin.clinica', 'clinica'] : null,
+            $temClinica ? ['Usuários', 'admin.usuarios', 'admin.usuarios', 'usuarios'] : null,
             $user?->is_super_admin ? ['Painel da plataforma', 'plataforma.index', 'plataforma.*', 'plataforma'] : null,
         ]));
 
@@ -124,6 +148,13 @@ class MenuLateral extends Component
     /** @param  array<int, array{0: string, 1: string, 2: string, 3: string}>  $itens */
     private function itens(array $itens): array
     {
+        // Só o que o perfil acessa (rotas fora do mapa, como a do painel da plataforma, não são filtradas)
+        $itens = array_filter($itens, function (array $i): bool {
+            $modulo = self::MODULO_DA_ROTA[$i[1]] ?? null;
+
+            return $modulo === null || (bool) $this->usuario?->pode(\App\Enums\Modulo::from($modulo));
+        });
+
         return array_map(fn (array $i) => [
             'rotulo' => $i[0],
             'rota'   => $i[1],

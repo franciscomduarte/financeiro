@@ -135,7 +135,7 @@ class AlertasVencimentoTest extends TestCase
         Mail::fake();
         Http::fake(['*' => Http::response(['ok' => true])]);
         User::factory()->create(['email' => 'gestora@clinica.com', 'role' => 'admin', 'active' => true]);
-        User::factory()->create(['email' => 'recepcao@clinica.com', 'role' => 'user', 'active' => true]);
+        User::factory()->create(['email' => 'recepcao@clinica.com', 'role' => 'recepcao', 'active' => true]);
         $this->despesa('Aluguel', '2026-10-11');
 
         $r = app(EnviarResumoVencimentosAction::class)->execute($this->hoje);
