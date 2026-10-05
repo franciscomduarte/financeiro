@@ -586,7 +586,11 @@ class TransacaoIndex extends Component
             return null;
         }
 
-        return Transacao::with(['anexos', 'paciente:id,nome,email,telefone'])->find($this->transacaoDetalheId);
+        return Transacao::with([
+            'anexos',
+            'paciente:id,nome,email,telefone',
+            'notasFiscais' => fn ($q) => $q->select(['id', 'transacao_id', 'status', 'numero', 'url', 'homologacao', 'created_at'])->latest()->limit(5),
+        ])->find($this->transacaoDetalheId);
     }
 
     // ─── Render ──────────────────────────────────────────────────

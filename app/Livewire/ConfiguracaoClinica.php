@@ -47,6 +47,17 @@ class ConfiguracaoClinica extends Component
     // ─── Financeiro ───────────────────────────────────────────────
     public string $aliquotaImposto = '6.00';
 
+    // ─── Nota fiscal (NFS-e pela Focus NFe) ─────────────────────
+    public string $nfseToken             = '';
+    public bool   $nfseHomologacao       = true;
+    public string $inscricaoMunicipal    = '';
+    public string $codigoMunicipio       = '';
+    public string $nfseItemListaServico  = '';
+    public string $nfseCodigoTributario  = '';
+    public string $nfseAliquotaIss       = '';
+    public bool   $nfseOptanteSimples    = true;
+    public string $nfseDiscriminacao     = '';
+
     public ?string $flashSucesso = null;
     public ?string $flashErro    = null;
 
@@ -64,6 +75,14 @@ class ConfiguracaoClinica extends Component
         $this->whatsappNumero    = (string) $c->whatsapp_numero;
         $this->evolutionInstance = (string) $c->evolution_instance;
         $this->asaasSandbox      = (bool) $c->asaas_sandbox;
+        $this->nfseHomologacao      = (bool) $c->nfse_homologacao;
+        $this->inscricaoMunicipal   = (string) $c->inscricao_municipal;
+        $this->codigoMunicipio      = (string) $c->codigo_municipio;
+        $this->nfseItemListaServico = (string) $c->nfse_item_lista_servico;
+        $this->nfseCodigoTributario = (string) $c->nfse_codigo_tributario;
+        $this->nfseAliquotaIss      = $c->nfse_aliquota_iss !== null ? (string) $c->nfse_aliquota_iss : '';
+        $this->nfseOptanteSimples   = (bool) $c->nfse_optante_simples;
+        $this->nfseDiscriminacao    = (string) $c->nfse_discriminacao_padrao;
         $this->aliquotaImposto   = number_format((float) $c->aliquota_imposto, 2, '.', '');
     }
 
@@ -137,6 +156,37 @@ class ConfiguracaoClinica extends Component
         ]);
 
         $this->salvar($action, ['aliquota_imposto' => round((float) $this->aliquotaImposto, 2)]);
+    }
+
+    public function salvarNotaFiscal(AtualizarConfiguracaoClinicaAction $action): void
+    {
+        $this->validate([
+            'nfseToken'            => 'nullable|string|max:255',
+            'nfseHomologacao'      => 'boolean',
+            'inscricaoMunicipal'   => 'nullable|string|max:30',
+            'codigoMunicipio'      => ['nullable', 'regex:/^\d{7}$/'],
+            'nfseItemListaServico' => 'nullable|string|max:10',
+            'nfseCodigoTributario' => 'nullable|string|max:30',
+            'nfseAliquotaIss'      => 'nullable|numeric|min:0|max:10',
+            'nfseOptanteSimples'   => 'boolean',
+            'nfseDiscriminacao'    => 'nullable|string|max:1000',
+        ], [
+            'codigoMunicipio.regex' => 'Use o código IBGE de 7 números. Ex.: 5300108 (Brasília).',
+            'nfseAliquotaIss.max'   => 'A alíquota do ISS vai de 0 a 10%.',
+        ]);
+
+        $this->salvar($action, [
+            'nfse_token'                => $this->nfseToken,
+            'nfse_homologacao'          => $this->nfseHomologacao,
+            'inscricao_municipal'       => trim($this->inscricaoMunicipal) ?: null,
+            'codigo_municipio'          => trim($this->codigoMunicipio) ?: null,
+            'nfse_item_lista_servico'   => trim($this->nfseItemListaServico) ?: null,
+            'nfse_codigo_tributario'    => trim($this->nfseCodigoTributario) ?: null,
+            'nfse_aliquota_iss'         => $this->nfseAliquotaIss !== '' ? (float) str_replace(',', '.', $this->nfseAliquotaIss) : null,
+            'nfse_optante_simples'      => $this->nfseOptanteSimples,
+            'nfse_discriminacao_padrao' => trim($this->nfseDiscriminacao) ?: null,
+        ]);
+        $this->nfseToken = '';
     }
 
     public function removerSegredo(string $campo, AtualizarConfiguracaoClinicaAction $action): void

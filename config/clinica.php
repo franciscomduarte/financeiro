@@ -10,7 +10,7 @@ return [
     'tabelas' => [
         'agendamentos', 'bloqueios_agenda', 'cobrancas', 'comissao_fechamentos', 'conta_consumo_faturas', 'contas_consumo',
         'contrato_pagamentos', 'contratos', 'contratos_reajustes', 'documento_categorias', 'documento_versoes',
-        'documentos', 'fornecedores', 'grade_horarios', 'obrigacao_fiscal_lancamentos', 'obrigacoes_fiscais', 'orcamento_itens', 'orcamentos',
+        'documentos', 'fornecedores', 'notas_fiscais', 'grade_horarios', 'obrigacao_fiscal_lancamentos', 'obrigacoes_fiscais', 'orcamento_itens', 'orcamentos',
         'pacote_sessoes', 'pacotes', 'paciente_acessos', 'pacientes', 'parcelamentos', 'procedimentos', 'profissionais', 'prontuario_evolucoes', 'prontuario_fotos', 'prontuario_modelos',
         'pesquisas_satisfacao', 'prontuario_orientacoes', 'prontuario_termos', 'recorrencias', 'relacionamento_contatos', 'stock_batches', 'stock_categories',
         'stock_movements', 'stock_products', 'taxas_cartao', 'transacao_anexos', 'transacoes',

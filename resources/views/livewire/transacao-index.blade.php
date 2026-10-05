@@ -456,6 +456,35 @@
                         </div>
                     @endif
 
+                    {{-- Nota fiscal (receitas) --}}
+                    @if ($t->tipo === \App\Enums\TipoTransacao::Entrada && $t->status !== \App\Enums\StatusTransacao::Cancelado)
+                        @php $nf = $t->notasFiscais->first(); @endphp
+                        <div class="flex flex-col gap-3 rounded-xl border border-stone-200 p-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div class="text-sm">
+                                <p class="font-medium text-stone-700">Nota fiscal</p>
+                                @if ($nf)
+                                    <p class="mt-0.5 text-stone-500">
+                                        <span class="badge {{ $nf->status->badge() }}">{{ $nf->status->label() }}</span>
+                                        @if ($nf->numero) nº {{ $nf->numero }} @endif
+                                        @if ($nf->homologacao) <span class="text-xs">(teste)</span> @endif
+                                    </p>
+                                @else
+                                    <p class="mt-0.5 text-stone-500">Ainda sem NFS-e.</p>
+                                @endif
+                            </div>
+                            <div class="flex shrink-0 gap-2">
+                                @if ($nf?->url && $nf->status === \App\Enums\StatusNotaFiscal::Autorizada)
+                                    <a href="{{ $nf->url }}" target="_blank" rel="noopener" class="btn-secondary">Ver nota</a>
+                                @endif
+                                @if (! $nf || ! $nf->status->ativa())
+                                    <a href="{{ route('notas-fiscais.index', ['transacao' => $t->id]) }}" wire:navigate class="btn-secondary">Emitir NFS-e</a>
+                                @else
+                                    <a href="{{ route('notas-fiscais.index') }}" wire:navigate class="btn-ghost">Notas fiscais</a>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
+
                     {{-- Composição do valor --}}
                     <div class="bg-stone-50 rounded-xl p-4">
                         <p class="text-sm font-medium text-stone-700 mb-3">Composição do valor</p>

@@ -54,6 +54,7 @@ class MenuLateral extends Component
         'relacionamento.index'  => 'pacientes',
         'pacotes.index'         => 'cobrancas',
         'comissoes.index'       => 'relatorios',
+        'notas-fiscais.index'   => 'lancamentos',
         'transacoes.index'      => 'lancamentos',
         'web.relatorio'         => 'relatorios',
         'taxas-cartao.index'    => 'taxas',
@@ -113,6 +114,7 @@ class MenuLateral extends Component
             ]),
             $this->grupo('Financeiro', [
                 ['Lançamentos', 'transacoes.index', 'transacoes.*', 'lancamentos'],
+                ['Notas fiscais', 'notas-fiscais.index', 'notas-fiscais.*', 'documentos'],
                 ['Comissões', 'comissoes.index', 'comissoes.*', 'comissoes'],
                 ['Relatórios', 'web.relatorio', 'web.relatorio', 'relatorios'],
                 ['Taxas de cartão', 'taxas-cartao.index', 'taxas-cartao.*', 'taxas'],

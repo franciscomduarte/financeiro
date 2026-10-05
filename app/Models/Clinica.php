@@ -36,10 +36,19 @@ class Clinica extends Model
         'asaas_api_key',
         'asaas_sandbox',
         'asaas_webhook_token',
+        'nfse_token',
+        'nfse_homologacao',
+        'inscricao_municipal',
+        'codigo_municipio',
+        'nfse_item_lista_servico',
+        'nfse_codigo_tributario',
+        'nfse_aliquota_iss',
+        'nfse_optante_simples',
+        'nfse_discriminacao_padrao',
     ];
 
     /** Segredos nunca vão para arrays/JSON. */
-    protected $hidden = ['evolution_api_key', 'asaas_api_key', 'asaas_webhook_token'];
+    protected $hidden = ['evolution_api_key', 'asaas_api_key', 'asaas_webhook_token', 'nfse_token'];
 
     protected $casts = [
         'status'              => StatusClinica::class,
@@ -49,6 +58,10 @@ class Clinica extends Model
         'evolution_api_key'   => 'encrypted',
         'asaas_api_key'       => 'encrypted',
         'asaas_webhook_token' => 'encrypted',
+        'nfse_token'          => 'encrypted',
+        'nfse_homologacao'    => 'boolean',
+        'nfse_optante_simples' => 'boolean',
+        'nfse_aliquota_iss'   => 'decimal:2',
         'aviso_teste_3_dias_em' => 'datetime',
         'aviso_teste_fim_em'    => 'datetime',
         'primeiros_passos_dispensado_em' => 'datetime',
@@ -66,6 +79,19 @@ class Clinica extends Model
         return $this->belongsToMany(User::class, 'clinica_user')
             ->withPivot('papel')
             ->withTimestamps();
+    }
+
+    /** O que falta preencher para emitir NFS-e (vazio = pronto). */
+    public function pendenciasNfse(): array
+    {
+        return array_keys(array_filter([
+            'Token da Focus NFe'          => ! filled($this->nfse_token),
+            'CNPJ'                        => strlen((string) preg_replace('/\D/', '', (string) $this->cnpj)) !== 14,
+            'Inscrição municipal'         => ! filled($this->inscricao_municipal),
+            'Código IBGE do município'    => ! preg_match('/^\d{7}$/', (string) $this->codigo_municipio),
+            'Item da lista de serviço'    => ! filled($this->nfse_item_lista_servico),
+            'Alíquota do ISS'             => $this->nfse_aliquota_iss === null,
+        ]));
     }
 
     /** Alíquota como fração (6.00 → 0.06). */

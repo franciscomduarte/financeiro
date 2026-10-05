@@ -14,8 +14,8 @@
     <div class="max-w-3xl space-y-6">
 
     {{-- Abas --}}
-    <div class="grid grid-cols-3 rounded-xl bg-stone-100 p-1" role="tablist">
-        @foreach (['dados' => 'Dados', 'integracoes' => 'Integrações', 'financeiro' => 'Financeiro'] as $chave => $titulo)
+    <div class="grid grid-cols-2 gap-1 rounded-xl bg-stone-100 p-1 sm:grid-cols-4" role="tablist">
+        @foreach (['dados' => 'Dados', 'integracoes' => 'Integrações', 'financeiro' => 'Financeiro', 'nota_fiscal' => 'Nota fiscal'] as $chave => $titulo)
             <button type="button" wire:click="$set('aba', '{{ $chave }}')"
                     role="tab" aria-selected="{{ $aba === $chave ? 'true' : 'false' }}"
                     class="min-h-[44px] rounded-lg text-sm font-medium transition-colors {{ $aba === $chave ? 'bg-surface text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700' }}">
@@ -183,6 +183,81 @@
             <div class="rounded-xl bg-stone-50 px-4 py-3 text-sm text-stone-600">
                 As taxas de cartão (débito e crédito de 1x a 12x) ficam em
                 <a href="{{ route('taxas-cartao.index') }}" class="font-medium text-rose-600 underline underline-offset-2 hover:text-rose-700">Taxas de cartão</a>.
+            </div>
+            <div class="flex justify-end">
+                <button type="submit" wire:loading.attr="disabled" class="btn-primary">Salvar alterações</button>
+            </div>
+        </form>
+    @endif
+
+    {{-- ═══════════════ Nota fiscal ═══════════════ --}}
+    @if ($aba === 'nota_fiscal')
+        @php $pendencias = $clinica->pendenciasNfse(); @endphp
+        <form wire:submit="salvarNotaFiscal" class="card space-y-5 p-5 sm:p-6">
+            <div>
+                <h2 class="text-base font-semibold text-stone-900">NFS-e pela Focus NFe</h2>
+                <p class="mt-1 text-sm text-stone-500">
+                    Emita a nota de serviço direto dos lançamentos. Crie a conta em focusnfe.com.br, cadastre a empresa com o certificado digital A1
+                    e cole aqui o token. Os dados fiscais (item da lista, código de tributação e alíquota) estão no seu cadastro na prefeitura ou com o contador.
+                </p>
+            </div>
+
+            @if ($pendencias)
+                <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">Falta para emitir: {{ implode(', ', $pendencias) }}.</div>
+            @else
+                <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                    Tudo pronto para emitir {{ $clinica->nfse_homologacao ? 'em homologação (notas de teste, sem valor fiscal)' : 'notas de verdade (produção)' }}.
+                </div>
+            @endif
+
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div class="sm:col-span-2">
+                    <label for="nfse-token" class="label">Token da Focus NFe</label>
+                    <div class="flex gap-2">
+                        <input id="nfse-token" type="password" wire:model="nfseToken" autocomplete="off" class="input"
+                               placeholder="{{ $clinica->nfse_token ? '•••••••• (salvo; preencha só para trocar)' : 'Cole o token da empresa na Focus NFe' }}">
+                        @if ($clinica->nfse_token)
+                            <button type="button" wire:click="removerSegredo('nfse_token')" wire:confirm="Remover o token da Focus NFe? A emissão de notas para." class="btn-ghost shrink-0 text-red-600">Remover</button>
+                        @endif
+                    </div>
+                </div>
+                <label class="flex min-h-11 items-center gap-3 text-sm text-stone-700 sm:col-span-2">
+                    <input type="checkbox" wire:model="nfseHomologacao" class="h-5 w-5 rounded border-stone-300 text-rose-600 focus:ring-rose-300">
+                    Ambiente de homologação (testes, sem valor fiscal). Desmarque só quando a Focus liberar a produção.
+                </label>
+                <div>
+                    <label for="nfse-im" class="label">Inscrição municipal</label>
+                    <input id="nfse-im" type="text" wire:model="inscricaoMunicipal" maxlength="30" class="input" placeholder="Ex.: 0812345600172">
+                    @error('inscricaoMunicipal') <p class="field-error">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label for="nfse-municipio" class="label">Código IBGE do município</label>
+                    <input id="nfse-municipio" type="text" inputmode="numeric" wire:model="codigoMunicipio" maxlength="7" class="input tabular-nums" placeholder="Ex.: 5300108 (Brasília)">
+                    @error('codigoMunicipio') <p class="field-error">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label for="nfse-item" class="label">Item da lista de serviço (LC 116)</label>
+                    <input id="nfse-item" type="text" wire:model="nfseItemListaServico" maxlength="10" class="input" placeholder="Ex.: 06.02 (estética)">
+                </div>
+                <div>
+                    <label for="nfse-codigo" class="label">Código de tributação do município (opcional)</label>
+                    <input id="nfse-codigo" type="text" wire:model="nfseCodigoTributario" maxlength="30" class="input" placeholder="Conforme a prefeitura">
+                </div>
+                <div>
+                    <label for="nfse-aliquota" class="label">Alíquota do ISS (%)</label>
+                    <input id="nfse-aliquota" type="text" inputmode="decimal" wire:model="nfseAliquotaIss" class="input tabular-nums" placeholder="Ex.: 2">
+                    @error('nfseAliquotaIss') <p class="field-error">{{ $message }}</p> @enderror
+                </div>
+                <label class="flex min-h-11 items-center gap-3 self-end text-sm text-stone-700">
+                    <input type="checkbox" wire:model="nfseOptanteSimples" class="h-5 w-5 rounded border-stone-300 text-rose-600 focus:ring-rose-300">
+                    Empresa optante pelo Simples Nacional
+                </label>
+                <div class="sm:col-span-2">
+                    <label for="nfse-discriminacao" class="label">Texto padrão da nota (opcional)</label>
+                    <textarea id="nfse-discriminacao" wire:model="nfseDiscriminacao" rows="2" maxlength="1000" class="input"
+                              placeholder="Ex.: Serviços de estética prestados pela clínica."></textarea>
+                    <p class="hint">Vai no início da descrição da nota; a descrição do lançamento é acrescentada depois.</p>
+                </div>
             </div>
             <div class="flex justify-end">
                 <button type="submit" wire:loading.attr="disabled" class="btn-primary">Salvar alterações</button>
