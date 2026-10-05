@@ -225,8 +225,18 @@
                     <input type="checkbox" wire:model="nfseHomologacao" class="h-5 w-5 rounded border-stone-300 text-rose-600 focus:ring-rose-300">
                     Ambiente de homologação (testes, sem valor fiscal). Desmarque só quando a Focus liberar a produção.
                 </label>
+                <div class="sm:col-span-2">
+                    <label for="nfse-padrao" class="label">Padrão da nota</label>
+                    <select id="nfse-padrao" wire:model.live="nfsePadrao" class="input">
+                        @foreach (\App\Enums\PadraoNfse::cases() as $p)
+                            <option value="{{ $p->value }}">{{ $p->label() }}</option>
+                        @endforeach
+                    </select>
+                    <p class="hint">Veja no painel da Focus NFe, no cadastro da empresa, se o seu município emite pela NFS-e Nacional. Na dúvida, pergunte ao contador.</p>
+                    @error('nfsePadrao') <p class="field-error">{{ $message }}</p> @enderror
+                </div>
                 <div>
-                    <label for="nfse-im" class="label">Inscrição municipal</label>
+                    <label for="nfse-im" class="label">Inscrição municipal{{ $nfsePadrao === 'nacional' ? ' (opcional)' : '' }}</label>
                     <input id="nfse-im" type="text" wire:model="inscricaoMunicipal" maxlength="30" class="input" placeholder="Ex.: 0812345600172">
                     @error('inscricaoMunicipal') <p class="field-error">{{ $message }}</p> @enderror
                 </div>
@@ -235,8 +245,16 @@
                     <input id="nfse-municipio" type="text" inputmode="numeric" wire:model="codigoMunicipio" maxlength="7" class="input tabular-nums" placeholder="Ex.: 5300108 (Brasília)">
                     @error('codigoMunicipio') <p class="field-error">{{ $message }}</p> @enderror
                 </div>
+                @if ($nfsePadrao === 'nacional')
                 <div>
-                    <label for="nfse-item" class="label">Item da lista de serviço (LC 116)</label>
+                    <label for="nfse-ctn" class="label">Código de tributação nacional</label>
+                    <input id="nfse-ctn" type="text" inputmode="numeric" wire:model="nfseCodigoNacional" maxlength="6" class="input tabular-nums" placeholder="Ex.: 060201">
+                    <p class="hint">6 números, conforme a tabela da NFS-e Nacional.</p>
+                    @error('nfseCodigoNacional') <p class="field-error">{{ $message }}</p> @enderror
+                </div>
+                @endif
+                <div>
+                    <label for="nfse-item" class="label">Item da lista de serviço (LC 116){{ $nfsePadrao === 'nacional' ? ' (opcional)' : '' }}</label>
                     <input id="nfse-item" type="text" wire:model="nfseItemListaServico" maxlength="10" class="input" placeholder="Ex.: 06.02 (estética)">
                 </div>
                 <div>

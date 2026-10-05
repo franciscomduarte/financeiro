@@ -33,7 +33,7 @@ class CancelarNotaFiscalAction
             throw new RuntimeException('Só notas emitidas podem ser canceladas.');
         }
 
-        $r = $this->focus->cancelar($nota->referencia, mb_substr($justificativa, 0, 255));
+        $r = $this->focus->cancelar($nota->padrao, $nota->referencia, mb_substr($justificativa, 0, 255));
         if ($r['status'] !== 'cancelado') {
             throw new RuntimeException('A prefeitura não cancelou a nota: ' . ($r['mensagem'] ?? 'tente de novo em instantes.'));
         }

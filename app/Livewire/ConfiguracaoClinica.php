@@ -57,6 +57,8 @@ class ConfiguracaoClinica extends Component
     public string $nfseAliquotaIss       = '';
     public bool   $nfseOptanteSimples    = true;
     public string $nfseDiscriminacao     = '';
+    public string $nfsePadrao            = 'municipal';
+    public string $nfseCodigoNacional    = '';
 
     public ?string $flashSucesso = null;
     public ?string $flashErro    = null;
@@ -83,6 +85,8 @@ class ConfiguracaoClinica extends Component
         $this->nfseAliquotaIss      = $c->nfse_aliquota_iss !== null ? (string) $c->nfse_aliquota_iss : '';
         $this->nfseOptanteSimples   = (bool) $c->nfse_optante_simples;
         $this->nfseDiscriminacao    = (string) $c->nfse_discriminacao_padrao;
+        $this->nfsePadrao           = ($c->nfse_padrao ?? \App\Enums\PadraoNfse::Municipal)->value;
+        $this->nfseCodigoNacional   = (string) $c->nfse_codigo_tributacao_nacional;
         $this->aliquotaImposto   = number_format((float) $c->aliquota_imposto, 2, '.', '');
     }
 
@@ -170,7 +174,10 @@ class ConfiguracaoClinica extends Component
             'nfseAliquotaIss'      => 'nullable|numeric|min:0|max:10',
             'nfseOptanteSimples'   => 'boolean',
             'nfseDiscriminacao'    => 'nullable|string|max:1000',
+            'nfsePadrao'           => ['required', \Illuminate\Validation\Rule::enum(\App\Enums\PadraoNfse::class)],
+            'nfseCodigoNacional'   => ['nullable', 'regex:/^\d{6}$/'],
         ], [
+            'nfseCodigoNacional.regex' => 'Use os 6 números do código de tributação nacional. Ex.: 060201.',
             'codigoMunicipio.regex' => 'Use o código IBGE de 7 números. Ex.: 5300108 (Brasília).',
             'nfseAliquotaIss.max'   => 'A alíquota do ISS vai de 0 a 10%.',
         ]);
@@ -185,6 +192,8 @@ class ConfiguracaoClinica extends Component
             'nfse_aliquota_iss'         => $this->nfseAliquotaIss !== '' ? (float) str_replace(',', '.', $this->nfseAliquotaIss) : null,
             'nfse_optante_simples'      => $this->nfseOptanteSimples,
             'nfse_discriminacao_padrao' => trim($this->nfseDiscriminacao) ?: null,
+            'nfse_padrao'               => $this->nfsePadrao,
+            'nfse_codigo_tributacao_nacional' => preg_replace('/\D/', '', $this->nfseCodigoNacional) ?: null,
         ]);
         $this->nfseToken = '';
     }
