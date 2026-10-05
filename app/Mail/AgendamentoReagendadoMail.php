@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mail;
 
+use App\Support\ClinicaAtual;
 use App\Models\Agendamento;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -22,7 +23,7 @@ class AgendamentoReagendadoMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: '🔄 Reagendamento confirmado — LC Estética',
+            subject: '🔄 Reagendamento confirmado — ' . app(ClinicaAtual::class)->nome(),
         );
     }
 

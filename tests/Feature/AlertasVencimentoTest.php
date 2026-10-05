@@ -38,7 +38,11 @@ class AlertasVencimentoTest extends TestCase
         parent::setUp();
         $this->hoje = CarbonImmutable::parse('2026-10-10');
         $this->travelTo($this->hoje->setTime(8, 0));
-        $this->clinica->update(['whatsapp_numero' => '+55 (61) 99999-0000']);
+        $this->clinica->update([
+            'whatsapp_numero'    => '+55 (61) 99999-0000',
+            'evolution_instance' => 'lc',
+            'evolution_api_key'  => 'chave-lc',
+        ]);
         Cache::flush();
     }
 
@@ -173,7 +177,8 @@ class AlertasVencimentoTest extends TestCase
     public function test_falha_no_whatsapp_tenta_de_novo_sem_reenviar_email(): void
     {
         Mail::fake();
-        Http::fakeSequence()->push('erro', 500)->push(['ok' => true]);
+        // 3 falhas = esgota as novas tentativas do envio; a 4ª resposta é a do retry do Job
+        Http::fakeSequence()->push('erro', 500)->push('erro', 500)->push('erro', 500)->push(['ok' => true]);
         User::factory()->create(['role' => 'admin', 'active' => true]);
         $this->despesa('Aluguel', '2026-10-11');
 

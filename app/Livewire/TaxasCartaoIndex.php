@@ -75,6 +75,7 @@ class TaxasCartaoIndex extends Component
 
         try {
             DB::transaction(function (): void {
+                app(\App\Support\ClinicaAtual::class)->garantirEscrita(); // update em massa não dispara eventos do Model
                 foreach ($this->taxas as $id => $dados) {
                     TaxaCartao::where('id', $id)->update([
                         'percentual' => (float) $dados['percentual'],
@@ -98,6 +99,6 @@ class TaxasCartaoIndex extends Component
     public function render(): View
     {
         return view('livewire.taxas-cartao-index')
-            ->layout('layouts.app', ['title' => 'Taxas de Cartão — LC Estética']);
+            ->layout('layouts.app', ['title' => 'Taxas de Cartão']);
     }
 }

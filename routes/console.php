@@ -80,3 +80,12 @@ Schedule::call($porClinica(fn () => \App\Jobs\ResumoVencimentosJob::dispatch()))
     ->timezone('America/Sao_Paulo') // app roda em UTC; 07:30 no horário da clínica
     ->name('resumo-vencimentos')
     ->withoutOverlapping();
+
+// ─── Plataforma: teste grátis ────────────────────────────────────────────────
+
+// Avisa os admins das clínicas em teste 3 dias antes do fim e no último dia
+Schedule::call(fn () => app(\App\Actions\AvisarFimDoTesteAction::class)->execute())
+    ->dailyAt('08:00')
+    ->timezone('America/Sao_Paulo')
+    ->name('avisos-fim-do-teste')
+    ->withoutOverlapping();

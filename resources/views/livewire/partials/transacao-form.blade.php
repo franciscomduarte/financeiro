@@ -149,7 +149,7 @@
                 <span class="text-red-600 font-medium">- R$ {{ number_format($taxaOperacional, 2, ',', '.') }}</span>
             </div>
             <div class="flex justify-between text-sm">
-                <span class="text-stone-500">Imposto Estimado (6%)</span>
+                <span class="text-stone-500">Imposto Estimado ({{ rtrim(rtrim(number_format((float) ($clinicaAtual?->aliquota_imposto ?? 6), 2, ",", "."), "0"), ",") }}%)</span>
                 <span class="text-red-600 font-medium">- R$ {{ number_format($impostoEstimado, 2, ',', '.') }}</span>
             </div>
             <div class="flex justify-between text-sm pt-2 border-t border-stone-200 font-semibold">

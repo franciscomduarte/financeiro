@@ -84,6 +84,8 @@ class BloqueioAgendaService
     /** Remove o bloqueio e, se fizer parte de um grupo, todos os do mesmo grupo. */
     public function remover(BloqueioAgenda $bloqueio): int
     {
+        app(\App\Support\ClinicaAtual::class)->garantirEscrita(); // delete em massa não dispara eventos do Model
+
         $removidos = DB::transaction(fn () => $bloqueio->grupo_id
             ? BloqueioAgenda::where('grupo_id', $bloqueio->grupo_id)->delete()
             : (int) $bloqueio->delete());

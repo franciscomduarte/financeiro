@@ -469,7 +469,7 @@
                             </div>
                             @if ((float)$t->imposto_estimado > 0)
                             <div class="flex justify-between text-sm">
-                                <span class="text-stone-500">Imposto Estimado (6%)</span>
+                                <span class="text-stone-500">Imposto Estimado ({{ rtrim(rtrim(number_format((float) ($clinicaAtual?->aliquota_imposto ?? 6), 2, ",", "."), "0"), ",") }}%)</span>
                                 <span class="text-red-600 tabular-nums">− R$ {{ number_format((float)$t->imposto_estimado, 2, ',', '.') }}</span>
                             </div>
                             @endif
