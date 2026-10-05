@@ -1,171 +1,123 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="h-full">
+<html lang="pt-BR" class="scroll-smooth">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Sistema de Gestão LC Estética e Saúde Integrativa">
-    <title>LC Estética — Gestão</title>
+    <meta name="description" content="{{ config('app.name') }}: agenda, financeiro, cobranças, estoque e documentos da sua clínica em um só lugar. Teste grátis por {{ config('clinica.dias_teste') }} dias.">
+    <title>{{ config('app.name') }} — gestão completa para clínicas</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="h-full bg-stone-50 font-sans antialiased">
+<body class="bg-white font-sans antialiased text-stone-800">
 
-    {{-- Header --}}
-    <header class="bg-white border-b border-stone-100 px-6 py-4">
-        <div class="max-w-6xl mx-auto flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full bg-rose-100 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-rose-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" />
-                    </svg>
-                </div>
-                <div>
-                    <p class="text-sm font-semibold text-stone-800 leading-none">LC Estética</p>
-                    <p class="text-xs text-stone-400 mt-0.5">Saúde Integrativa</p>
-                </div>
-            </div>
-            <span class="text-xs bg-rose-50 text-rose-600 border border-rose-100 px-2.5 py-1 rounded-full font-medium">
-                Sistema interno
-            </span>
+@php($dias = config('clinica.dias_teste'))
+
+{{-- ─── Topo ─── --}}
+<header class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-stone-100">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+        <a href="{{ route('home') }}" class="flex items-center gap-2.5 min-w-0">
+            <span class="w-9 h-9 shrink-0 rounded-xl bg-rose-600 text-white flex items-center justify-center font-bold">{{ mb_substr(config('app.name'), 0, 1) }}</span>
+            <span class="font-semibold truncate">{{ config('app.name') }}</span>
+        </a>
+        <nav class="flex items-center gap-1 sm:gap-2 shrink-0">
+            <a href="{{ route('login') }}" class="inline-flex items-center min-h-[44px] px-3 rounded-lg text-sm font-medium text-stone-600 hover:bg-stone-100">Entrar</a>
+            <a href="{{ route('cadastro') }}" class="inline-flex items-center min-h-[44px] px-4 rounded-lg text-sm font-semibold bg-rose-600 hover:bg-rose-700 text-white">Assine já</a>
+        </nav>
+    </div>
+</header>
+
+{{-- ─── Destaque ─── --}}
+<section class="bg-gradient-to-b from-rose-50 to-white">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 pt-14 pb-16 md:pt-24 md:pb-24 text-center">
+        <span class="inline-block text-xs font-semibold uppercase tracking-wider text-rose-700 bg-rose-100 rounded-full px-3 py-1">Para clínicas de estética e saúde</span>
+        <h1 class="mt-5 text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight leading-tight max-w-3xl mx-auto">
+            A gestão da sua clínica, do agendamento ao caixa, num só lugar
+        </h1>
+        <p class="mt-5 text-base md:text-lg text-stone-600 max-w-2xl mx-auto">
+            Agenda com lembretes por WhatsApp, financeiro com taxas e impostos calculados, cobranças automáticas,
+            estoque e alertas de vencimento. Tudo funcionando no celular.
+        </p>
+        <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+            <a href="{{ route('cadastro') }}" class="inline-flex justify-center items-center min-h-[52px] px-7 rounded-xl text-base font-semibold bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-200">
+                Testar grátis por {{ $dias }} dias
+            </a>
+            <a href="#recursos" class="inline-flex justify-center items-center min-h-[52px] px-7 rounded-xl text-base font-medium text-stone-700 bg-white border border-stone-200 hover:border-stone-300">
+                Ver recursos
+            </a>
         </div>
-    </header>
+        <p class="mt-4 text-sm text-stone-500">Sem cartão de crédito · Cancele quando quiser</p>
+    </div>
+</section>
 
-    {{-- Main --}}
-    <main class="max-w-6xl mx-auto px-6 py-12">
+{{-- ─── Recursos ─── --}}
+<section id="recursos" class="max-w-6xl mx-auto px-4 sm:px-6 py-16 md:py-24">
+    <h2 class="text-2xl md:text-3xl font-bold text-center">Tudo o que a rotina da clínica pede</h2>
+    <p class="mt-3 text-stone-600 text-center max-w-2xl mx-auto">Menos planilhas e mensagens soltas, mais tempo para os pacientes.</p>
 
-        {{-- Hero --}}
-        <div class="text-center mb-12">
-            <h1 class="text-3xl md:text-4xl font-bold text-stone-800 mb-3">
-                Gestão LC Estética
-            </h1>
-            <p class="text-stone-500 text-base md:text-lg max-w-xl mx-auto">
-                Controle financeiro, contratos, fornecedores e manutenções da clínica em um único lugar.
-            </p>
+    @php($recursos = [
+        ['Agenda inteligente', 'Calendário por profissional, bloqueios, intervalos e confirmações automáticas por WhatsApp e e-mail.', 'M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5'],
+        ['Financeiro sem surpresa', 'Entradas e saídas com taxa da maquininha e imposto estimado já descontados. Relatórios por período.', 'M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z'],
+        ['Cobranças automáticas', 'Mensalidades e parcelamentos pelo Asaas, com Pix e boleto e baixa automática quando o paciente paga.', 'M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z'],
+        ['Alertas de vencimento', 'Resumo diário de contas, guias, contratos e alvarás que vencem — por e-mail e WhatsApp.', 'M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0'],
+        ['Estoque com validade', 'Lotes, frascos abertos e estoque mínimo. Avisos antes de faltar ou vencer.', 'M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z'],
+        ['Equipe e segurança', 'Cada pessoa com seu acesso, administradores e usuários. Dados da clínica isolados e protegidos.', 'M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z'],
+    ])
+    <div class="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        @foreach ($recursos as [$titulo, $texto, $icone])
+            <div class="rounded-2xl border border-stone-100 bg-stone-50/60 p-6">
+                <div class="w-11 h-11 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="{{ $icone }}" /></svg>
+                </div>
+                <h3 class="mt-4 font-semibold text-lg">{{ $titulo }}</h3>
+                <p class="mt-2 text-sm text-stone-600 leading-relaxed">{{ $texto }}</p>
+            </div>
+        @endforeach
+    </div>
+</section>
+
+{{-- ─── Como funciona ─── --}}
+<section class="bg-stone-50 border-y border-stone-100">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-16 md:py-20">
+        <h2 class="text-2xl md:text-3xl font-bold text-center">Comece hoje, em três passos</h2>
+        <ol class="mt-10 grid gap-6 md:grid-cols-3">
+            @foreach ([
+                ['Crie sua conta', 'Nome da clínica, seu e-mail e uma senha. Pronto: o sistema já abre.'],
+                ['Configure do seu jeito', 'Logo, profissionais, procedimentos, taxas da maquininha e WhatsApp.'],
+                ['Use por ' . $dias . ' dias grátis', 'Agende, lance e cobre de verdade. Gostou? É só assinar.'],
+            ] as $i => [$titulo, $texto])
+                <li class="bg-white rounded-2xl border border-stone-100 p-6">
+                    <span class="w-8 h-8 rounded-full bg-rose-600 text-white text-sm font-bold flex items-center justify-center">{{ $i + 1 }}</span>
+                    <h3 class="mt-4 font-semibold">{{ $titulo }}</h3>
+                    <p class="mt-1.5 text-sm text-stone-600">{{ $texto }}</p>
+                </li>
+            @endforeach
+        </ol>
+    </div>
+</section>
+
+{{-- ─── Chamada final ─── --}}
+<section class="max-w-6xl mx-auto px-4 sm:px-6 py-16 md:py-24">
+    <div class="rounded-3xl bg-rose-600 text-white px-6 py-12 md:px-12 text-center">
+        <h2 class="text-2xl md:text-3xl font-bold">Vamos organizar sua clínica?</h2>
+        <p class="mt-3 text-rose-100">{{ $dias }} dias grátis, sem cartão de crédito.</p>
+        <a href="{{ route('cadastro') }}" class="mt-8 inline-flex justify-center items-center min-h-[52px] px-8 rounded-xl text-base font-semibold bg-white text-rose-700 hover:bg-rose-50">
+            Criar minha conta grátis
+        </a>
+    </div>
+</section>
+
+<footer class="border-t border-stone-100">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8 flex flex-col sm:flex-row gap-3 items-center justify-between text-sm text-stone-500">
+        <p>&copy; {{ date('Y') }} {{ config('app.name') }}</p>
+        <div class="flex gap-4">
+            @if ($whatsapp = \App\Support\Plataforma::whatsappLink('Olá! Quero saber mais sobre o ' . config('app.name') . '.'))
+                <a href="{{ $whatsapp }}" target="_blank" rel="noopener" class="hover:text-stone-700">WhatsApp</a>
+            @endif
+            @if ($email = \App\Support\Plataforma::email())
+                <a href="mailto:{{ $email }}" class="hover:text-stone-700">{{ $email }}</a>
+            @endif
+            <a href="{{ route('login') }}" class="hover:text-stone-700">Entrar</a>
         </div>
-
-        {{-- Módulos --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
-
-            {{-- Financeiro --}}
-            <div class="bg-white rounded-2xl border border-stone-100 p-6 hover:shadow-md transition-shadow">
-                <div class="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center mb-4">
-                    <svg class="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
-                    </svg>
-                </div>
-                <div class="flex items-center gap-2 mb-1">
-                    <h2 class="font-semibold text-stone-800">Financeiro</h2>
-                    <span class="text-xs bg-emerald-50 text-emerald-600 border border-emerald-100 px-2 py-0.5 rounded-full">Fase 1 ✓</span>
-                </div>
-                <p class="text-sm text-stone-500">Entradas, saídas, implantação vs operação, taxas de cartão e upload de boletos/comprovantes.</p>
-            </div>
-
-            {{-- Contratos --}}
-            <div class="bg-white rounded-2xl border border-stone-100 p-6 hover:shadow-md transition-shadow opacity-60">
-                <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center mb-4">
-                    <svg class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                    </svg>
-                </div>
-                <div class="flex items-center gap-2 mb-1">
-                    <h2 class="font-semibold text-stone-800">Contratos e Fornecedores</h2>
-                    <span class="text-xs bg-stone-100 text-stone-400 border border-stone-200 px-2 py-0.5 rounded-full">Fase 2</span>
-                </div>
-                <p class="text-sm text-stone-500">Cadastro de fornecedores, vigência de contratos, reajustes e alertas de vencimento.</p>
-            </div>
-
-            {{-- Manutenção --}}
-            <div class="bg-white rounded-2xl border border-stone-100 p-6 hover:shadow-md transition-shadow opacity-60">
-                <div class="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center mb-4">
-                    <svg class="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z" />
-                    </svg>
-                </div>
-                <div class="flex items-center gap-2 mb-1">
-                    <h2 class="font-semibold text-stone-800">Manutenção Preventiva</h2>
-                    <span class="text-xs bg-stone-100 text-stone-400 border border-stone-200 px-2 py-0.5 rounded-full">Fase 3</span>
-                </div>
-                <p class="text-sm text-stone-500">Equipamentos, plano de manutenção, histórico e próximas datas calculadas automaticamente.</p>
-            </div>
-
-            {{-- Dashboard --}}
-            <div class="bg-white rounded-2xl border border-stone-100 p-6 hover:shadow-md transition-shadow opacity-60">
-                <div class="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center mb-4">
-                    <svg class="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-                    </svg>
-                </div>
-                <div class="flex items-center gap-2 mb-1">
-                    <h2 class="font-semibold text-stone-800">Dashboard</h2>
-                    <span class="text-xs bg-stone-100 text-stone-400 border border-stone-200 px-2 py-0.5 rounded-full">Fase 3</span>
-                </div>
-                <p class="text-sm text-stone-500">KPIs operacionais, painel de implantação, projeção de caixa e alertas automáticos.</p>
-            </div>
-
-            {{-- Projeção --}}
-            <div class="bg-white rounded-2xl border border-stone-100 p-6 hover:shadow-md transition-shadow opacity-60">
-                <div class="w-10 h-10 bg-sky-50 rounded-xl flex items-center justify-center mb-4">
-                    <svg class="w-5 h-5 text-sky-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
-                    </svg>
-                </div>
-                <div class="flex items-center gap-2 mb-1">
-                    <h2 class="font-semibold text-stone-800">Projeção Financeira</h2>
-                    <span class="text-xs bg-stone-100 text-stone-400 border border-stone-200 px-2 py-0.5 rounded-full">Fase 3</span>
-                </div>
-                <p class="text-sm text-stone-500">Fluxo de caixa projetado para 6 meses com base em recorrências e contratos ativos.</p>
-            </div>
-
-            {{-- API --}}
-            <div class="bg-white rounded-2xl border border-stone-100 p-6 hover:shadow-md transition-shadow">
-                <div class="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center mb-4">
-                    <svg class="w-5 h-5 text-rose-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
-                    </svg>
-                </div>
-                <div class="flex items-center gap-2 mb-1">
-                    <h2 class="font-semibold text-stone-800">API REST</h2>
-                    <span class="text-xs bg-emerald-50 text-emerald-600 border border-emerald-100 px-2 py-0.5 rounded-full">Fase 1 ✓</span>
-                </div>
-                <p class="text-sm text-stone-500">
-                    Endpoints disponíveis em
-                    <code class="bg-stone-100 text-stone-700 px-1.5 py-0.5 rounded text-xs">/api/v1/</code>
-                    com autenticação via Sanctum.
-                </p>
-            </div>
-
-        </div>
-
-        {{-- Endpoints ativos --}}
-        <div class="bg-white border border-stone-100 rounded-2xl p-6">
-            <h3 class="text-sm font-semibold text-stone-700 mb-4">Endpoints ativos — Fase 1</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                @foreach ([
-                    ['POST /api/v1/transacoes', 'Criar transação'],
-                    ['GET /api/v1/transacoes', 'Listar com filtros'],
-                    ['GET /api/v1/transacoes/{id}', 'Detalhe + anexos'],
-                    ['PUT /api/v1/transacoes/{id}', 'Atualizar transação'],
-                    ['DELETE /api/v1/transacoes/{id}', 'Cancelar transação'],
-                    ['POST /api/v1/transacoes/{id}/anexos', 'Upload boleto/comprovante'],
-                    ['GET /api/v1/transacoes/{id}/anexos', 'Listar anexos'],
-                    ['GET /api/v1/anexos/{id}/download', 'Download seguro'],
-                    ['GET|PUT /api/v1/taxas-cartao', 'Taxas de cartão'],
-                ] as [$endpoint, $desc])
-                <div class="flex items-start gap-2">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 mt-1.5"></span>
-                    <div>
-                        <code class="text-xs text-stone-400 block">{{ $endpoint }}</code>
-                        <span class="text-stone-600">{{ $desc }}</span>
-                    </div>
-                </div>
-                @endforeach
-            </div>
-        </div>
-
-    </main>
-
-    <footer class="text-center py-8 text-xs text-stone-400">
-        LC Estética e Saúde Integrativa &mdash; Sistema de Gestão &copy; {{ date('Y') }}
-    </footer>
-
+    </div>
+</footer>
 </body>
 </html>

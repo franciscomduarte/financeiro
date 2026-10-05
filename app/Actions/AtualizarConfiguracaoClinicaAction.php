@@ -23,6 +23,8 @@ class AtualizarConfiguracaoClinicaAction
 
     public function execute(Clinica $clinica, array $dados, ?UploadedFile $logo = null): Clinica
     {
+        $this->clinicaAtual->garantirEscrita();
+
         foreach (self::SEGREDOS as $segredo) {
             if (! filled($dados[$segredo] ?? null)) {
                 unset($dados[$segredo]);
@@ -58,6 +60,7 @@ class AtualizarConfiguracaoClinicaAction
     public function removerSegredo(Clinica $clinica, string $campo): void
     {
         abort_unless(in_array($campo, self::SEGREDOS, true), 422);
+        $this->clinicaAtual->garantirEscrita();
 
         $clinica->update([$campo => null]);
         Log::info('[Clinica] segredo removido', ['tenant_id' => $clinica->id, 'user_id' => auth()->id(), 'campo' => $campo]);

@@ -12,9 +12,12 @@ class ExampleTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_raiz_leva_visitante_para_o_login(): void
+    public function test_raiz_mostra_a_pagina_do_produto_ao_visitante(): void
     {
-        $this->get('/')->assertRedirect(route('login'));
+        $this->get('/')
+            ->assertOk()
+            ->assertSee(route('cadastro'))
+            ->assertSee(route('login'));
     }
 
     public function test_raiz_leva_usuario_autenticado_para_o_dashboard(): void

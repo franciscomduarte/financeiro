@@ -17,6 +17,9 @@ class ClinicaAtual
 {
     private ?Clinica $clinica = null;
 
+    /** Uma gravação foi barrada pelo modo somente leitura (lido pelas telas Livewire para avisar). */
+    private bool $escritaBloqueada = false;
+
     public function definir(?Clinica $clinica): void
     {
         $this->clinica = $clinica;
@@ -49,6 +52,33 @@ class ClinicaAtual
     public function nome(): string
     {
         return $this->clinica?->nome ?? (string) config('app.name');
+    }
+
+    public function somenteLeitura(): bool
+    {
+        return (bool) $this->clinica?->somenteLeitura();
+    }
+
+    /** Barra gravações quando o teste da clínica ativa terminou. */
+    public function garantirEscrita(): void
+    {
+        if (! $this->somenteLeitura()) {
+            return;
+        }
+
+        // Marca para a tela Livewire trocar a mensagem genérica de erro pelo aviso (AppServiceProvider)
+        $this->escritaBloqueada = true;
+
+        throw new \App\Exceptions\ClinicaSomenteLeituraException();
+    }
+
+    /** Informa (e zera) se alguma gravação foi barrada desde a última consulta. */
+    public function consumirEscritaBloqueada(): bool
+    {
+        $bloqueada              = $this->escritaBloqueada;
+        $this->escritaBloqueada = false;
+
+        return $bloqueada;
     }
 
     public function definida(): bool
@@ -85,7 +115,8 @@ class ClinicaAtual
     }
 
     /**
-     * Executa $callback para cada clínica não bloqueada (tarefas agendadas).
+     * Executa $callback para cada clínica em uso (tarefas agendadas): ignora bloqueadas
+     * e as que estão em modo somente leitura (teste encerrado).
      *
      * @param  callable(Clinica): void  $callback
      */
@@ -93,6 +124,9 @@ class ClinicaAtual
     {
         Clinica::query()
             ->where('status', '!=', StatusClinica::Bloqueada->value)
+            ->where(fn ($q) => $q->where('status', '!=', StatusClinica::Teste->value)
+                ->orWhereNull('teste_ate')
+                ->orWhere('teste_ate', '>=', today()->toDateString()))
             ->lazyById(100)
             ->each(fn (Clinica $clinica) => $this->executarComo($clinica, $callback));
     }

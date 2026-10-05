@@ -31,6 +31,10 @@ trait BelongsToClinica
 
             $model->tenant_id = $clinicaId;
         });
+
+        // Teste grátis encerrado: nada é criado, alterado ou excluído
+        static::saving(fn () => app(ClinicaAtual::class)->garantirEscrita());
+        static::deleting(fn () => app(ClinicaAtual::class)->garantirEscrita());
     }
 
     public function initializeBelongsToClinica(): void

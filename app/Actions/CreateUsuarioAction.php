@@ -20,6 +20,8 @@ class CreateUsuarioAction
     /** @return array{user: User, existente: bool} */
     public function execute(array $data, Clinica $clinica, RoleUsuario $papel): array
     {
+        app(\App\Support\ClinicaAtual::class)->garantirEscrita();
+
         return DB::transaction(function () use ($data, $clinica, $papel): array {
             $user      = User::where('email', $data['email'])->lockForUpdate()->first();
             $existente = $user !== null;

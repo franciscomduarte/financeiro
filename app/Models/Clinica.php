@@ -49,6 +49,8 @@ class Clinica extends Model
         'evolution_api_key'   => 'encrypted',
         'asaas_api_key'       => 'encrypted',
         'asaas_webhook_token' => 'encrypted',
+        'aviso_teste_3_dias_em' => 'datetime',
+        'aviso_teste_fim_em'    => 'datetime',
     ];
 
     public function usuarios(): BelongsToMany
@@ -88,5 +90,26 @@ class Clinica extends Model
     public function estaBloqueada(): bool
     {
         return $this->status === StatusClinica::Bloqueada;
+    }
+
+    public function emTeste(): bool
+    {
+        return $this->status === StatusClinica::Teste;
+    }
+
+    /** Teste grátis terminou (o último dia de uso é teste_ate): só leitura até a assinatura. */
+    public function somenteLeitura(): bool
+    {
+        return $this->emTeste() && $this->teste_ate !== null && $this->teste_ate->lt(today());
+    }
+
+    /** Dias de teste que ainda restam contando hoje (0 quando já terminou); null fora do teste. */
+    public function diasRestantesTeste(): ?int
+    {
+        if (! $this->emTeste() || $this->teste_ate === null) {
+            return null;
+        }
+
+        return max(0, (int) today()->diffInDays($this->teste_ate, false) + 1);
     }
 }
