@@ -73,7 +73,11 @@ class TransacaoIndex extends Component
     public string $dataPagamento    = '';
     public string $status           = 'pendente';
     public string $recorrencia      = 'unica';
+    public string $recorrenciaAte   = '';
+    public bool   $recorrenciaPago  = false;
     public string $observacoes      = '';
+    /** Lançamento em edição veio de uma recorrência (mostra aviso no formulário) */
+    public bool   $editandoRecorrente = false;
 
     // ─── Valores calculados ─────────────────────────────────────
     public ?float $taxaOperacional = null;
@@ -208,6 +212,16 @@ class TransacaoIndex extends Component
     }
 
     // ─── Modais ─────────────────────────────────────────────────
+    public function mount(): void
+    {
+        // Atalho da aba Recorrências: abre o novo lançamento já repetindo todo mês
+        if (request()->query('novo') === 'recorrente') {
+            $this->abrirModalCriar();
+            $this->recorrencia = RecorrenciaTransacao::Mensal->value;
+            $this->tipo        = 'saida';
+        }
+    }
+
     public function abrirModalCriar(): void
     {
         $this->resetFormulario();
@@ -238,6 +252,7 @@ class TransacaoIndex extends Component
         $this->dataPagamento       = $transacao->data_pagamento?->format('Y-m-d') ?? '';
         $this->status              = $transacao->status->value;
         $this->recorrencia         = $transacao->recorrencia->value;
+        $this->editandoRecorrente  = $transacao->recorrencia_id !== null;
         $this->observacoes         = $transacao->observacoes ?? '';
 
         $this->taxaOperacional = (float) $transacao->taxa_operacional;
@@ -327,10 +342,18 @@ class TransacaoIndex extends Component
         $this->validarFormulario();
 
         try {
-            $action = app(CreateTransacaoAction::class);
-            $action->execute($this->buildData());
+            $frequencia = RecorrenciaTransacao::from($this->recorrencia);
 
-            $this->flashSucesso = 'Lançamento salvo.';
+            if ($frequencia->repete()) {
+                app(\App\Actions\CriarLancamentoRecorrenteAction::class)
+                    ->execute($this->buildData(), $this->recorrenciaAte ?: null, $this->recorrenciaPago);
+            } else {
+                app(CreateTransacaoAction::class)->execute($this->buildData());
+            }
+
+            $this->flashSucesso = $frequencia->repete()
+                ? 'Lançamento salvo. Ele vai se repetir ' . mb_strtolower($frequencia->label()) . ' (veja em Recorrências).'
+                : 'Lançamento salvo.';
             $this->modalCriar   = false;
             $this->resetFormulario();
         } catch (Throwable $e) {
@@ -462,6 +485,9 @@ class TransacaoIndex extends Component
         $this->dataPagamento   = '';
         $this->status          = 'pendente';
         $this->recorrencia     = 'unica';
+        $this->recorrenciaAte  = '';
+        $this->recorrenciaPago = false;
+        $this->editandoRecorrente = false;
         $this->observacoes     = '';
         $this->taxaOperacional = null;
         $this->impostoEstimado = null;
@@ -482,10 +508,13 @@ class TransacaoIndex extends Component
             'dataPagamento'    => 'nullable|date|required_if:status,pago',
             'status'           => ['required', Rule::enum(StatusTransacao::class)],
             'recorrencia'      => ['required', Rule::enum(RecorrenciaTransacao::class)],
+            'recorrenciaAte'   => 'nullable|date|after_or_equal:dataCompetencia',
+            'recorrenciaPago'  => 'boolean',
             'pacienteId'       => 'nullable|uuid|exists:pacientes,id',
             'observacoes'      => 'nullable|string|max:1000',
         ], [
             'dataPagamento.required_if' => 'Informe a data de pagamento, já que o lançamento está pago.',
+            'recorrenciaAte.after_or_equal' => 'A repetição precisa terminar depois do primeiro lançamento.',
         ]);
     }
 
@@ -569,7 +598,7 @@ class TransacaoIndex extends Component
                 'paciente_id', 'fornecedor_id',
                 'valor_bruto', 'taxa_operacional', 'imposto_estimado', 'valor_liquido',
                 'data_competencia', 'data_pagamento', 'forma_pagamento',
-                'num_parcelas', 'status', 'recorrencia', 'observacoes',
+                'num_parcelas', 'status', 'recorrencia', 'recorrencia_id', 'observacoes',
             ])
             ->with(['paciente:id,nome'])
             ->orderBy('data_competencia', 'desc')

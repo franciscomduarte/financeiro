@@ -204,7 +204,7 @@
         </div>
     </div>
 
-    {{-- Situação (recorrência fica oculta até existir geração automática dos lançamentos) --}}
+    {{-- Situação --}}
     <div>
         <label for="tx-status" class="label">Situação <span class="text-red-600">*</span></label>
         <select id="tx-status" wire:model.live="status" class="input @error('status') border-red-300 @enderror">
@@ -214,6 +214,43 @@
         </select>
         @error('status') <p class="field-error">{{ $message }}</p> @enderror
     </div>
+
+    {{-- Repetição: só ao criar; depois é gerenciada na aba Recorrências --}}
+    @if ($transacaoEditandoId === null)
+        <div class="rounded-xl border border-stone-200 p-4 space-y-4">
+            <div>
+                <label for="tx-repetir" class="label">Repetir</label>
+                <select id="tx-repetir" wire:model.live="recorrencia" class="input @error('recorrencia') border-red-300 @enderror">
+                    @foreach ($recorrenciasEnum as $rec)
+                        <option value="{{ $rec->value }}">{{ $rec->label() }}</option>
+                    @endforeach
+                </select>
+                <p class="hint">Para contas fixas como aluguel, salários e internet. O sistema cria os próximos sozinho, no início de cada mês.</p>
+                @error('recorrencia') <p class="field-error">{{ $message }}</p> @enderror
+            </div>
+
+            @if ($recorrencia !== 'unica')
+                <div>
+                    <label for="tx-repetir-ate" class="label">Repetir até <span class="font-normal text-stone-500">(opcional)</span></label>
+                    <input id="tx-repetir-ate" type="date" wire:model="recorrenciaAte" class="input @error('recorrenciaAte') border-red-300 @enderror">
+                    <p class="hint">Deixe em branco para repetir até você encerrar.</p>
+                    @error('recorrenciaAte') <p class="field-error">{{ $message }}</p> @enderror
+                </div>
+                <label class="flex min-h-[44px] items-start gap-3 cursor-pointer">
+                    <input type="checkbox" wire:model="recorrenciaPago" class="mt-1 w-4 h-4 rounded border-stone-300 text-rose-600 focus:ring-rose-300">
+                    <span class="text-sm text-stone-700">
+                        Lançar os próximos já como pagos
+                        <span class="block text-xs text-stone-500">Use para débito automático. Senão, eles entram como pendentes para você marcar.</span>
+                    </span>
+                </label>
+            @endif
+        </div>
+    @elseif ($editandoRecorrente)
+        <p class="rounded-xl bg-stone-50 px-4 py-3 text-sm text-stone-600">
+            Este lançamento faz parte de uma recorrência. A alteração vale só para ele; para mudar os próximos, use
+            <a href="{{ route('transacoes.recorrencias') }}" class="font-semibold text-rose-600 hover:underline">Recorrências</a>.
+        </p>
+    @endif
 
     {{-- Observações --}}
     <div>

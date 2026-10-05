@@ -29,6 +29,7 @@ use App\Livewire\EstoqueMovimentacaoIndex;
 use App\Livewire\EstoqueProdutoIndex;
 use App\Livewire\PacienteIndex;
 use App\Livewire\PlataformaIndex;
+use App\Livewire\RecorrenciaIndex;
 use App\Livewire\TransacaoIndex;
 use Illuminate\Support\Facades\Route;
 
@@ -69,6 +70,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/pacientes', PacienteIndex::class)->name('pacientes.index');
     Route::get('/cobrancas', CobrancaIndex::class)->name('cobrancas.index');
     Route::get('/transacoes', TransacaoIndex::class)->name('transacoes.index');
+    Route::get('/transacoes/recorrencias', RecorrenciaIndex::class)->name('transacoes.recorrencias');
     Route::get('/taxas-cartao', TaxasCartaoIndex::class)->name('taxas-cartao.index');
     Route::get('/fornecedores', FornecedorIndex::class)->name('web.fornecedores');
     Route::get('/contratos', ContratoIndex::class)->name('web.contratos');

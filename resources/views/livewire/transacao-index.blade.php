@@ -59,6 +59,7 @@
             </button>
         </x-slot:acoes>
     </x-ui.page-header>
+    <x-ui.abas-lancamentos />
 
     {{-- ─── Indicadores ──────────────────────────────────── --}}
     <div class="grid gap-4 sm:grid-cols-3 mb-6">
@@ -213,7 +214,7 @@
                             class="flex w-full min-h-[64px] items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-stone-50 active:bg-stone-100">
                         <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full {{ $entrada ? 'bg-emerald-500' : 'bg-red-500' }}" aria-hidden="true"></span>
                         <span class="min-w-0 flex-1">
-                            <span class="block truncate text-sm font-medium text-stone-800">{{ $transacao->descricao }}</span>
+                            <span class="block truncate text-sm font-medium text-stone-800">@if ($transacao->recorrencia_id)<svg class="inline-block w-3.5 h-3.5 mr-1 -mt-0.5 text-stone-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" role="img" aria-label="Recorrente"><title>Recorrente</title><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>@endif{{ $transacao->descricao }}</span>
                             <span class="mt-0.5 block truncate text-xs text-stone-500">
                                 {{ $transacao->data_competencia?->format('d/m/Y') ?? '—' }} · {{ $transacao->categoria }}@if ($transacao->paciente) · {{ $transacao->paciente->nome }}@elseif ($transacao->cliente) · {{ $transacao->cliente }}@endif
                             </span>
@@ -264,7 +265,7 @@
                                 <span class="truncate block">{{ $transacao->categoria }}</span>
                             </td>
                             <td class="px-4 py-3 max-w-[240px]">
-                                <p class="text-stone-800 font-medium truncate">{{ $transacao->descricao }}</p>
+                                <p class="text-stone-800 font-medium truncate">@if ($transacao->recorrencia_id)<svg class="inline-block w-3.5 h-3.5 mr-1 -mt-0.5 text-stone-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" role="img" aria-label="Recorrente"><title>Recorrente</title><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>@endif{{ $transacao->descricao }}</p>
                                 @if ($transacao->paciente)
                                     <p class="text-xs text-stone-500 truncate mt-0.5">{{ $transacao->paciente->nome }}</p>
                                 @elseif ($transacao->cliente)

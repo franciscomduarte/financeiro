@@ -89,3 +89,13 @@ Schedule::call(fn () => app(\App\Actions\AvisarFimDoTesteAction::class)->execute
     ->timezone('America/Sao_Paulo')
     ->name('avisos-fim-do-teste')
     ->withoutOverlapping();
+
+// ─── Lançamentos recorrentes ─────────────────────────────────────────────────
+
+// Cria os lançamentos do mês das recorrências (aluguel, salários...). Roda todo dia, mas só gera
+// o que ainda falta: na prática, no dia 1º (ou no 1º dia em que a rotina rodar no mês).
+Schedule::call($porClinica(fn () => app(\App\Actions\GerarLancamentosRecorrentesAction::class)->execute()))
+    ->dailyAt('06:00')
+    ->timezone('America/Sao_Paulo')
+    ->name('lancamentos-recorrentes')
+    ->withoutOverlapping();
