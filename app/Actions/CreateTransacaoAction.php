@@ -56,6 +56,7 @@ class CreateTransacaoAction
                 'recorrencia'             => $data['recorrencia'] ?? 'unica',
                 'data_inicio_recorrencia' => $data['data_inicio_recorrencia'] ?? null,
                 'transacao_pai_id'        => $data['transacao_pai_id'] ?? null,
+                'recorrencia_id'          => $data['recorrencia_id'] ?? null,
                 'observacoes'             => $data['observacoes'] ?? null,
             ]);
 

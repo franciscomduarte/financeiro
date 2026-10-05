@@ -69,6 +69,7 @@ class Transacao extends Model
         'recorrencia',
         'data_inicio_recorrencia',
         'transacao_pai_id',
+        'recorrencia_id',
         'observacoes',
     ];
 
@@ -112,6 +113,12 @@ class Transacao extends Model
     public function transacoesFilhas(): HasMany
     {
         return $this->hasMany(Transacao::class, 'transacao_pai_id');
+    }
+
+    /** Modelo de onde este lançamento foi gerado (lançamentos recorrentes). */
+    public function recorrenciaModelo(): BelongsTo
+    {
+        return $this->belongsTo(Recorrencia::class, 'recorrencia_id');
     }
 
     public function anexos(): HasMany

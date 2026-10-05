@@ -29,7 +29,7 @@
     @endif
 
     {{-- Cabeçalho --}}
-    <x-ui.page-header titulo="Cobranças" subtitulo="Envie mensalidades e parcelas por PIX e acompanhe quem já pagou." class="!mb-0">
+    <x-ui.page-header titulo="Cobranças" subtitulo="Envie mensalidades e parcelas por PIX e acompanhe quem já pagou.">
         <x-slot:acoes>
             @if ($abaAtiva === 'mensalidades')
                 @if ($pacientesAtivos > 0)

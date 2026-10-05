@@ -29,7 +29,7 @@
     @endif
 
     {{-- Cabeçalho --}}
-    <x-ui.page-header titulo="Pacientes" subtitulo="Cadastre e acompanhe seus pacientes." class="!mb-0">
+    <x-ui.page-header titulo="Pacientes" subtitulo="Cadastre e acompanhe seus pacientes.">
         <x-slot:acoes>
             <button wire:click="abrirModalCriar" class="btn-primary">
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
