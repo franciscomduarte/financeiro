@@ -86,6 +86,11 @@ class Paciente extends Model
         return $this->hasMany(ProntuarioEvolucao::class, 'paciente_id');
     }
 
+    public function anexosProntuario(): HasMany
+    {
+        return $this->hasMany(ProntuarioAnexo::class, 'paciente_id');
+    }
+
     public function fotosProntuario(): HasMany
     {
         return $this->hasMany(ProntuarioFoto::class, 'paciente_id');

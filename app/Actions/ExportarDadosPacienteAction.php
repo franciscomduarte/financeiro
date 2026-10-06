@@ -35,6 +35,7 @@ class ExportarDadosPacienteAction
                 ->with(['profissional:id,nome', 'autor:id,name'])->orderBy('created_at')->limit(self::LIMITE),
             'fotosProntuario' => fn ($q) => $q->select(['id', 'paciente_id', 'momento', 'regiao', 'descricao', 'tirada_em'])
                 ->orderBy('tirada_em')->limit(self::LIMITE),
+            'anexosProntuario' => fn ($q) => $q->select(['id', 'paciente_id', 'nome', 'created_at'])->orderBy('created_at')->limit(self::LIMITE),
             'termos' => fn ($q) => $q->select(['id', 'paciente_id', 'titulo', 'conteudo', 'assinante_nome', 'assinado_em', 'hash'])
                 ->orderBy('assinado_em')->limit(self::LIMITE),
             'orientacoes' => fn ($q) => $q->select(['id', 'paciente_id', 'titulo', 'texto', 'created_at'])
@@ -97,6 +98,10 @@ class ExportarDadosPacienteAction
                     'momento'   => $f->momento->value,
                     'regiao'    => $f->regiao,
                     'descricao' => $f->descricao,
+                ])->all(),
+                'anexos_pdf' => $paciente->anexosProntuario->map(fn ($a) => [
+                    'data' => $a->created_at?->toDateString(),
+                    'nome' => $a->nome,
                 ])->all(),
                 'termos_assinados' => $paciente->termos->map(fn ($t) => [
                     'titulo'                 => $t->titulo,

@@ -102,6 +102,7 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/atendimentos/{id}', \App\Livewire\AtendimentoTela::class)->whereUuid('id')->name('atendimentos.show');
         Route::get('/prontuario/fotos/{id}/{tamanho?}', [ProntuarioArquivoController::class, 'foto'])
             ->whereIn('tamanho', ['mini'])->name('prontuario.foto');
+        Route::get('/prontuario/anexos/{id}', [ProntuarioArquivoController::class, 'anexo'])->whereUuid('id')->name('prontuario.anexo');
         Route::get('/prontuario/termos/{id}/pdf', [ProntuarioArquivoController::class, 'termo'])->name('prontuario.termo.pdf');
         Route::get('/prontuario/orientacoes/{id}/pdf', [ProntuarioArquivoController::class, 'orientacao'])->name('prontuario.orientacao.pdf');
     });
