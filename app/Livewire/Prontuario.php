@@ -151,11 +151,22 @@ class Prontuario extends Component
             ->with([
                 'profissional:id,nome', 'autor:id,name', 'agendamento:id,inicio_em,procedimento_id', 'agendamento.procedimento:id,nome',
                 'fichas:id,atendimento_id,titulo,campos,respostas', 'injetaveis.produto:id,name,unit_type', 'plano.itens',
+                'anexos:id,atendimento_id,nome,tamanho',
             ])
             ->where('paciente_id', $this->pacienteId)
             ->latest('iniciado_em')
             ->limit($this->limite)
             ->get();
+    }
+
+    /** PDFs do paciente (exames, laudos), mostrados na aba Fotos. */
+    #[Computed]
+    public function anexos(): Collection
+    {
+        return \App\Models\ProntuarioAnexo::query()->select(['id', 'paciente_id', 'atendimento_id', 'nome', 'tamanho', 'created_at'])
+            ->where('paciente_id', $this->pacienteId)
+            ->where(fn ($q) => $q->whereNull('atendimento_id')->orWhereIn('atendimento_id', \App\Models\Atendimento::query()->select('id'))) // respeita atendimento privado
+            ->latest()->limit(100)->get();
     }
 
     /** Abre um atendimento avulso (sem agendamento) para este paciente. */

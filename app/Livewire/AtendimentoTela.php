@@ -58,6 +58,50 @@ class AtendimentoTela extends Component
     public array $fotos = [];
     public string $fotoMomento = 'antes';
     public string $fotoRegiao = '';
+    /** @var array<int, mixed> */
+    public array $anexos = [];
+    public string $anexoDescricao = '';
+
+    #[Computed]
+    public function anexosDoAtendimento(): Collection
+    {
+        return \App\Models\ProntuarioAnexo::query()->select(['id', 'nome', 'tamanho', 'created_at'])
+            ->where('atendimento_id', $this->atendimentoId)->latest()->limit(60)->get();
+    }
+
+    public function adicionarAnexos(\App\Actions\Atendimento\AnexosAtendimentoAction $acao): void
+    {
+        $this->resetErrorBag();
+        $this->validate([
+            'anexos'         => ['required', 'array', 'min:1', 'max:10'],
+            'anexos.*'       => ['file', 'mimes:pdf', 'max:' . \App\Actions\Atendimento\AnexosAtendimentoAction::MAX_KB],
+            'anexoDescricao' => ['nullable', 'string', 'max:150'],
+        ], [
+            'anexos.required' => 'Escolha pelo menos um PDF.',
+            'anexos.max'      => 'Envie até 10 arquivos por vez.',
+            'anexos.*.mimes'  => 'Envie só arquivos PDF.',
+            'anexos.*.max'    => 'Cada PDF pode ter até 20 MB.',
+        ]);
+
+        try {
+            $total = $acao->adicionar($this->atendimentoId, $this->anexos, $this->anexoDescricao);
+            $this->reset('anexos', 'anexoDescricao');
+            unset($this->anexosDoAtendimento);
+            $this->flashSucesso = $total === 1 ? 'PDF anexado ao prontuário.' : "{$total} PDFs anexados ao prontuário.";
+        } catch (Throwable $e) {
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível anexar');
+        }
+    }
+
+    public function removerAnexo(string $id, \App\Actions\Atendimento\AnexosAtendimentoAction $acao): void
+    {
+        try {
+            $acao->remover($id);
+            unset($this->anexosDoAtendimento);
+        } catch (Throwable $e) {
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível remover');
+        }
+    }
 
     // ─── Injetáveis ─────────────────────────────────────────────
     public string $injProduto = '';
@@ -139,7 +183,7 @@ class AtendimentoTela extends Component
             $secoes['ficha:' . $f['id']] = $f['nome'];
         }
 
-        return $secoes + ['fotos' => 'Fotos', 'injetaveis' => 'Injetáveis', 'orcamento' => 'Orçamento', 'plano' => 'Plano de tratamento'];
+        return $secoes + ['fotos' => 'Fotos e anexos', 'injetaveis' => 'Injetáveis', 'orcamento' => 'Orçamento', 'plano' => 'Plano de tratamento'];
     }
 
     public function secaoAtual(): string
@@ -202,6 +246,7 @@ class AtendimentoTela extends Component
 
     public function adicionarFotos(AdicionarFotosProntuarioAction $adicionar): void
     {
+        $this->resetErrorBag();
         $this->validate([
             'fotos'       => ['required', 'array', 'min:1', 'max:10'],
             'fotos.*'     => ['image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],

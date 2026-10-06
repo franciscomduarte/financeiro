@@ -59,6 +59,11 @@ class Atendimento extends Model
         return $this->hasOne(PlanoTratamento::class, 'atendimento_id');
     }
 
+    public function anexos(): HasMany
+    {
+        return $this->hasMany(ProntuarioAnexo::class, 'atendimento_id');
+    }
+
     public function fotos(): HasMany
     {
         return $this->hasMany(ProntuarioFoto::class, 'atendimento_id');

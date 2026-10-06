@@ -112,6 +112,16 @@
                                     {{ $at->injetaveis->map(fn ($i) => $i->produto?->name . ' ' . rtrim(rtrim(number_format((float) $i->quantidade, 3, ',', '.'), '0'), ',') . ' ' . $i->produto?->unit_type->abbreviation() . ($i->regiao ? ' (' . $i->regiao . ')' : '') . ($i->lotes_baixados ? ' · lote ' . $i->lotes_baixados : ''))->implode('; ') }}
                                 </p>
                             @endif
+                            @if ($at->anexos->isNotEmpty())
+                                <div class="mt-2 flex flex-wrap gap-x-4">
+                                    @foreach ($at->anexos as $anexo)
+                                        <a href="{{ route('prontuario.anexo', $anexo->id) }}" target="_blank" rel="noopener" class="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-rose-700 hover:text-rose-800">
+                                            <svg class="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                                            {{ $anexo->nome }} <span class="text-xs font-normal text-stone-400">PDF · {{ $anexo->tamanhoTexto() }}</span>
+                                        </a>
+                                    @endforeach
+                                </div>
+                            @endif
                             @if ($at->plano?->itens?->isNotEmpty())
                                 <p class="mt-2 text-sm text-stone-600"><span class="font-medium text-stone-700">Plano:</span>
                                     {{ $at->plano->itens->map(fn ($i) => $i->descricao . ' × ' . $i->sessoes)->implode(', ') }}
@@ -192,6 +202,22 @@
 
     {{-- ═══════════════ FOTOS ═══════════════ --}}
     @if ($aba === 'fotos')
+        @if ($this->anexos->isNotEmpty())
+            <div class="card mb-5 p-4 sm:p-5">
+                <h2 class="text-sm font-semibold text-stone-900">Anexos (PDF)</h2>
+                <ul class="mt-2 divide-y divide-stone-100">
+                    @foreach ($this->anexos as $anexo)
+                        <li class="flex flex-wrap items-center justify-between gap-2" wire:key="pa-{{ $anexo->id }}">
+                            <a href="{{ route('prontuario.anexo', $anexo->id) }}" target="_blank" rel="noopener" class="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-rose-700 hover:text-rose-800">
+                                <svg class="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                                {{ $anexo->nome }} <span class="text-xs font-normal text-stone-400">PDF · {{ $anexo->tamanhoTexto() }}</span>
+                            </a>
+                            <span class="text-xs text-stone-400 tabular-nums">{{ $anexo->created_at->timezone($fuso)->format('d/m/Y') }}</span>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
         @unless ($p->anonimizado())
             <form wire:submit="adicionarFotos" class="card mb-5 space-y-4 p-4 sm:p-5">
                 <div>

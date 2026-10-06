@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Actions\Prontuario\AdicionarFotosProntuarioAction;
+use App\Models\ProntuarioAnexo;
 use App\Models\ProntuarioFoto;
 use App\Models\ProntuarioOrientacao;
 use App\Models\ProntuarioTermo;
@@ -30,6 +31,20 @@ class ProntuarioArquivoController extends Controller
         return Storage::disk(AdicionarFotosProntuarioAction::DISCO)->response($path, null, [
             'Cache-Control' => 'private, max-age=86400',
         ]);
+    }
+
+    public function anexo(string $id): StreamedResponse
+    {
+        $anexo = ProntuarioAnexo::query()->select(['id', 'tenant_id', 'paciente_id', 'atendimento_id', 'nome', 'arquivo_path'])->findOrFail($id);
+
+        // Anexo de atendimento privado segue a mesma regra do atendimento
+        abort_if($anexo->atendimento_id !== null && ! \App\Models\Atendimento::query()->whereKey($anexo->atendimento_id)->exists(), 404);
+        abort_unless(Storage::disk(AdicionarFotosProntuarioAction::DISCO)->exists($anexo->arquivo_path), 404, 'Arquivo não encontrado.');
+
+        return Storage::disk(AdicionarFotosProntuarioAction::DISCO)->response($anexo->arquivo_path, Str::slug($anexo->nome) . '.pdf', [
+            'Content-Type'  => 'application/pdf',
+            'Cache-Control' => 'private, no-store',
+        ], 'inline');
     }
 
     public function termo(string $id, PdfProntuarioService $pdf): Response

@@ -244,4 +244,42 @@ class AtendimentoTest extends TestCase
         $this->assertSame('Como está a região?', AtendimentoFicha::sole()->campos[0]['rotulo']);
         $this->assertSame($idQ, $m->fresh()->campos[0]['id']); // id da pergunta se mantém
     }
+
+    public function test_anexa_pdf_no_atendimento_e_aparece_no_prontuario(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('local');
+        $a = $this->iniciar();
+
+        Livewire::test(AtendimentoTela::class, ['id' => $a->id])
+            ->call('irPara', 'fotos')
+            ->set('anexos', [\Illuminate\Http\UploadedFile::fake()->image('foto.jpg')])
+            ->call('adicionarAnexos')
+            ->assertHasErrors('anexos.0');
+
+        Livewire::test(AtendimentoTela::class, ['id' => $a->id])
+            ->call('irPara', 'fotos')
+            ->set('anexos', [\Illuminate\Http\UploadedFile::fake()->createWithContent('hemograma.pdf', "%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n")])
+            ->set('anexoDescricao', 'Hemograma 10/2026')
+            ->call('adicionarAnexos')
+            ->assertHasNoErrors()
+            ->assertSet('flashSucesso', 'PDF anexado ao prontuário.')
+            ->assertSee('Hemograma 10/2026');
+
+        $anexo = \App\Models\ProntuarioAnexo::sole();
+        $this->assertSame($a->id, $anexo->atendimento_id);
+        \Illuminate\Support\Facades\Storage::disk('local')->assertExists($anexo->arquivo_path);
+
+        $this->get(route('prontuario.anexo', $anexo->id))->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        Livewire::test(Prontuario::class, ['id' => $this->maria->id])->set('aba', 'fotos')->assertSee('Hemograma 10/2026');
+
+        // Atendimento privado: outro profissional não baixa o PDF
+        $outro = User::factory()->create(['role' => 'profissional']);
+        $this->actingAs($outro)->get(route('prontuario.anexo', $anexo->id))->assertNotFound();
+
+        // Quem atendeu remove enquanto está em andamento; o arquivo some junto
+        $this->actingAs($this->admin);
+        Livewire::test(AtendimentoTela::class, ['id' => $a->id])->call('removerAnexo', $anexo->id)->assertSet('flashErro', null);
+        $this->assertSame(0, \App\Models\ProntuarioAnexo::count());
+        \Illuminate\Support\Facades\Storage::disk('local')->assertMissing($anexo->arquivo_path);
+    }
 }
