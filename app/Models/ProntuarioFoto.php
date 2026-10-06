@@ -17,7 +17,7 @@ class ProntuarioFoto extends Model
     protected $table = 'prontuario_fotos';
 
     protected $fillable = [
-        'paciente_id', 'agendamento_id', 'user_id', 'momento', 'regiao', 'descricao',
+        'paciente_id', 'agendamento_id', 'atendimento_id', 'user_id', 'momento', 'regiao', 'descricao',
         'tirada_em', 'arquivo_path', 'miniatura_path', 'mime', 'tamanho',
     ];
 

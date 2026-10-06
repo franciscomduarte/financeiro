@@ -72,6 +72,7 @@ class MenuLateral extends Component
         'admin.clinica'         => 'dados_clinica',
         'admin.usuarios'        => 'usuarios',
         'prontuario.modelos'    => 'dados_clinicos',
+        'atendimento.fichas'    => 'dados_clinicos',
     ];
 
     private ?\App\Models\User $usuario = null;
@@ -138,6 +139,7 @@ class MenuLateral extends Component
 
         $this->menuUsuario = $this->itens(array_filter([
             $temClinica && ! $this->suporte ? ['Minha conta', 'minha-conta', 'minha-conta', 'conta'] : null,
+            $temClinica ? ['Fichas de atendimento', 'atendimento.fichas', 'atendimento.fichas', 'documentos'] : null,
             $temClinica ? ['Modelos de termos e orientações', 'prontuario.modelos', 'prontuario.modelos', 'documentos'] : null,
             $temClinica ? ['Profissionais e horários', 'agenda.configuracao', 'agenda.configuracao', 'horarios'] : null,
             $temClinica ? ['Dados da clínica', 'admin.clinica', 'admin.clinica', 'clinica'] : null,

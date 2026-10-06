@@ -38,14 +38,14 @@ class Prontuario extends Component
     use Concerns\MensagemDeErro;
     use WithFileUploads;
 
-    public const ABAS = ['evolucoes', 'fotos', 'termos', 'orientacoes'];
+    public const ABAS = ['atendimentos', 'evolucoes', 'fotos', 'termos', 'orientacoes'];
     private const POR_PAGINA = 20;
 
     #[Locked]
     public string $pacienteId;
 
-    #[Url(except: 'evolucoes')]
-    public string $aba = 'evolucoes';
+    #[Url(except: 'atendimentos')]
+    public string $aba = 'atendimentos';
 
     public int $limite = self::POR_PAGINA;
 
@@ -90,14 +90,14 @@ class Prontuario extends Component
 
         $this->pacienteId   = $paciente->id;
         $this->fotoTiradaEm = now()->toDateString();
-        $this->aba          = in_array($this->aba, self::ABAS, true) ? $this->aba : 'evolucoes';
+        $this->aba          = in_array($this->aba, self::ABAS, true) ? $this->aba : 'atendimentos';
 
         $registro->registrar($paciente, AcaoAcessoPaciente::AbriuProntuario);
     }
 
     public function updatedAba(): void
     {
-        $this->aba    = in_array($this->aba, self::ABAS, true) ? $this->aba : 'evolucoes';
+        $this->aba    = in_array($this->aba, self::ABAS, true) ? $this->aba : 'atendimentos';
         $this->limite = self::POR_PAGINA;
         $this->limparFlash();
     }
@@ -136,11 +136,40 @@ class Prontuario extends Component
     public function contagens(): array
     {
         return [
+            'atendimentos' => \App\Models\Atendimento::query()->where('paciente_id', $this->pacienteId)->count(),
             'evolucoes'   => ProntuarioEvolucao::query()->where('paciente_id', $this->pacienteId)->count(),
             'fotos'       => ProntuarioFoto::query()->where('paciente_id', $this->pacienteId)->count(),
             'termos'      => ProntuarioTermo::query()->where('paciente_id', $this->pacienteId)->count(),
             'orientacoes' => ProntuarioOrientacao::query()->where('paciente_id', $this->pacienteId)->count(),
         ];
+    }
+
+    #[Computed]
+    public function registrosAtendimento(): Collection
+    {
+        return \App\Models\Atendimento::query()
+            ->with([
+                'profissional:id,nome', 'autor:id,name', 'agendamento:id,inicio_em,procedimento_id', 'agendamento.procedimento:id,nome',
+                'fichas:id,atendimento_id,titulo,campos,respostas', 'injetaveis.produto:id,name,unit_type', 'plano.itens',
+            ])
+            ->where('paciente_id', $this->pacienteId)
+            ->latest('iniciado_em')
+            ->limit($this->limite)
+            ->get();
+    }
+
+    /** Abre um atendimento avulso (sem agendamento) para este paciente. */
+    public function novoAtendimento(\App\Actions\Atendimento\IniciarAtendimentoAction $iniciar): mixed
+    {
+        try {
+            $a = $iniciar->execute($this->pacienteId);
+        } catch (Throwable $e) {
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível iniciar o atendimento');
+
+            return null;
+        }
+
+        return $this->redirectRoute('atendimentos.show', ['id' => $a->id], navigate: true);
     }
 
     #[Computed]

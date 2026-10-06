@@ -2,6 +2,7 @@
     $p = $this->paciente;
     $fuso = config('clinica.fuso_horario');
     $abas = [
+        'atendimentos' => 'Atendimentos',
         'evolucoes'   => 'Evoluções',
         'fotos'       => 'Fotos',
         'termos'      => 'Termos',
@@ -19,7 +20,9 @@
 
     <x-ui.page-header titulo="Prontuário" :subtitulo="$p->nome . ($p->data_nascimento ? ' · ' . $p->data_nascimento->age . ' anos' : '')">
         <x-slot:acoes>
-            @if ($aba === 'termos')
+            @if ($aba === 'atendimentos' && ! $p->anonimizado())
+                <button wire:click="novoAtendimento" wire:loading.attr="disabled" class="btn-primary">+ Novo atendimento</button>
+            @elseif ($aba === 'termos')
                 <button wire:click="abrirTermo" class="btn-primary">+ Novo termo</button>
             @elseif ($aba === 'orientacoes')
                 <button wire:click="abrirOrientacao" class="btn-primary">+ Novas orientações</button>
@@ -66,6 +69,63 @@
             @endforeach
         </nav>
     </div>
+
+    {{-- ═══════════════ ATENDIMENTOS ═══════════════ --}}
+    @if ($aba === 'atendimentos')
+        @if ($this->registrosAtendimento->isEmpty())
+            <div class="card">
+                <x-ui.empty-state titulo="Nenhum atendimento registrado"
+                    texto="Inicie pela agenda (detalhe do horário) ou aqui, com “Novo atendimento”. Fichas, fotos, injetáveis e plano ficam juntos."
+                    icone="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" />
+            </div>
+        @else
+            <div class="space-y-4">
+                @foreach ($this->registrosAtendimento as $at)
+                    @php $preenchidas = $at->fichas->filter->preenchida(); @endphp
+                    <article class="card p-4 sm:p-5" wire:key="at-{{ $at->id }}">
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <p class="font-medium text-stone-900">
+                                    {{ $at->iniciado_em->timezone($fuso)->format('d/m/Y H:i') }}
+                                    @if ($at->agendamento?->procedimento) · {{ $at->agendamento->procedimento->nome }} @endif
+                                </p>
+                                <p class="mt-0.5 text-sm text-stone-500">
+                                    {{ $at->profissional?->nome ?? $at->autor?->name ?? '—' }}
+                                    @if ($at->duracaoTexto()) · {{ $at->duracaoTexto() }} @endif
+                                    · 🔒 {{ $at->visibilidade->label() }}
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="badge {{ $at->emAndamento() ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700' }}">{{ $at->status->label() }}</span>
+                                <a href="{{ route('atendimentos.show', $at->id) }}" wire:navigate class="btn-secondary min-h-10 px-3 text-sm">{{ $at->emAndamento() ? 'Continuar' : 'Abrir' }}</a>
+                            </div>
+                        </div>
+                        @if (! $at->emAndamento())
+                            @foreach ($preenchidas as $ficha)
+                                <details class="mt-3 rounded-xl bg-stone-50 px-4 py-2">
+                                    <summary class="flex min-h-11 cursor-pointer items-center text-sm font-medium text-stone-700">{{ $ficha->titulo }}</summary>
+                                    <div class="pb-3">@include('livewire.atendimento.respostas', ['ficha' => $ficha])</div>
+                                </details>
+                            @endforeach
+                            @if ($at->injetaveis->isNotEmpty())
+                                <p class="mt-3 text-sm text-stone-600"><span class="font-medium text-stone-700">Injetáveis:</span>
+                                    {{ $at->injetaveis->map(fn ($i) => $i->produto?->name . ' ' . rtrim(rtrim(number_format((float) $i->quantidade, 3, ',', '.'), '0'), ',') . ' ' . $i->produto?->unit_type->abbreviation() . ($i->regiao ? ' (' . $i->regiao . ')' : '') . ($i->lotes_baixados ? ' · lote ' . $i->lotes_baixados : ''))->implode('; ') }}
+                                </p>
+                            @endif
+                            @if ($at->plano?->itens?->isNotEmpty())
+                                <p class="mt-2 text-sm text-stone-600"><span class="font-medium text-stone-700">Plano:</span>
+                                    {{ $at->plano->itens->map(fn ($i) => $i->descricao . ' × ' . $i->sessoes)->implode(', ') }}
+                                </p>
+                            @endif
+                        @endif
+                    </article>
+                @endforeach
+            </div>
+            @if ($this->registrosAtendimento->count() >= $limite)
+                <div class="mt-4 text-center"><button type="button" wire:click="verMais" class="btn-secondary">Ver mais</button></div>
+            @endif
+        @endif
+    @endif
 
     {{-- ═══════════════ EVOLUÇÕES ═══════════════ --}}
     @if ($aba === 'evolucoes')

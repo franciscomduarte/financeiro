@@ -40,14 +40,18 @@ class AdicionarFotosProntuarioAction
         ?string $regiao = null,
         ?string $descricao = null,
         ?string $agendamentoId = null,
+        ?string $atendimentoId = null,
     ): array {
         $this->clinicaAtual->garantirEscrita();
         $atendimento = $this->atendimentoDoPaciente($paciente, $agendamentoId);
+        if ($atendimentoId !== null && ! \App\Models\Atendimento::query()->whereKey($atendimentoId)->where('paciente_id', $paciente->id)->exists()) {
+            throw new \InvalidArgumentException('Esse atendimento não é deste paciente.');
+        }
         $pasta       = $this->clinicaAtual->pasta("prontuario/{$paciente->id}/fotos");
         $gravados    = [];
 
         try {
-            return DB::transaction(function () use ($arquivos, $paciente, $momento, $tiradaEm, $regiao, $descricao, $atendimento, $pasta, &$gravados): array {
+            return DB::transaction(function () use ($arquivos, $paciente, $momento, $tiradaEm, $regiao, $descricao, $atendimento, $atendimentoId, $pasta, &$gravados): array {
                 $fotos = [];
                 foreach ($arquivos as $arquivo) {
                     // Tudo que lê o arquivo vem antes do storeAs: o upload do Livewire é movido (não copiado)
@@ -67,6 +71,7 @@ class AdicionarFotosProntuarioAction
                     $fotos[] = ProntuarioFoto::create([
                         'paciente_id'    => $paciente->id,
                         'agendamento_id' => $atendimento?->id,
+                        'atendimento_id' => $atendimentoId,
                         'user_id'        => auth()->id(),
                         'momento'        => $momento,
                         'regiao'         => $regiao !== '' ? $regiao : null,

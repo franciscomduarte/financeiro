@@ -1,4 +1,5 @@
 import './bootstrap';
+import './editor-rico';
 
 /**
  * Alpine.js component – Preenchimento de formulário por voz.

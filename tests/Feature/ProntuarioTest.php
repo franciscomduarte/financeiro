@@ -119,6 +119,7 @@ class ProntuarioTest extends TestCase
         $this->actingAs($admin);
 
         Livewire::test(Prontuario::class, ['id' => $paciente->id])
+            ->set('aba', 'evolucoes')
             ->set('evolucaoTexto', 'Aplicação de toxina, 20U. Sem intercorrências.')
             ->set('evolucaoAgendamentoId', $atend->id)
             ->call('registrarEvolucao')
