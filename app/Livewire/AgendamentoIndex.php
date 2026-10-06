@@ -107,6 +107,14 @@ class AgendamentoIndex extends Component
         $this->criarData     = now()->toDateString();
         $this->reagendarData = now()->toDateString();
 
+        // Vindo de um lead convertido: abre o agendamento já com o paciente escolhido
+        $pacienteId = request()->query('paciente');
+        if (is_string($pacienteId) && \Illuminate\Support\Str::isUuid($pacienteId)
+            && ($paciente = \App\Models\Paciente::query()->select(['id', 'nome'])->find($pacienteId))) {
+            $this->abrirModalCriar();
+            $this->selecionarPaciente($paciente->id, $paciente->nome);
+        }
+
         // Vindo do atendimento finalizado: abre a conclusão (receita/pacote) do horário
         $concluir = request()->query('concluir');
         if (is_string($concluir) && \Illuminate\Support\Str::isUuid($concluir)

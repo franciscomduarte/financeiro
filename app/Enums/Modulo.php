@@ -10,6 +10,7 @@ enum Modulo: string
     case Inicio             = 'inicio';             // painel com números financeiros
     case Agenda             = 'agenda';
     case Notificacoes       = 'notificacoes';       // histórico e agendadas (WhatsApp/e-mail)
+    case Leads              = 'leads';              // interessados e funil de vendas
     case Pacientes          = 'pacientes';
     case DadosClinicos      = 'dados_clinicos';     // anamnese, prontuário, fotos
     case Cobrancas          = 'cobrancas';

@@ -33,23 +33,17 @@ class WhatsAppWebhookController extends Controller
             return response()->json(['status' => 'ok', 'atualizadas' => $this->atualizarEntregas($request)]);
         }
 
-        // Ignora eventos que não são mensagens de áudio
-        if ($request->input('data.messageType') !== 'audioMessage') {
-            return response()->json(['status' => 'ignored']);
-        }
-
         $remoteJid = (string) $request->input('data.key.remoteJid', '');
 
-        // Ignora mensagens enviadas pelo próprio bot (fromMe)
-        if ($request->boolean('data.key.fromMe')) {
+        // Ignora mensagens enviadas pelo próprio número, grupos e status
+        if ($request->boolean('data.key.fromMe') || str_ends_with($remoteJid, '@g.us') || str_starts_with($remoteJid, 'status@')) {
             return response()->json(['status' => 'ignored_own_message']);
         }
 
-        // O remetente precisa ser o número autorizado de alguma clínica; o lançamento vai para ela
+        // Áudio do "WhatsApp da gestão" vira lançamento; o resto pode ser um lead novo
         $clinica = $this->clinicaDoRemetente($remoteJid);
-        if ($clinica === null) {
-            Log::info('WhatsApp webhook: remetente não autorizado', ['jid' => $remoteJid]);
-            return response()->json(['status' => 'unauthorized']);
+        if ($request->input('data.messageType') !== 'audioMessage' || $clinica === null) {
+            return response()->json(['status' => $clinica === null ? $this->registrarLead($request, $remoteJid) : 'ignored']);
         }
 
         $audioUrl = (string) $request->input('data.message.audioMessage.url', '');
@@ -67,6 +61,46 @@ class WhatsAppWebhookController extends Controller
         Log::info('WhatsApp webhook: áudio enfileirado', ['jid' => $remoteJid, 'tenant_id' => $clinica->id]);
 
         return response()->json(['status' => 'queued']);
+    }
+
+    /** Mensagem de número desconhecido para a instância de uma clínica: vira lead (ou atualiza o lead). */
+    private function registrarLead(Request $request, string $remoteJid): string
+    {
+        $evento = str_replace('_', '.', mb_strtolower((string) $request->input('event')));
+        $instancia = (string) $request->input('instance', '');
+        if ($evento !== 'messages.upsert' || $instancia === '' || ! str_ends_with($remoteJid, '@s.whatsapp.net')) {
+            return 'ignored';
+        }
+
+        $clinica = Clinica::query()->select(['id', 'nome', 'status', 'evolution_instance', 'whatsapp_numero'])
+            ->where('evolution_instance', $instancia)->where('status', '!=', StatusClinica::Bloqueada->value)->first();
+        if ($clinica === null) {
+            return 'ignored';
+        }
+
+        $m     = (array) $request->input('data.message', []);
+        $texto = (string) ($m['conversation'] ?? $m['extendedTextMessage']['text'] ?? $m['imageMessage']['caption'] ?? $m['videoMessage']['caption'] ?? '');
+        if ($texto === '') {
+            $texto = match ((string) $request->input('data.messageType')) {
+                'audioMessage'    => '[áudio]',
+                'imageMessage'    => '[foto]',
+                'videoMessage'    => '[vídeo]',
+                'documentMessage' => '[documento]',
+                'stickerMessage'  => '[figurinha]',
+                default           => '[mensagem]',
+            };
+        }
+
+        try {
+            $resultado = app(ClinicaAtual::class)->executarComo($clinica, fn () => app(\App\Actions\Leads\RegistrarMensagemWhatsAppAction::class)
+                ->execute(strtok($remoteJid, '@'), mb_substr(trim((string) $request->input('data.pushName', '')), 0, 150) ?: null, $texto));
+        } catch (\Throwable $e) {
+            Log::error('WhatsApp webhook: falha ao registrar lead', ['tenant_id' => $clinica->id, 'erro' => $e->getMessage()]);
+
+            return 'error';
+        }
+
+        return (string) $resultado;
     }
 
     /** Evolution v1/v2: "data" é um objeto ou uma lista; status em texto (DELIVERY_ACK, READ) ou número. */
