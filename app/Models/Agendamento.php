@@ -110,12 +110,9 @@ class Agendamento extends Model
         return $query->where('status', $status->value);
     }
 
-    /**
-     * Instante real do horário. A agenda grava a hora de parede da clínica sem fuso
-     * (14:00 fica 14:00 no banco); para comparar com now() é preciso ler nesse fuso.
-     */
+    /** Início como instante imutável (a aplicação e o banco usam o fuso da clínica). */
     public function inicioReal(): \Carbon\CarbonImmutable
     {
-        return \Carbon\CarbonImmutable::parse($this->inicio_em->format('Y-m-d H:i:s'), (string) config('clinica.fuso_horario'))->utc();
+        return $this->inicio_em->toImmutable();
     }
 }

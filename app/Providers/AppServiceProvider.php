@@ -60,6 +60,13 @@ class AppServiceProvider extends ServiceProvider
         Queue::before(fn () => app(\App\Support\EscopoProfissional::class)->esquecer());
         Queue::failing(fn ($e) => $e->connectionName === 'sync' ?: app(ClinicaAtual::class)->definir(null));
 
+        // Monitor: conta erros do log para avisar quando se repetem (sistema:monitorar)
+        \Illuminate\Support\Facades\Event::listen(\Illuminate\Log\Events\MessageLogged::class, function ($e): void {
+            if (in_array($e->level, ['error', 'critical', 'alert', 'emergency'], true)) {
+                \App\Services\SaudeSistemaService::registrarErro((string) $e->message);
+            }
+        });
+
         // Ações das telas Livewire passam pelas mesmas regras de acesso da rota da página
         \Livewire\Livewire::addPersistentMiddleware([
             \App\Http\Middleware\EnsureModulo::class,

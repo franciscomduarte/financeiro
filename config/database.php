@@ -97,6 +97,8 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
+            // Mesmo fuso da aplicação para valores gerados pelo banco (CURRENT_TIMESTAMP)
+            'timezone' => env('DB_TIMEZONE', env('APP_TIMEZONE', 'America/Sao_Paulo')),
         ],
 
         'sqlsrv' => [

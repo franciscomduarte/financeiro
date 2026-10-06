@@ -44,6 +44,12 @@ return [
         'key' => env('OPENAI_API_KEY'),
     ],
 
+    // Monitor do sistema (sistema:monitorar): quem recebe os alertas além dos super admins
+    'monitor' => [
+        'emails'           => env('MONITOR_EMAILS'),             // separados por vírgula
+        'whatsapp_clinica' => env('MONITOR_WHATSAPP_CLINICA'),   // slug da clínica cuja instância envia ao "WhatsApp da gestão"
+    ],
+
     // Webhook transacional da Brevo (entrega/abertura dos e-mails): /api/webhooks/brevo/{token}
     'brevo' => [
         'webhook_token' => env('BREVO_WEBHOOK_TOKEN'),
