@@ -98,6 +98,8 @@ Route::middleware('auth')->group(function (): void {
     Route::middleware('modulo:dados_clinicos')->group(function (): void {
         Route::get('/pacientes/{id}/prontuario', Prontuario::class)->name('pacientes.prontuario');
         Route::get('/prontuario/modelos', ProntuarioModelos::class)->name('prontuario.modelos');
+        Route::get('/atendimentos/fichas', \App\Livewire\FichaModelos::class)->name('atendimento.fichas');
+        Route::get('/atendimentos/{id}', \App\Livewire\AtendimentoTela::class)->whereUuid('id')->name('atendimentos.show');
         Route::get('/prontuario/fotos/{id}/{tamanho?}', [ProntuarioArquivoController::class, 'foto'])
             ->whereIn('tamanho', ['mini'])->name('prontuario.foto');
         Route::get('/prontuario/termos/{id}/pdf', [ProntuarioArquivoController::class, 'termo'])->name('prontuario.termo.pdf');

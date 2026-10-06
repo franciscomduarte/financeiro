@@ -106,6 +106,28 @@ class AgendamentoIndex extends Component
         }
         $this->criarData     = now()->toDateString();
         $this->reagendarData = now()->toDateString();
+
+        // Vindo do atendimento finalizado: abre a conclusão (receita/pacote) do horário
+        $concluir = request()->query('concluir');
+        if (is_string($concluir) && \Illuminate\Support\Str::isUuid($concluir)
+            && Agendamento::query()->whereKey($concluir)->whereIn('status', [StatusAgendamento::Agendado, StatusAgendamento::Confirmado])->exists()) {
+            $this->abrirModalConcluir($concluir);
+        }
+    }
+
+    /** Abre (ou retoma) o atendimento clínico deste horário. */
+    public function iniciarAtendimento(string $id, \App\Actions\Atendimento\IniciarAtendimentoAction $iniciar): mixed
+    {
+        try {
+            $agendamento = Agendamento::query()->select(['id', 'paciente_id'])->findOrFail($id);
+            $atendimento = $iniciar->execute((string) $agendamento->paciente_id, $agendamento->id);
+        } catch (Throwable $e) {
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível iniciar o atendimento');
+
+            return null;
+        }
+
+        return $this->redirectRoute('atendimentos.show', ['id' => $atendimento->id], navigate: true);
     }
 
     // ─── Computed ─────────────────────────────────────────────────
