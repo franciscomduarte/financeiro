@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Enums\StatusAgendamento;
-use App\Enums\TipoNotificacaoAgendamento;
-use App\Jobs\NotificacaoAgendamentoJob;
+use App\Enums\TipoNotificacao;
 use App\Models\Agendamento;
 use App\Models\BloqueioAgenda;
 use App\Models\GradeHorario;
@@ -21,6 +20,7 @@ class AgendamentoService
 {
     public function __construct(
         private readonly GoogleCalendarService $googleCalendar,
+        private readonly NotificacaoService $notificacoes,
     ) {}
 
     public function criar(array $dados): Agendamento
@@ -65,8 +65,7 @@ class AgendamentoService
                 Log::warning('AgendamentoService: Google Calendar falhou ao criar', ['error' => $e->getMessage()]);
             }
 
-            NotificacaoAgendamentoJob::dispatch($agendamento->id, TipoNotificacaoAgendamento::Confirmacao)
-                ->onQueue('default');
+            $this->notificacoes->avisarAgendamento($agendamento, TipoNotificacao::AgendamentoConfirmado);
 
             return $agendamento;
         });
@@ -97,8 +96,7 @@ class AgendamentoService
                 }
             }
 
-            NotificacaoAgendamentoJob::dispatch($agendamento->id, TipoNotificacaoAgendamento::Cancelamento)
-                ->onQueue('default');
+            $this->notificacoes->avisarAgendamento($agendamento, TipoNotificacao::AgendamentoCancelado);
 
             return $agendamento;
         });
@@ -155,8 +153,7 @@ class AgendamentoService
                 Log::warning('AgendamentoService: Google Calendar falhou ao criar (reagendamento)', ['error' => $e->getMessage()]);
             }
 
-            NotificacaoAgendamentoJob::dispatch($novo->id, TipoNotificacaoAgendamento::Reagendamento)
-                ->onQueue('default');
+            $this->notificacoes->avisarAgendamento($novo, TipoNotificacao::AgendamentoRemarcado);
 
             return $novo;
         });

@@ -76,8 +76,10 @@ class DisparadorCobrancaMensalJob implements ShouldQueue
 
         if ($this->enviarWhatsapp && $paciente->telefone) {
             try {
-                $whatsapp->enviarCobranca($paciente->telefone, $cobranca, $paciente->nome);
+                $ok = $whatsapp->enviarCobranca($paciente->telefone, $cobranca, $paciente->nome);
                 $registro->update(['whatsapp_enviado_em' => now()]);
+                app(\App\Services\NotificacaoService::class)->registrar(\App\Enums\TipoNotificacao::Cobranca, \App\Enums\CanalNotificacao::WhatsApp, $paciente, (string) $paciente->telefone, 'Cobrança ' . $mesAtual,
+                    'Cobrança de R$ ' . number_format((float) $paciente->valor_mensalidade, 2, ',', '.') . ' com vencimento em ' . (string) $vencimento, $ok, $registro, $whatsapp->ultimoIdMensagem);
             } catch (Throwable $e) {
                 Log::error("WhatsApp falhou para paciente {$paciente->id}: {$e->getMessage()}");
             }
@@ -87,6 +89,8 @@ class DisparadorCobrancaMensalJob implements ShouldQueue
             try {
                 Mail::to($paciente->email)->send(new CobrancaMensalMail($paciente, $cobranca));
                 $registro->update(['email_enviado_em' => now()]);
+                app(\App\Services\NotificacaoService::class)->registrar(\App\Enums\TipoNotificacao::Cobranca, \App\Enums\CanalNotificacao::Email, $paciente, (string) $paciente->email, 'Cobrança ' . $mesAtual,
+                    'Cobrança de R$ ' . number_format((float) $paciente->valor_mensalidade, 2, ',', '.') . ' com vencimento em ' . (string) $vencimento, true, $registro);
             } catch (Throwable $e) {
                 Log::error("E-mail falhou para paciente {$paciente->id}: {$e->getMessage()}");
             }

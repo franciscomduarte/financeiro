@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+#[\Illuminate\Database\Eloquent\Attributes\ObservedBy(\App\Observers\AgendamentoObserver::class)]
 class Agendamento extends Model
 {
     use BelongsToClinica, HasUuids;
@@ -107,5 +108,14 @@ class Agendamento extends Model
     public function scopePorStatus(Builder $query, StatusAgendamento $status): Builder
     {
         return $query->where('status', $status->value);
+    }
+
+    /**
+     * Instante real do horário. A agenda grava a hora de parede da clínica sem fuso
+     * (14:00 fica 14:00 no banco); para comparar com now() é preciso ler nesse fuso.
+     */
+    public function inicioReal(): \Carbon\CarbonImmutable
+    {
+        return \Carbon\CarbonImmutable::parse($this->inicio_em->format('Y-m-d H:i:s'), (string) config('clinica.fuso_horario'))->utc();
     }
 }

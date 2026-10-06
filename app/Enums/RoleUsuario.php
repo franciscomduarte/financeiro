@@ -37,7 +37,7 @@ enum RoleUsuario: string
     {
         return match ($this) {
             self::Admin        => Modulo::cases(),
-            self::Recepcao     => [Modulo::Agenda, Modulo::Pacientes, Modulo::Cobrancas],
+            self::Recepcao     => [Modulo::Agenda, Modulo::Pacientes, Modulo::Cobrancas, Modulo::Notificacoes],
             self::Profissional => [Modulo::Agenda, Modulo::Pacientes, Modulo::DadosClinicos, Modulo::Estoque],
             self::Financeiro   => [
                 Modulo::Inicio, Modulo::Cobrancas, Modulo::Lancamentos, Modulo::Relatorios, Modulo::Taxas,

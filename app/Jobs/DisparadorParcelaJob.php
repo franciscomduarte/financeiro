@@ -87,8 +87,10 @@ class DisparadorParcelaJob implements ShouldQueue
                     'parcela_info' => "{$numeroParcela}/{$parcelamento->total_parcelas}",
                     'descricao'    => $parcelamento->descricao,
                 ]);
-                $whatsapp->enviarCobranca($paciente->telefone, $dadosWhatsapp, $paciente->nome);
+                $ok = $whatsapp->enviarCobranca($paciente->telefone, $dadosWhatsapp, $paciente->nome);
                 $registro->update(['whatsapp_enviado_em' => now()]);
+                app(\App\Services\NotificacaoService::class)->registrar(\App\Enums\TipoNotificacao::Cobranca, \App\Enums\CanalNotificacao::WhatsApp, $paciente, (string) $paciente->telefone, 'Parcela ' . $dadosWhatsapp['parcela_info'],
+                    'Parcela ' . $dadosWhatsapp['parcela_info'] . ' de ' . $parcelamento->descricao, $ok, $registro, $whatsapp->ultimoIdMensagem);
             } catch (Throwable $e) {
                 Log::error("WhatsApp falhou para parcelamento {$this->parcelamentoId}: {$e->getMessage()}");
             }

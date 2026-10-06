@@ -41,9 +41,12 @@ class RegistrarContatoAction
             if (! $paciente->telefone) {
                 throw new RuntimeException('Cadastre o telefone do paciente para enviar por WhatsApp.');
             }
-            if (! $this->whatsApp->enviarTextoParaTelefone($paciente->telefone, self::mensagem($tipo, $paciente->nome, $this->clinicaAtual->nome(), $contexto))) {
+            $texto = self::mensagem($tipo, $paciente->nome, $this->clinicaAtual->nome(), $contexto);
+            if (! $this->whatsApp->enviarTextoParaTelefone($paciente->telefone, $texto)) {
                 throw new RuntimeException('O WhatsApp não respondeu. Confira a conexão nas configurações da clínica e tente de novo.');
             }
+            app(\App\Services\NotificacaoService::class)->registrar(\App\Enums\TipoNotificacao::from($tipo->value), \App\Enums\CanalNotificacao::WhatsApp, $paciente, (string) $paciente->telefone,
+                \App\Enums\TipoNotificacao::from($tipo->value)->label(), $texto, true, idExterno: $this->whatsApp->ultimoIdMensagem);
         }
 
         $contato = RelacionamentoContato::create([

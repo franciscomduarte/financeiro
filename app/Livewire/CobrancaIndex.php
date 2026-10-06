@@ -186,14 +186,18 @@ class CobrancaIndex extends Component
             }
 
             if ($this->reenviarWhatsapp && $cobranca->paciente?->telefone) {
-                $whatsapp->enviarCobranca($cobranca->paciente->telefone, $dados, $cobranca->paciente->nome);
+                $ok = $whatsapp->enviarCobranca($cobranca->paciente->telefone, $dados, $cobranca->paciente->nome);
                 $cobranca->update(['whatsapp_enviado_em' => now()]);
+                app(\App\Services\NotificacaoService::class)->registrar(\App\Enums\TipoNotificacao::Cobranca, \App\Enums\CanalNotificacao::WhatsApp, $cobranca->paciente, (string) $cobranca->paciente->telefone, 'Cobrança (reenvio)',
+                    'Cobrança de R$ ' . number_format((float) $cobranca->valor, 2, ',', '.') . ' com vencimento em ' . $dados['vencimento'], $ok, $cobranca, $whatsapp->ultimoIdMensagem);
             }
 
             if ($this->reenviarEmail && $cobranca->paciente?->email) {
                 Mail::to($cobranca->paciente->email)
                     ->send(new CobrancaMensalMail($cobranca->paciente, $dados));
                 $cobranca->update(['email_enviado_em' => now()]);
+                app(\App\Services\NotificacaoService::class)->registrar(\App\Enums\TipoNotificacao::Cobranca, \App\Enums\CanalNotificacao::Email, $cobranca->paciente, (string) $cobranca->paciente->email, 'Cobrança (reenvio)',
+                    'Cobrança de R$ ' . number_format((float) $cobranca->valor, 2, ',', '.') . ' com vencimento em ' . $dados['vencimento'], true, $cobranca);
             }
 
             $this->modalReenviar = false;

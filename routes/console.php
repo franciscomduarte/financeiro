@@ -66,10 +66,10 @@ Schedule::call($porClinica(function () {
 
 // ─── Agendamentos — lembretes ─────────────────────────────────────────────────
 
-// Verifica e envia lembretes de consulta a cada 15 minutos
-Schedule::call($porClinica(fn () => \App\Jobs\EnviarLembretesAgendamentosJob::dispatch()))
-    ->everyFifteenMinutes()
-    ->name('lembretes-agendamentos')
+// Envia as notificações agendadas (lembretes de consulta) que chegaram na hora
+Schedule::call($porClinica(fn () => \App\Jobs\DespacharNotificacoesJob::dispatch()))
+    ->everyMinute()
+    ->name('despachar-notificacoes')
     ->withoutOverlapping();
 
 // ─── Alertas de vencimento ────────────────────────────────────────────────────

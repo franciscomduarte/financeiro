@@ -44,6 +44,11 @@ return [
         'key' => env('OPENAI_API_KEY'),
     ],
 
+    // Webhook transacional da Brevo (entrega/abertura dos e-mails): /api/webhooks/brevo/{token}
+    'brevo' => [
+        'webhook_token' => env('BREVO_WEBHOOK_TOKEN'),
+    ],
+
     'whatsapp' => [
         'allowed_number' => env('WHATSAPP_ALLOWED_NUMBER'),
         'webhook_token'  => env('WHATSAPP_WEBHOOK_TOKEN'),
