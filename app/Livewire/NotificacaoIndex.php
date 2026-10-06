@@ -139,8 +139,8 @@ class NotificacaoIndex extends Component
             ->when(! $agendadas && $status !== null, fn ($q) => $q->where('status', $status))
             ->when($canal !== null, fn ($q) => $q->where('canal', $canal))
             ->when($tipo !== null, fn ($q) => $q->where('tipo', $tipo))
-            ->when($this->dataValida($this->de), fn ($q) => $q->where($campoData, '>=', now($fuso)->setDateFrom($this->de)->startOfDay()->utc()))
-            ->when($this->dataValida($this->ate), fn ($q) => $q->where($campoData, '<=', now($fuso)->setDateFrom($this->ate)->endOfDay()->utc()))
+            ->when($this->dataValida($this->de), fn ($q) => $q->where($campoData, '>=', now($fuso)->setDateFrom($this->de)->startOfDay()))
+            ->when($this->dataValida($this->ate), fn ($q) => $q->where($campoData, '<=', now($fuso)->setDateFrom($this->ate)->endOfDay()))
             ->when($termo !== '', fn ($q) => $q->where(fn ($w) => $w->where('destinatario_nome', 'ilike', '%' . addcslashes($termo, '%_\\') . '%')
                 ->orWhere('assunto', 'ilike', '%' . addcslashes($termo, '%_\\') . '%')));
     }

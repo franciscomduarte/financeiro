@@ -99,3 +99,17 @@ Schedule::call($porClinica(fn () => app(\App\Actions\GerarLancamentosRecorrentes
     ->timezone('America/Sao_Paulo')
     ->name('lancamentos-recorrentes')
     ->withoutOverlapping();
+
+// ─── Monitor do sistema ───────────────────────────────────────────────────────
+
+// Prova de vida da fila: se parar de rodar, o monitor avisa
+Schedule::job(new \App\Jobs\BatimentoFilaJob(), 'default')
+    ->everyFiveMinutes()
+    ->name('batimento-fila');
+
+// Confere fila, falhas e erros e avisa o dono da plataforma
+Schedule::command('sistema:monitorar')
+    ->everyFiveMinutes()
+    ->name('monitor-sistema')
+    ->withoutOverlapping();
+

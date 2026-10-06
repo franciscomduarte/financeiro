@@ -139,6 +139,7 @@ class PlataformaIndex extends Component
             'aberta'      => $aberta,
             'uso'         => $aberta ? $indicadores->uso($aberta) : null,
             'situacoes'   => StatusClinica::cases(),
+            'saude'       => app(\App\Services\SaudeSistemaService::class)->metricas(),
         ])->layout('layouts.app', ['title' => 'Clínicas']);
     }
 }

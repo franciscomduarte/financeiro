@@ -16,8 +16,8 @@ return [
         'stock_movements', 'stock_products', 'taxas_cartao', 'transacao_anexos', 'transacoes',
     ],
 
-    // Fuso para exibir carimbos de data/hora (created_at etc. são gravados em UTC)
-    'fuso_horario' => 'America/Sao_Paulo',
+    // Fuso da clínica (igual ao app.timezone: tudo é gravado e exibido na hora de Brasília)
+    'fuso_horario' => env('APP_TIMEZONE', 'America/Sao_Paulo'),
 
     // Dias de teste grátis no autocadastro (fase 3)
     'dias_teste' => 14,
