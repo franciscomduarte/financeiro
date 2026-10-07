@@ -40,9 +40,14 @@ class WhatsAppWebhookController extends Controller
 
         $remoteJid = (string) $request->input('data.key.remoteJid', '');
 
-        // Ignora mensagens enviadas pelo próprio número, grupos, canais e status
-        if ($request->boolean('data.key.fromMe') || str_ends_with($remoteJid, '@g.us') || str_ends_with($remoteJid, '@newsletter') || str_starts_with($remoteJid, 'status@')) {
-            return response()->json(['status' => 'ignored_own_message']);
+        // Ignora grupos, canais e status
+        if (str_ends_with($remoteJid, '@g.us') || str_ends_with($remoteJid, '@newsletter') || str_starts_with($remoteJid, 'status@')) {
+            return response()->json(['status' => 'ignored_group']);
+        }
+
+        // Enviada pela clínica (celular, WhatsApp Web ou pelo sistema): entra na conversa do lead, se houver
+        if ($request->boolean('data.key.fromMe')) {
+            return response()->json(['status' => $this->registrarLead($request, $remoteJid, daClinica: true)]);
         }
 
         // Áudio do "WhatsApp da gestão" vira lançamento; o resto pode ser um lead novo
@@ -69,8 +74,8 @@ class WhatsAppWebhookController extends Controller
         return response()->json(['status' => 'queued']);
     }
 
-    /** Mensagem de número desconhecido para a instância de uma clínica: vira lead (ou atualiza o lead). */
-    private function registrarLead(Request $request, string $remoteJid): string
+    /** Mensagem de número desconhecido para a instância de uma clínica: vira lead (ou atualiza o lead). Da clínica: resposta ao lead. */
+    private function registrarLead(Request $request, string $remoteJid, bool $daClinica = false): string
     {
         $evento = str_replace('_', '.', mb_strtolower((string) $request->input('event')));
         $instancia = (string) $request->input('instance', '');
@@ -107,7 +112,8 @@ class WhatsAppWebhookController extends Controller
 
         try {
             $resultado = app(ClinicaAtual::class)->executarComo($clinica, fn () => app(\App\Actions\Leads\RegistrarMensagemWhatsAppAction::class)
-                ->execute($telefone, mb_substr(trim((string) $request->input('data.pushName', '')), 0, 150) ?: null, $texto, $lid));
+                ->execute($telefone, mb_substr(trim((string) $request->input('data.pushName', '')), 0, 150) ?: null, $texto, $lid,
+                    (string) $request->input('data.key.id', '') ?: null, $daClinica));
             Log::info('WhatsApp webhook: mensagem recebida', ['tenant_id' => $clinica->id, 'resultado' => $resultado]);
         } catch (\Throwable $e) {
             Log::error('WhatsApp webhook: falha ao registrar lead', ['tenant_id' => $clinica->id, 'erro' => $e->getMessage()]);

@@ -7,6 +7,7 @@ namespace App\Livewire;
 use App\Actions\Leads\AtualizarLeadAction;
 use App\Actions\Leads\BuscarPacienteDoLead;
 use App\Actions\Leads\CriarLeadAction;
+use App\Actions\Leads\EnviarWhatsAppLeadAction;
 use App\Enums\EtapaLead;
 use App\Enums\Modulo;
 use App\Enums\OrigemLead;
@@ -65,6 +66,9 @@ class LeadIndex extends Component
     public string $contatoTipo = 'ligacao';
     public string $contatoTexto = '';
     public string $contatoProximo = '';
+
+    // ─── Conversa no WhatsApp ───────────────────────────────────
+    public string $resposta = '';
 
     // ─── Perda ──────────────────────────────────────────────────
     public ?string $perdendoId = null;
@@ -167,6 +171,13 @@ class LeadIndex extends Component
             ->orderBy('users.name')->limit(100)->get();
     }
 
+    /** Responder pela ficha só com a Evolution da clínica configurada. */
+    #[Computed]
+    public function whatsappConectado(): bool
+    {
+        return (bool) app(ClinicaAtual::class)->get()?->whatsappConfigurado();
+    }
+
     /** Aviso no formulário: telefone/e-mail já é de um paciente. */
     #[Computed]
     public function pacienteExistente(): ?string
@@ -184,7 +195,7 @@ class LeadIndex extends Component
     {
         $this->limparFlash();
         $this->leadId = $id;
-        $this->reset('contatoTexto', 'contatoProximo');
+        $this->reset('contatoTexto', 'contatoProximo', 'resposta');
         $this->contatoTipo = 'ligacao';
     }
 
@@ -331,6 +342,21 @@ class LeadIndex extends Component
             unset($this->colunas, $this->resumo, $this->lead);
         } catch (Throwable $e) {
             $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível registrar');
+        }
+    }
+
+    /** Resposta enviada pela própria ficha, pelo WhatsApp da clínica. */
+    public function enviarWhatsApp(EnviarWhatsAppLeadAction $enviar): void
+    {
+        $this->limparFlash();
+        $this->validate(['resposta' => ['required', 'string', 'max:2000']], ['resposta.required' => 'Escreva a mensagem.']);
+
+        try {
+            $enviar->execute($this->leadId, $this->resposta);
+            $this->reset('resposta');
+            unset($this->colunas, $this->resumo, $this->lead);
+        } catch (Throwable $e) {
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível enviar');
         }
     }
 

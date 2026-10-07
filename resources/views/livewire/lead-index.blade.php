@@ -183,7 +183,9 @@
 
                     <div class="flex flex-wrap gap-2">
                         @if ($l->whatsappLink())
-                            <a href="{{ $l->whatsappLink($this->textoWhatsApp($l)) }}" target="_blank" rel="noopener" wire:click="whatsappAberto" class="btn bg-emerald-600 text-white hover:bg-emerald-700">WhatsApp</a>
+                            {{-- Celular abre o app; computador abre o WhatsApp Web direto na conversa --}}
+                            <a href="{{ $l->whatsappLink($this->textoWhatsApp($l)) }}" target="_blank" rel="noopener" wire:click="whatsappAberto" class="btn bg-emerald-600 text-white hover:bg-emerald-700 md:hidden"><x-icone.whatsapp class="h-4 w-4" /> Abrir no WhatsApp</a>
+                            <a href="{{ $l->whatsappWebLink($this->textoWhatsApp($l)) }}" target="_blank" rel="noopener" wire:click="whatsappAberto" class="btn hidden bg-emerald-600 text-white hover:bg-emerald-700 md:inline-flex"><x-icone.whatsapp class="h-4 w-4" /> Abrir no WhatsApp Web</a>
                         @endif
                         @if ($l->telefone)
                             <a href="tel:+55{{ \App\Support\Telefone::nacional($l->telefone) }}" class="btn-secondary">Ligar</a>
@@ -207,6 +209,46 @@
                             </select>
                             @if ($l->motivo_perda) <p class="hint">Motivo da perda: {{ $l->motivo_perda }}</p> @endif
                         </div>
+                    @endif
+
+                    @php
+                        $temWhatsApp = $l->whatsappLink() !== null || filled($l->whatsapp_lid);
+                        $conversa = $temWhatsApp ? $l->interacoes->filter->ehMensagemWhatsApp()->take(50)->reverse() : collect();
+                    @endphp
+                    @if ($temWhatsApp)
+                        <section class="rounded-xl border border-stone-200" aria-label="Conversa no WhatsApp" wire:poll.15s>
+                            <p class="flex items-center gap-2 border-b border-stone-100 px-3 py-2 text-sm font-semibold text-stone-900">
+                                <x-icone.whatsapp class="h-4 w-4 text-emerald-600" /> Conversa no WhatsApp
+                            </p>
+                            <div class="max-h-72 space-y-2 overflow-y-auto bg-stone-50/60 px-3 py-3" wire:key="conversa-{{ $l->id }}-{{ $conversa->count() }}" x-data x-init="$el.scrollTop = $el.scrollHeight">
+                                @forelse ($conversa as $m)
+                                    @php $minha = $m->tipo === \App\Enums\TipoInteracaoLead::WhatsAppEnviado; @endphp
+                                    <div class="flex {{ $minha ? 'justify-end' : 'justify-start' }}" wire:key="msg-{{ $m->id }}">
+                                        <div class="max-w-[85%] rounded-2xl px-3 py-2 text-sm shadow-sm {{ $minha ? 'rounded-br-sm bg-emerald-100 text-emerald-950' : 'rounded-bl-sm bg-surface text-stone-800' }}">
+                                            <p class="whitespace-pre-line break-words">{{ $m->texto }}</p>
+                                            <p class="mt-0.5 text-right text-[11px] {{ $minha ? 'text-emerald-800/70' : 'text-stone-400' }}">
+                                                {{ $minha ? ($m->autor ? explode(' ', $m->autor->name)[0] . ' · ' : 'Celular da clínica · ') : '' }}{{ $quando($m->created_at) }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <p class="py-4 text-center text-xs text-stone-400">Nenhuma mensagem ainda. As mensagens trocadas com o WhatsApp da clínica aparecem aqui.</p>
+                                @endforelse
+                            </div>
+                            @if ($this->whatsappConectado)
+                                <form wire:submit="enviarWhatsApp" class="flex items-end gap-2 border-t border-stone-100 p-2">
+                                    <textarea wire:model="resposta" rows="2" maxlength="2000" class="input min-h-11 flex-1 resize-none" aria-label="Mensagem para {{ $l->nome }}"
+                                              placeholder="Escreva a resposta…" x-on:keydown.enter="if (! $event.shiftKey && window.matchMedia('(min-width: 768px)').matches) { $event.preventDefault(); $wire.enviarWhatsApp() }"></textarea>
+                                    <button type="submit" class="btn bg-emerald-600 text-white hover:bg-emerald-700" wire:loading.attr="disabled" wire:target="enviarWhatsApp">
+                                        <span wire:loading.remove wire:target="enviarWhatsApp">Enviar</span><span wire:loading wire:target="enviarWhatsApp">Enviando…</span>
+                                    </button>
+                                </form>
+                                @error('resposta') <p class="field-error px-3 pb-2">{{ $message }}</p> @enderror
+                                @if ($flashErro) <p class="px-3 pb-2 text-sm text-red-700" role="alert">{{ $flashErro }}</p> @endif
+                            @else
+                                <p class="hint border-t border-stone-100 px-3 py-2">Para responder por aqui, conecte o WhatsApp da clínica em Dados da clínica.</p>
+                            @endif
+                        </section>
                     @endif
 
                     @if ($l->etapa->aberta())
@@ -238,6 +280,7 @@
                         <p class="mb-2 text-sm font-semibold text-stone-900">Histórico</p>
                         <ol class="space-y-3 border-l border-stone-200 pl-4">
                             @foreach ($l->interacoes as $i)
+                                @continue($temWhatsApp && $i->ehMensagemWhatsApp())
                                 <li class="relative">
                                     <span class="absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full bg-rose-400" aria-hidden="true"></span>
                                     <p class="text-xs text-stone-500">{{ $i->tipo->label() }} · {{ $i->created_at->timezone($fuso)->format('d/m/Y H:i') }}{{ $i->autor ? ' · ' . $i->autor->name : '' }}</p>

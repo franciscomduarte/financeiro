@@ -86,13 +86,13 @@ class LeadsTest extends TestCase
 
         $msg = fn (string $jid, string $texto, string $nome = 'Bia') => $this->postJson('/api/whatsapp/webhook', [
             'event' => 'messages.upsert', 'instance' => 'lc',
-            'data'  => ['key' => ['remoteJid' => $jid, 'fromMe' => false, 'id' => 'X'], 'pushName' => $nome, 'messageType' => 'conversation', 'message' => ['conversation' => $texto]],
+            'data'  => ['key' => ['remoteJid' => $jid, 'fromMe' => false, 'id' => uniqid('X')], 'pushName' => $nome, 'messageType' => 'conversation', 'message' => ['conversation' => $texto]],
         ]);
 
         $msg('556196666333@s.whatsapp.net', 'Oi, quanto custa o preenchimento?')->assertJson(['status' => 'lead_criado']);
         $msg('556196666333@s.whatsapp.net', 'Alô?')->assertJson(['status' => 'lead_atualizado']);
         $msg('556177772222@s.whatsapp.net', 'Bom dia')->assertJson(['status' => 'paciente']);
-        $msg('120363000000@g.us', 'grupo')->assertJson(['status' => 'ignored_own_message']);
+        $msg('120363000000@g.us', 'grupo')->assertJson(['status' => 'ignored_group']);
 
         // "Webhook by Events" ligado: o evento vem no endereço; token no corpo também vale
         config(['services.whatsapp.webhook_token' => 'segredo']);
@@ -109,7 +109,7 @@ class LeadsTest extends TestCase
         // Contato identificado pelo código do WhatsApp (…@lid): usa o número alternativo, ou o próprio código
         $lid = fn (string $id, array $key = []) => $this->postJson('/api/whatsapp/webhook', [
             'event' => 'messages.upsert', 'instance' => 'lc',
-            'data' => ['key' => ['remoteJid' => "{$id}@lid", 'fromMe' => false, 'id' => 'L'] + $key, 'pushName' => 'Rui', 'messageType' => 'conversation', 'message' => ['conversation' => 'Oi']],
+            'data' => ['key' => ['remoteJid' => "{$id}@lid", 'fromMe' => false, 'id' => uniqid('L')] + $key, 'pushName' => 'Rui', 'messageType' => 'conversation', 'message' => ['conversation' => 'Oi']],
         ]);
         $lid('187654321098765', ['senderPn' => '556194444333@s.whatsapp.net'])->assertJson(['status' => 'lead_criado']);
         $lid('111222333444555')->assertJson(['status' => 'lead_criado']);
@@ -125,7 +125,67 @@ class LeadsTest extends TestCase
         $this->assertSame('Bia', $lead->nome);
         $this->assertSame('(61) 99666-6333', $lead->telefone);
         $this->assertSame(OrigemLead::WhatsApp, $lead->origem);
-        $this->assertSame(1, $lead->interacoes()->count()); // mensagens seguidas não repetem
+        $this->assertSame(['Alô?', 'Oi, quanto custa o preenchimento?'], $lead->interacoes()->pluck('texto')->all()); // a conversa toda
+    }
+
+    public function test_conversa_no_whatsapp_resposta_pelo_celular_e_pelo_sistema(): void
+    {
+        $user = User::factory()->create(['role' => 'recepcao']);
+        app(ClinicaAtual::class)->definir(null);
+        $webhook = fn (string $jid, string $texto, string $id, bool $daClinica = false) => $this->postJson('/api/whatsapp/webhook', [
+            'event' => 'messages.upsert', 'instance' => 'lc',
+            'data'  => ['key' => ['remoteJid' => $jid, 'fromMe' => $daClinica, 'id' => $id], 'pushName' => 'Bia', 'messageType' => 'conversation', 'message' => ['conversation' => $texto]],
+        ]);
+
+        $webhook('556196666333@s.whatsapp.net', 'Oi, quanto custa?', 'A1')->assertJson(['status' => 'lead_criado']);
+        $webhook('556196666333@s.whatsapp.net', 'Oi, quanto custa?', 'A1')->assertJson(['status' => 'duplicada']); // reenvio do webhook
+        // Resposta pelo celular da clínica: entra na conversa e conta como primeiro contato
+        $webhook('556196666333@s.whatsapp.net', 'Oi Bia! R$ 900.', 'B1', daClinica: true)->assertJson(['status' => 'resposta_registrada']);
+        $webhook('556190000000@s.whatsapp.net', 'Lembrete da consulta', 'B2', daClinica: true)->assertJson(['status' => 'ignorado']); // não é lead
+
+        app(ClinicaAtual::class)->definir($this->clinica->fresh());
+        $lead = Lead::sole();
+        $this->assertSame(EtapaLead::EmContato, $lead->etapa);
+        $this->assertNotNull($lead->primeiro_contato_em);
+
+        // Resposta pela ficha: vai pela Evolution e entra na conversa com o autor
+        $this->actingAs($user);
+        Livewire::test(LeadIndex::class)->call('abrir', $lead->id)
+            ->assertSee('Conversa no WhatsApp')->assertSee('Oi Bia! R$ 900.')->assertSee('Celular da clínica')
+            ->set('resposta', '')->call('enviarWhatsApp')->assertHasErrors('resposta')
+            ->set('resposta', 'Quer agendar uma avaliação?')->call('enviarWhatsApp')
+            ->assertHasNoErrors()->assertSet('resposta', '')->assertSet('flashErro', null)
+            ->assertSee('Quer agendar uma avaliação?');
+        Http::assertSent(fn ($r) => str_contains($r->url(), '/message/sendText/lc') && $r['number'] === '5561996666333'
+            && $r['textMessage']['text'] === 'Quer agendar uma avaliação?');
+        $enviada = LeadInteracao::query()->where('mensagem_id', 'MSG1')->sole();
+        $this->assertSame($user->id, $enviada->user_id);
+        $this->assertSame(TipoInteracaoLead::WhatsAppEnviado, $enviada->tipo);
+
+        // Eco da mesma mensagem no webhook não duplica
+        app(ClinicaAtual::class)->definir(null);
+        $webhook('556196666333@s.whatsapp.net', 'Quer agendar uma avaliação?', 'MSG1', daClinica: true)->assertJson(['status' => 'duplicada']);
+        app(ClinicaAtual::class)->definir($this->clinica->fresh());
+        $this->assertSame(3, LeadInteracao::query()->where('lead_id', $lead->id)->count()); // recebida, resposta do celular, resposta do sistema
+    }
+
+    public function test_responder_lead_sem_numero_usa_o_codigo_do_whatsapp_e_mostra_falha(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => 'recepcao']));
+        Http::swap(new \Illuminate\Http\Client\Factory);
+        Http::fake(['*' => Http::sequence()->push(['key' => ['id' => 'L1']], 201)->push(['error' => 'not exists'], 400)]);
+        [$lead] = app(CriarLeadAction::class)->execute(['nome' => 'Rui', 'whatsapp_lid' => '111222333444555'], OrigemLead::WhatsApp);
+
+        Livewire::test(LeadIndex::class)->call('abrir', $lead->id)->set('resposta', 'Olá!')->call('enviarWhatsApp')->assertSet('flashErro', null);
+        Http::assertSent(fn ($r) => ($r['number'] ?? null) === '111222333444555@lid');
+
+        Livewire::test(LeadIndex::class)->call('abrir', $lead->id)->set('resposta', 'Oi de novo')->call('enviarWhatsApp')
+            ->assertSet('resposta', 'Oi de novo')->assertSee('escondeu o número');
+
+        // Sem WhatsApp conectado na clínica: só o atalho, sem caixa de resposta
+        $this->clinica->update(['evolution_instance' => null]);
+        app(ClinicaAtual::class)->definir($this->clinica->fresh());
+        Livewire::test(LeadIndex::class)->call('abrir', $lead->id)->assertSee('conecte o WhatsApp da clínica')->assertDontSee('Escreva a resposta');
     }
 
     public function test_funil_contato_perda_e_conversao_em_paciente(): void
