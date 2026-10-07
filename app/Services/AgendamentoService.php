@@ -110,7 +110,7 @@ class AgendamentoService
 
         return DB::transaction(function () use ($agendamento, $novaData, $novoHorario): Agendamento {
             $agendamento->load(['paciente', 'profissional', 'procedimento']);
-            $procedimento = $agendamento->procedimento;
+            $duracao = self::duracaoMinutos($agendamento);
 
             // Marca o original como reagendado e deleta o evento Google
             $eventIdOriginal   = $agendamento->google_event_id;
@@ -128,12 +128,13 @@ class AgendamentoService
 
             // Cria o novo agendamento
             $inicioEm = Carbon::parse("{$novaData} {$novoHorario}")->timezone(config('app.timezone'));
-            $fimEm    = $inicioEm->copy()->addMinutes($procedimento->duracao_minutos);
+            $fimEm    = $inicioEm->copy()->addMinutes($duracao);
 
             $novo = Agendamento::create([
                 'paciente_id'           => $agendamento->paciente_id,
                 'profissional_id'       => $agendamento->profissional_id,
                 'procedimento_id'       => $agendamento->procedimento_id,
+                'procedimentos_ids'     => $agendamento->procedimentos_ids,
                 'inicio_em'             => $inicioEm,
                 'fim_em'                => $fimEm,
                 'status'                => StatusAgendamento::Agendado->value,
@@ -189,10 +190,62 @@ class AgendamentoService
         return $agendamento;
     }
 
+    /** Duração do atendimento: a marcada no agendamento (fim − início) ou a soma dos procedimentos. */
+    public static function duracaoMinutos(Agendamento $agendamento): int
+    {
+        if ($agendamento->inicio_em && $agendamento->fim_em && $agendamento->fim_em->gt($agendamento->inicio_em)) {
+            return (int) $agendamento->inicio_em->diffInMinutes($agendamento->fim_em);
+        }
+        $ids = $agendamento->procedimentos_ids ?: [$agendamento->procedimento_id];
+
+        return max(1, (int) \App\Models\Procedimento::whereIn('id', $ids)->sum('duracao_minutos'));
+    }
+
+    /**
+     * Por que o horário não está livre (fora do expediente, intervalo, outro paciente, bloqueio); null se estiver livre.
+     * Usado para avisar no encaixe: a equipe pode marcar mesmo assim.
+     */
+    public function conflito(string $profissionalId, string $data, string $hora, int $duracaoMinutos, ?string $ignorarAgendamentoId = null): ?string
+    {
+        $inicio = Carbon::parse("{$data} {$hora}");
+        $fim    = $inicio->copy()->addMinutes($duracaoMinutos);
+
+        $grade = GradeHorario::where('profissional_id', $profissionalId)
+            ->where('dia_semana', (int) $inicio->dayOfWeek)->where('ativo', true)->first();
+        if (! $grade) {
+            return 'O profissional não atende neste dia da semana.';
+        }
+        if ($inicio->lt(Carbon::parse("{$data} {$grade->hora_inicio}")) || $fim->gt(Carbon::parse("{$data} {$grade->hora_fim}"))) {
+            return 'Fica fora do horário de atendimento do profissional (' . substr((string) $grade->hora_inicio, 0, 5) . '–' . substr((string) $grade->hora_fim, 0, 5) . ').';
+        }
+        if (($intervalo = $grade->intervalo()) && $inicio->lt(Carbon::parse("{$data} {$intervalo[1]}")) && $fim->gt(Carbon::parse("{$data} {$intervalo[0]}"))) {
+            return 'Cai no intervalo do profissional (' . $intervalo[0] . '–' . $intervalo[1] . ').';
+        }
+
+        $outro = Agendamento::query()->with('paciente:id,nome')
+            ->select(['id', 'paciente_id', 'inicio_em', 'fim_em'])
+            ->where('profissional_id', $profissionalId)
+            ->whereIn('status', [StatusAgendamento::Agendado->value, StatusAgendamento::Confirmado->value])
+            ->when($ignorarAgendamentoId, fn ($q) => $q->whereKeyNot($ignorarAgendamentoId))
+            ->where('inicio_em', '<', $fim)->where('fim_em', '>', $inicio)
+            ->orderBy('inicio_em')->first();
+        if ($outro) {
+            $fuso = config('clinica.fuso_horario');
+
+            return 'Já tem ' . ($outro->paciente?->nome ?? 'outro paciente') . ' das ' . $outro->inicio_em->timezone($fuso)->format('H:i')
+                . ' às ' . $outro->fim_em->timezone($fuso)->format('H:i') . '.';
+        }
+
+        $bloqueado = BloqueioAgenda::where('profissional_id', $profissionalId)
+            ->where('inicio_em', '<', $fim)->where('fim_em', '>', $inicio)->exists();
+
+        return $bloqueado ? 'A agenda do profissional está bloqueada neste horário.' : null;
+    }
+
     /**
      * @return list<string> ex: ["09:00", "10:00", "14:00"]
      */
-    public function slotsDisponiveis(string $profissionalId, string $data, int $duracaoMinutos): array
+    public function slotsDisponiveis(string $profissionalId, string $data, int $duracaoMinutos, ?string $ignorarAgendamentoId = null): array
     {
         $dataCarbon = Carbon::parse($data);
         $diaSemana  = (int) $dataCarbon->dayOfWeek; // 0=dom, 6=sab
@@ -225,6 +278,7 @@ class AgendamentoService
         $agendamentosOcupados = Agendamento::where('profissional_id', $profissionalId)
             ->whereIn('status', [StatusAgendamento::Agendado->value, StatusAgendamento::Confirmado->value])
             ->whereDate('inicio_em', $data)
+            ->when($ignorarAgendamentoId, fn ($q) => $q->whereKeyNot($ignorarAgendamentoId)) // ao reagendar, o próprio horário fica livre
             ->get(['inicio_em', 'fim_em']);
 
         // Busca bloqueios no dia

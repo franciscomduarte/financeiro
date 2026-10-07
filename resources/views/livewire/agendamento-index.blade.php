@@ -679,9 +679,27 @@
                             </div>
                         @else
                             <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                                Nenhum horário livre nesta data. Tente outro dia.
+                                Nenhum horário livre nesta data. Escolha outro dia ou digite o horário abaixo para encaixar.
                             </div>
                         @endif
+
+                        {{-- Encaixe: qualquer horário, com aviso se não estiver livre --}}
+                        @php $foraDaLista = $reagendarSlot !== '' && ! in_array($reagendarSlot, $this->horariosReagendar, true); @endphp
+                        <div class="mt-4">
+                            <label for="reagendar-outro" class="label">Outro horário</label>
+                            <input id="reagendar-outro" type="time" step="300" class="input w-36"
+                                   value="{{ $foraDaLista ? $reagendarSlot : '' }}"
+                                   x-on:change="$wire.set('reagendarSlot', $event.target.value)">
+                            @if ($foraDaLista && $this->conflitoReagendar)
+                                <p class="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800" role="alert">
+                                    <span class="font-medium">Atenção:</span> {{ $this->conflitoReagendar }} Você pode encaixar mesmo assim.
+                                </p>
+                            @elseif ($foraDaLista)
+                                <p class="hint">Horário livre.</p>
+                            @else
+                                <p class="hint">Para encaixar num horário que não está na lista.</p>
+                            @endif
+                        </div>
                     @else
                         <p class="text-sm text-stone-500">Escolha uma data para ver os horários livres.</p>
                     @endif
@@ -696,7 +714,7 @@
                     <span wire:loading wire:target="confirmarReagendamento">
                         <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
                     </span>
-                    Confirmar reagendamento
+                    {{ $reagendarSlot !== '' && $this->conflitoReagendar ? 'Encaixar mesmo assim' : 'Confirmar reagendamento' }}
                 </button>
             </div>
         </div>

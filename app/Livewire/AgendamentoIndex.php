@@ -200,22 +200,48 @@ class AgendamentoIndex extends Component
             return [];
         }
 
-        $agendamento = Agendamento::with('procedimento')->find($this->reagendarId);
+        $agendamento = $this->agendamentoReagendar();
         if (! $agendamento) {
             return [];
         }
 
-        $duracao = $agendamento->procedimentos_ids
-            ? (int) Procedimento::whereIn('id', $agendamento->procedimentos_ids)->sum('duracao_minutos')
-            : $agendamento->procedimento->duracao_minutos;
-
-        /** @var AgendamentoService $service */
-        $service = app(AgendamentoService::class);
-        return $service->slotsDisponiveis(
+        // O próprio agendamento não ocupa o horário que vai deixar
+        return app(AgendamentoService::class)->slotsDisponiveis(
             $agendamento->profissional_id,
             $this->reagendarData,
-            $duracao,
+            AgendamentoService::duracaoMinutos($agendamento),
+            $agendamento->id,
         );
+    }
+
+    /** Horário digitado fora da lista de livres (encaixe): o motivo do aviso, ou null. */
+    #[Computed]
+    public function conflitoReagendar(): ?string
+    {
+        if (! preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $this->reagendarSlot) || in_array($this->reagendarSlot, $this->horariosReagendar, true)) {
+            return null;
+        }
+        $agendamento = $this->agendamentoReagendar();
+        if (! $agendamento || ! $this->reagendarData) {
+            return null;
+        }
+
+        return app(AgendamentoService::class)->conflito(
+            $agendamento->profissional_id, $this->reagendarData, $this->reagendarSlot,
+            AgendamentoService::duracaoMinutos($agendamento), $agendamento->id,
+        );
+    }
+
+    private function agendamentoReagendar(): ?Agendamento
+    {
+        return $this->reagendarId
+            ? Agendamento::query()->select(['id', 'profissional_id', 'procedimento_id', 'procedimentos_ids', 'inicio_em', 'fim_em'])->find($this->reagendarId)
+            : null;
+    }
+
+    public function updatedReagendarSlot(): void
+    {
+        unset($this->conflitoReagendar);
     }
 
     // ─── Paciente (seleção via combobox Alpine) ───────────────────
@@ -263,7 +289,7 @@ class AgendamentoIndex extends Component
     public function updatedReagendarData(): void
     {
         $this->reagendarSlot = '';
-        unset($this->horariosReagendar);
+        unset($this->horariosReagendar, $this->conflitoReagendar);
     }
 
     // ─── Modal Criar ──────────────────────────────────────────────
@@ -432,7 +458,8 @@ class AgendamentoIndex extends Component
             'reagendarSlot' => 'required|date_format:H:i',
         ], [
             'reagendarData.required' => 'Informe a nova data.',
-            'reagendarSlot.required' => 'Selecione o novo horário.',
+            'reagendarSlot.required'    => 'Selecione o novo horário.',
+            'reagendarSlot.date_format' => 'Informe o horário no formato 00:00.',
         ]);
 
         try {
