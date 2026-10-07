@@ -39,11 +39,18 @@
             ['Falhas (24h)', (string) $saude['falhas_24h'], $saude['falhas_24h'] === 0],
             ['Erros (1h)', (string) $saude['erros_hora'], $saude['erros_hora'] < \App\Services\SaudeSistemaService::LIMITE_ERROS_HORA],
             ['Notificações com falha (1h)', (string) $saude['notificacoes_falhas_hora'], $saude['notificacoes_falhas_hora'] < \App\Services\SaudeSistemaService::LIMITE_NOTIFICACOES_HORA],
+            ['Último backup', match (true) {
+                ! $saude['backup']['configurado']          => 'não configurado',
+                $saude['backup']['falha'] !== null         => 'falhou',
+                $saude['backup']['ultimo_horas'] === null  => 'nenhum ainda',
+                default                                    => 'há ' . $saude['backup']['ultimo_horas'] . ' h',
+            }, $saude['backup']['configurado'] && $saude['backup']['falha'] === null && $saude['backup']['ultimo_horas'] !== null
+                && $saude['backup']['ultimo_horas'] < \App\Services\SaudeSistemaService::BACKUP_ATRASADO_HORAS],
         ];
     @endphp
     <section class="card mb-6 p-4 sm:p-5" aria-label="Saúde do sistema">
         <h2 class="text-sm font-semibold text-stone-900">Saúde do sistema</h2>
-        <dl class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <dl class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             @foreach ($itensSaude as [$rotulo, $valor, $ok])
                 <div class="rounded-xl px-3 py-2 {{ $ok ? 'bg-emerald-50' : 'bg-red-50' }}">
                     <dt class="text-xs {{ $ok ? 'text-emerald-700' : 'text-red-700' }}">{{ $rotulo }}</dt>

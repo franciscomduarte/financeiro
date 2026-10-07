@@ -67,6 +67,14 @@ class AppServiceProvider extends ServiceProvider
             }
         });
 
+        // Monitor: resultado do backup diário (spatie/laravel-backup)
+        \Illuminate\Support\Facades\Event::listen(\Spatie\Backup\Events\BackupWasSuccessful::class,
+            fn () => \App\Services\SaudeSistemaService::registrarBackup(true));
+        \Illuminate\Support\Facades\Event::listen(\Spatie\Backup\Events\BackupHasFailed::class,
+            fn ($e) => \App\Services\SaudeSistemaService::registrarBackup(false, $e->exception->getMessage()));
+        \Illuminate\Support\Facades\Event::listen(\Spatie\Backup\Events\CleanupHasFailed::class,
+            fn ($e) => \Illuminate\Support\Facades\Log::error('[Backup] limpeza dos backups antigos falhou', ['erro' => $e->exception->getMessage()]));
+
         // Ações das telas Livewire passam pelas mesmas regras de acesso da rota da página
         \Livewire\Livewire::addPersistentMiddleware([
             \App\Http\Middleware\EnsureModulo::class,

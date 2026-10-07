@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -88,5 +89,68 @@ class MonitorSistemaTest extends TestCase
         $this->falhaDeJob();
         $this->actingAs($this->dono)->get('/plataforma')
             ->assertOk()->assertSee('Saúde do sistema')->assertSee('Falhas (24h)')->assertSee('EnviarNotificacaoJob');
+    }
+
+    // ─── Backup ───────────────────────────────────────────────────
+
+    private function ligarBackup(): void
+    {
+        Storage::fake('backups');
+        config(['filesystems.disks.backups.bucket' => 'meu-bucket', 'backup.backup.password' => 'segredo', 'backup.backup.name' => 'financeiro']);
+    }
+
+    public function test_backup_desligado_nao_avisa_e_aparece_como_nao_configurado(): void
+    {
+        config(['filesystems.disks.backups.bucket' => null]);
+
+        $this->assertFalse(app(SaudeSistemaService::class)->metricas()['backup']['configurado']);
+        $this->artisan('sistema:monitorar')->expectsOutput('Tudo certo.')->assertSuccessful();
+    }
+
+    public function test_backup_que_falha_avisa_e_o_seguinte_bem_sucedido_normaliza(): void
+    {
+        $this->ligarBackup();
+        Storage::disk('backups')->put('financeiro/' . now()->format('Y-m-d-H-i-s') . '.zip', 'zip');
+
+        event(new \Spatie\Backup\Events\BackupHasFailed(new \Exception('pg_dump: conexão recusada'), 'backups', 'financeiro'));
+        $this->artisan('sistema:monitorar')->assertSuccessful();
+        Mail::assertSent(AlertaSistemaMail::class, fn (AlertaSistemaMail $m) => str_contains($m->problemas['backup_falhou'] ?? '', 'pg_dump: conexão recusada'));
+
+        event(new \Spatie\Backup\Events\BackupWasSuccessful('backups', 'financeiro'));
+        $this->assertSame([], app(SaudeSistemaService::class)->problemas());
+        $this->assertSame(0, app(SaudeSistemaService::class)->metricas()['backup']['ultimo_horas']);
+    }
+
+    public function test_backup_atrasado_avisa(): void
+    {
+        $this->ligarBackup();
+        Storage::disk('backups')->put('financeiro/' . now()->subHours(30)->format('Y-m-d-H-i-s') . '.zip', 'zip');
+
+        $problemas = app(SaudeSistemaService::class)->problemas();
+
+        $this->assertStringContainsString('há 30 horas', $problemas['backup_atrasado'] ?? '');
+    }
+
+    public function test_sem_nenhum_backup_so_avisa_depois_do_primeiro_dia(): void
+    {
+        $this->ligarBackup();
+
+        $this->assertArrayNotHasKey('backup_atrasado', app(SaudeSistemaService::class)->problemas());
+
+        Cache::put(SaudeSistemaService::CHAVE_INICIO, now()->subHours(27)->getTimestamp());
+        $this->assertSame('Nenhum backup encontrado no armazenamento.', app(SaudeSistemaService::class)->problemas()['backup_atrasado'] ?? null);
+    }
+
+    public function test_agenda_o_backup_diario_so_quando_configurado(): void
+    {
+        $eventos = fn () => collect(app(\Illuminate\Console\Scheduling\Schedule::class)->events())
+            ->filter(fn ($e) => str_contains((string) $e->command, 'backup:run'));
+
+        config(['filesystems.disks.backups.bucket' => null]);
+        $this->assertFalse($eventos()->first()->filtersPass($this->app));
+
+        $this->ligarBackup();
+        $this->assertTrue($eventos()->first()->filtersPass($this->app));
+        $this->assertSame('0 2 * * *', $eventos()->first()->expression);
     }
 }
