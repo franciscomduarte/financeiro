@@ -16,7 +16,7 @@
 </head>
 <body class="bg-stone-50 text-stone-800 font-sans antialiased">
 
-<div class="flex h-dvh overflow-hidden"
+<div class="flex min-h-dvh md:h-dvh md:overflow-hidden"
      x-data="{
         menuAberto: false,
         desktop: window.matchMedia('(min-width: 768px)').matches,
@@ -40,10 +40,10 @@
     </aside>
 
     {{-- Área principal --}}
-    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <div class="flex-1 flex flex-col min-w-0 overflow-x-clip md:overflow-hidden">
 
         {{-- Barra superior (celular: botão do menu + título) --}}
-        <header class="md:hidden h-14 bg-surface/90 backdrop-blur border-b border-stone-200/70 flex items-center gap-2 px-2 shrink-0">
+        <header class="md:hidden sticky top-0 z-20 h-14 bg-surface/90 backdrop-blur border-b border-stone-200/70 flex items-center gap-2 px-2 shrink-0">
             <button type="button" @click="menuAberto = true" aria-label="Abrir menu"
                     class="w-11 h-11 flex items-center justify-center rounded-lg text-stone-600 hover:bg-stone-100">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
@@ -81,7 +81,7 @@
         @endforeach
 
         {{-- Conteúdo --}}
-        <main class="flex-1 overflow-y-auto">
+        <main class="flex-1 md:overflow-y-auto">
             <div class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
                 {{ $slot ?? '' }}
                 @yield('content')
