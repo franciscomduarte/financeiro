@@ -74,6 +74,10 @@ class EnviarWhatsAppLeadAction
             }
 
             $atualizar = ['ultima_interacao_em' => now(), 'primeiro_contato_em' => $lead->primeiro_contato_em ?? now()];
+            if ($lead->assistente_pausado_em === null) {
+                // A equipe assumiu a conversa: o assistente para de responder este contato
+                $atualizar += ['assistente_pausado_em' => now(), 'assistente_motivo' => 'A equipe respondeu pelo sistema.'];
+            }
             if ($lead->etapa === EtapaLead::Novo) {
                 $atualizar['etapa'] = EtapaLead::EmContato;
             }

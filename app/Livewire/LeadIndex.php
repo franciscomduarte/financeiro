@@ -171,6 +171,34 @@ class LeadIndex extends Component
             ->orderBy('users.name')->limit(100)->get();
     }
 
+    #[Computed]
+    public function assistenteAtivo(): bool
+    {
+        return \App\Models\AssistenteConfiguracao::query()->where('ativo', true)->exists();
+    }
+
+    /** Equipe assume a conversa: o assistente para de responder este lead. */
+    public function pausarAssistente(): void
+    {
+        $this->alterarAssistente(['assistente_pausado_em' => now(), 'assistente_motivo' => 'Pausado por ' . (auth()->user()?->name ?? 'equipe') . '.']);
+    }
+
+    public function retomarAssistente(): void
+    {
+        $this->alterarAssistente(['assistente_pausado_em' => null, 'assistente_motivo' => null]);
+    }
+
+    private function alterarAssistente(array $dados): void
+    {
+        try {
+            app(ClinicaAtual::class)->garantirEscrita();
+            Lead::query()->findOrFail($this->leadId)->update($dados);
+            unset($this->lead);
+        } catch (Throwable $e) {
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível alterar o assistente');
+        }
+    }
+
     /** Responder pela ficha só com a Evolution da clínica configurada. */
     #[Computed]
     public function whatsappConectado(): bool

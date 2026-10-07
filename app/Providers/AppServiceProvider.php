@@ -25,6 +25,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ClinicaAtual::class);
         $this->app->singleton(\App\Support\EscopoProfissional::class);
 
+        // Assistente de WhatsApp: Claude pelo SDK oficial (2 novas tentativas em 429/5xx/rede)
+        $this->app->bind(\App\Contracts\AssistenteIa::class, fn () => new \App\Services\Assistente\ClaudeAssistente(
+            new \Anthropic\Client(apiKey: (string) config('services.anthropic.key'), requestOptions: ['timeout' => 90.0, 'maxRetries' => 2]),
+        ));
+
         // exists:/unique: passam a considerar apenas a clínica ativa
         $this->app->extend('validation.presence', fn ($verifier, $app) => new ClinicaPresenceVerifier(
             $app['db'],

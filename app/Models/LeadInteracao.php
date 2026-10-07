@@ -31,7 +31,7 @@ class LeadInteracao extends Model
     /** Mensagem da conversa no WhatsApp (recebida, ou enviada com id da Evolution). */
     public function ehMensagemWhatsApp(): bool
     {
-        return $this->tipo === TipoInteracaoLead::WhatsAppRecebido
+        return $this->tipo === TipoInteracaoLead::WhatsAppRecebido || $this->tipo === TipoInteracaoLead::WhatsAppAssistente
             || ($this->tipo === TipoInteracaoLead::WhatsAppEnviado && $this->mensagem_id !== null);
     }
 }

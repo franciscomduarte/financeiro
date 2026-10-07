@@ -11,6 +11,7 @@ enum TipoInteracaoLead: string
     case Ligacao           = 'ligacao';
     case WhatsAppEnviado   = 'whatsapp_enviado';
     case WhatsAppRecebido  = 'whatsapp_recebido';
+    case WhatsAppAssistente = 'whatsapp_assistente';
     case Formulario        = 'formulario';
     case Etapa             = 'etapa';
     case Convertido        = 'convertido';
@@ -23,6 +24,7 @@ enum TipoInteracaoLead: string
             self::Ligacao          => 'Ligação',
             self::WhatsAppEnviado  => 'WhatsApp enviado',
             self::WhatsAppRecebido => 'Mensagem recebida',
+            self::WhatsAppAssistente => 'Resposta do assistente',
             self::Formulario       => 'Formulário preenchido',
             self::Etapa            => 'Mudança de etapa',
             self::Convertido       => 'Virou paciente',
@@ -32,6 +34,6 @@ enum TipoInteracaoLead: string
     /** Contato feito pela clínica (conta para "tempo até o primeiro contato"). */
     public function contatoDaClinica(): bool
     {
-        return in_array($this, [self::Ligacao, self::WhatsAppEnviado], true);
+        return in_array($this, [self::Ligacao, self::WhatsAppEnviado, self::WhatsAppAssistente], true);
     }
 }

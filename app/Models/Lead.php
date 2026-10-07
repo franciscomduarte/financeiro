@@ -20,7 +20,7 @@ class Lead extends Model
     protected $fillable = [
         'nome', 'telefone', 'telefone_chave', 'whatsapp_lid', 'email', 'origem', 'procedimento_id', 'interesse', 'etapa', 'motivo_perda',
         'responsavel_id', 'proximo_contato_em', 'primeiro_contato_em', 'ultima_interacao_em', 'paciente_id', 'convertido_em',
-        'observacoes', 'consentimento_em',
+        'observacoes', 'consentimento_em', 'assistente_pausado_em', 'assistente_motivo',
     ];
 
     protected $casts = [
@@ -30,6 +30,7 @@ class Lead extends Model
         'primeiro_contato_em' => 'datetime',
         'ultima_interacao_em' => 'datetime',
         'convertido_em'       => 'datetime',
+        'assistente_pausado_em' => 'datetime',
         'consentimento_em'    => 'datetime',
     ];
 

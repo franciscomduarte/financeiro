@@ -10,6 +10,9 @@
 <div>
     <x-ui.page-header titulo="Leads" subtitulo="Quem demonstrou interesse e ainda não é paciente. Responda rápido e acompanhe até fechar.">
         <x-slot:acoes>
+            @if ($this->podeRelatorio())
+                <a href="{{ route('leads.assistente') }}" wire:navigate class="btn-secondary">Assistente</a>
+            @endif
             <button type="button" wire:click="$set('modalLinks', true)" class="btn-secondary">Links do formulário</button>
             <button type="button" wire:click="novo" class="btn-primary">+ Novo lead</button>
         </x-slot:acoes>
@@ -217,17 +220,34 @@
                     @endphp
                     @if ($temWhatsApp)
                         <section class="rounded-xl border border-stone-200" aria-label="Conversa no WhatsApp" wire:poll.15s>
-                            <p class="flex items-center gap-2 border-b border-stone-100 px-3 py-2 text-sm font-semibold text-stone-900">
-                                <x-icone.whatsapp class="h-4 w-4 text-emerald-600" /> Conversa no WhatsApp
-                            </p>
+                            <div class="flex flex-wrap items-center gap-2 border-b border-stone-100 px-3 py-2">
+                                <p class="flex flex-1 items-center gap-2 text-sm font-semibold text-stone-900">
+                                    <x-icone.whatsapp class="h-4 w-4 text-emerald-600" /> Conversa no WhatsApp
+                                </p>
+                                @if ($this->assistenteAtivo && $l->etapa->aberta())
+                                    @if ($l->assistente_pausado_em)
+                                        <span class="text-xs text-stone-500" title="{{ $l->assistente_motivo }}">🤖 Assistente pausado</span>
+                                        <button type="button" wire:click="retomarAssistente" class="btn-ghost min-h-[44px] px-3 text-xs">Retomar</button>
+                                    @else
+                                        <span class="text-xs text-emerald-700">🤖 Assistente respondendo</span>
+                                        <button type="button" wire:click="pausarAssistente" class="btn-ghost min-h-[44px] px-3 text-xs">Pausar</button>
+                                    @endif
+                                @endif
+                            </div>
+                            @if ($this->assistenteAtivo && $l->assistente_pausado_em && $l->assistente_motivo)
+                                <p class="border-b border-stone-100 bg-amber-50 px-3 py-1.5 text-xs text-amber-800">{{ $l->assistente_motivo }}</p>
+                            @endif
                             <div class="max-h-72 space-y-2 overflow-y-auto bg-stone-50/60 px-3 py-3" wire:key="conversa-{{ $l->id }}-{{ $conversa->count() }}" x-data x-init="$el.scrollTop = $el.scrollHeight">
                                 @forelse ($conversa as $m)
-                                    @php $minha = $m->tipo === \App\Enums\TipoInteracaoLead::WhatsAppEnviado; @endphp
+                                    @php
+                                        $doAssistente = $m->tipo === \App\Enums\TipoInteracaoLead::WhatsAppAssistente;
+                                        $minha = $doAssistente || $m->tipo === \App\Enums\TipoInteracaoLead::WhatsAppEnviado;
+                                    @endphp
                                     <div class="flex {{ $minha ? 'justify-end' : 'justify-start' }}" wire:key="msg-{{ $m->id }}">
                                         <div class="max-w-[85%] rounded-2xl px-3 py-2 text-sm shadow-sm {{ $minha ? 'rounded-br-sm bg-emerald-100 text-emerald-950' : 'rounded-bl-sm bg-surface text-stone-800' }}">
                                             <p class="whitespace-pre-line break-words">{{ $m->texto }}</p>
                                             <p class="mt-0.5 text-right text-[11px] {{ $minha ? 'text-emerald-800/70' : 'text-stone-400' }}">
-                                                {{ $minha ? ($m->autor ? explode(' ', $m->autor->name)[0] . ' · ' : 'Celular da clínica · ') : '' }}{{ $quando($m->created_at) }}
+                                                {{ $doAssistente ? '🤖 Assistente · ' : ($minha ? ($m->autor ? explode(' ', $m->autor->name)[0] . ' · ' : 'Celular da clínica · ') : '') }}{{ $quando($m->created_at) }}
                                             </p>
                                         </div>
                                     </div>
