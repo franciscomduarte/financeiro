@@ -57,6 +57,10 @@ class UpdateTransacaoAction
                 $data['data_pagamento'] = now()->toDateString();
             }
 
+            if (array_key_exists('antecipar_cartao', $data)) {
+                $transacao->anteciparCartao = $data['antecipar_cartao'] === null ? null : (bool) $data['antecipar_cartao'];
+                unset($data['antecipar_cartao']);
+            }
             $transacao->update($data);
 
             return $transacao->fresh();

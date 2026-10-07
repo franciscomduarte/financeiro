@@ -25,6 +25,9 @@ class Transacao extends Model
 
     protected $table = 'transacoes';
 
+    /** Escolha da venda no cartão (antecipar ou receber mês a mês); null usa o padrão da maquininha. Não é coluna. */
+    public ?bool $anteciparCartao = null;
+
     /** Categorias de receita (entrada) disponíveis. */
     public const CATEGORIAS_ENTRADA = [
         'Procedimento Facial',
@@ -60,6 +63,7 @@ class Transacao extends Model
         'paciente_id',
         'agendamento_id',
         'fornecedor_id',
+        'contrato_id',
         'valor_bruto',
         'taxa_operacional',
         'imposto_estimado',
@@ -198,5 +202,6 @@ class Transacao extends Model
             $this->data_pagamento = $quitado ? $baixas->max('data') : null;
         }
         $this->saveQuietly();
+        app(\App\Actions\Financeiro\SincronizarOrigemTituloAction::class)->execute($this);
     }
 }

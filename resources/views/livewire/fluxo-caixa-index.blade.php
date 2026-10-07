@@ -28,7 +28,7 @@
         </div>
 
         <div class="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <div class="card p-4"><p class="text-sm text-stone-500">Saldo hoje</p><p class="mt-1 whitespace-nowrap text-lg font-semibold tabular-nums sm:text-xl">{{ $brl($p['saldo_hoje']) }}</p><p class="text-xs text-stone-400">somando todas as contas</p></div>
+            <div class="card p-4"><p class="text-sm text-stone-500">Disponível hoje</p><p class="mt-1 whitespace-nowrap text-lg font-semibold tabular-nums sm:text-xl">{{ $brl($p['saldo_hoje']) }}</p><p class="text-xs text-stone-400">@if ($p['a_liberar_cartao'] > 0) + {{ $brl($p['a_liberar_cartao']) }} a liberar do cartão @else somando todas as contas @endif</p></div>
             <div class="card p-4"><p class="text-sm text-stone-500">A receber</p><p class="mt-1 whitespace-nowrap text-lg font-semibold tabular-nums sm:text-xl text-emerald-700">{{ $brl($p['entradas']) }}</p><p class="text-xs text-stone-400">próximos {{ $dias }} dias</p></div>
             <div class="card p-4"><p class="text-sm text-stone-500">A pagar</p><p class="mt-1 whitespace-nowrap text-lg font-semibold tabular-nums sm:text-xl text-red-700">{{ $brl($p['saidas']) }}</p><p class="text-xs text-stone-400">próximos {{ $dias }} dias</p></div>
             <div class="card p-4"><p class="text-sm text-stone-500">Saldo em {{ $dias }} dias</p><p class="mt-1 whitespace-nowrap text-lg font-semibold tabular-nums sm:text-xl {{ $p['saldo_final'] < 0 ? 'text-red-700' : 'text-stone-900' }}">{{ $brl($p['saldo_final']) }}</p><p class="text-xs text-stone-400">se tudo for pago em dia</p></div>
@@ -66,7 +66,7 @@
                 </div>
             @endforeach
         </section>
-        <p class="hint mt-2">Conta o que está a receber e a pagar pelo vencimento (recebimentos de cartão já sem a taxa) e as despesas e receitas recorrentes que ainda vão ser lançadas.</p>
+        <p class="hint mt-2">Conta o que está a receber e a pagar pelo vencimento, as vendas no cartão na data em que a maquininha libera (sem as taxas) e as despesas e receitas recorrentes que ainda vão ser lançadas.</p>
     @endif
 
     @if ($realizado)

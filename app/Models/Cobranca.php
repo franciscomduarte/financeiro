@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToClinica;
+use App\Observers\CobrancaObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[ObservedBy(CobrancaObserver::class)]
 class Cobranca extends Model
 {
     use BelongsToClinica;
@@ -28,6 +31,7 @@ class Cobranca extends Model
         'whatsapp_enviado_em',
         'email_enviado_em',
         'pago_em',
+        'transacao_id',
     ];
 
     protected $casts = [

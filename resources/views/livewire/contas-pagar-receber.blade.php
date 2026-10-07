@@ -176,6 +176,22 @@
                         </div>
                     </div>
 
+                    @if ($mq = $this->perguntaAntecipar())
+                        <fieldset>
+                            <legend class="label">A maquininha libera</legend>
+                            <div class="grid grid-cols-2 gap-2">
+                                @foreach (['parcelado' => ['Mês a mês', 'cada parcela em ' . $mq->prazo_credito_dias . ' dias'], 'antecipado' => ['Antecipado', 'em ' . $mq->antecipacao_dias . ' dia(s), ' . number_format((float) $mq->taxa_antecipacao_mes, 2, ',', '.') . '% ao mês']] as $valor => [$rot, $sub])
+                                    @php $marcado = $baixaCartao === $valor || ($baixaCartao === 'padrao' && ($valor === 'antecipado') === $mq->antecipar_padrao); @endphp
+                                    <label class="relative flex min-h-[44px] cursor-pointer flex-col rounded-xl border px-3 py-2 text-sm {{ $marcado ? 'border-rose-500 bg-rose-50' : 'border-stone-200' }}">
+                                        <input type="radio" wire:model.live="baixaCartao" value="{{ $valor }}" class="sr-only">
+                                        <span class="font-medium text-stone-900">{{ $rot }}</span>
+                                        <span class="text-xs text-stone-500">{{ $sub }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </fieldset>
+                    @endif
+
                     @if (! $baixaEncargos)
                         <button type="button" wire:click="$set('baixaEncargos', true)" class="text-sm font-medium text-rose-600 hover:text-rose-700 min-h-[44px]">
                             + Juros, multa ou desconto

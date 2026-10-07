@@ -12,6 +12,7 @@ enum TipoAlertaVencimento: string
     case Contrato  = 'contrato';
     case PagamentoContrato = 'pagamento_contrato';
     case Documento = 'documento';
+    case Recebimento = 'recebimento';
 
     public function label(): string
     {
@@ -22,6 +23,7 @@ enum TipoAlertaVencimento: string
             self::Contrato  => 'Contrato',
             self::PagamentoContrato => 'Pagamento de contrato',
             self::Documento => 'Documento',
+            self::Recebimento => 'A receber em atraso',
         };
     }
 
@@ -29,7 +31,8 @@ enum TipoAlertaVencimento: string
     public function rota(): string
     {
         return match ($this) {
-            self::Despesa   => 'transacoes.index',
+            self::Despesa   => 'financeiro.pagar',
+            self::Recebimento => 'financeiro.receber',
             self::Fatura    => 'web.contas-consumo',
             self::Guia      => 'web.obrigacoes-fiscais',
             self::Contrato, self::PagamentoContrato => 'web.contratos',

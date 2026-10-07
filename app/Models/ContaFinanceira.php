@@ -21,6 +21,7 @@ class ContaFinanceira extends Model
 
     protected $fillable = [
         'nome', 'tipo', 'banco', 'agencia', 'numero', 'saldo_inicial', 'saldo_inicial_em', 'padrao', 'ativa',
+        'prazo_credito_dias', 'prazo_debito_dias', 'antecipacao_dias', 'taxa_antecipacao_mes', 'antecipar_padrao', 'conta_liquidacao_id',
     ];
 
     protected $casts = [
@@ -29,6 +30,11 @@ class ContaFinanceira extends Model
         'saldo_inicial_em' => 'date',
         'padrao'           => 'boolean',
         'ativa'            => 'boolean',
+        'prazo_credito_dias'   => 'integer',
+        'prazo_debito_dias'    => 'integer',
+        'antecipacao_dias'     => 'integer',
+        'taxa_antecipacao_mes' => 'decimal:2',
+        'antecipar_padrao'     => 'boolean',
     ];
 
     /** Contas criadas para toda clínica (a migration cria as mesmas para as clínicas existentes). */
@@ -41,6 +47,16 @@ class ContaFinanceira extends Model
     public function baixas(): HasMany
     {
         return $this->hasMany(TransacaoBaixa::class, 'conta_financeira_id');
+    }
+
+    /** Para onde a maquininha libera o dinheiro (a configurada ou a conta padrão). */
+    public function contaLiquidacao(): ?self
+    {
+        $id = $this->conta_liquidacao_id
+            ?? static::query()->ativas()->where('padrao', true)->value('id')
+            ?? static::query()->ativas()->where('tipo', TipoContaFinanceira::Banco->value)->value('id');
+
+        return $id && $id !== $this->id ? static::query()->find($id) : null;
     }
 
     public function scopeAtivas(Builder $query): Builder

@@ -21,7 +21,7 @@ class BaixarTransacaoAction
 {
     /**
      * @param  array{valor: float|string, data: string, conta_financeira_id: string, juros?: float|string|null,
-     *               multa?: float|string|null, desconto?: float|string|null, forma_pagamento?: ?string, observacoes?: ?string}  $dados
+     *               multa?: float|string|null, desconto?: float|string|null, forma_pagamento?: ?string, observacoes?: ?string, antecipar?: ?bool}  $dados
      */
     public function execute(Transacao $transacao, array $dados): TransacaoBaixa
     {
@@ -68,6 +68,7 @@ class BaixarTransacaoAction
                 'user_id'             => auth()->id(),
             ]);
 
+            app(GerarRecebiveisCartaoAction::class)->execute($baixa, isset($dados['antecipar']) ? (bool) $dados['antecipar'] : null);
             $t->recalcularPagamento();
 
             Log::info('[Financeiro] baixa registrada', [

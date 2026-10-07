@@ -49,6 +49,7 @@ class AlertasVencimentoService
             ->concat($this->contratos($hoje))
             ->concat($this->pagamentosContrato($hoje))
             ->concat($this->documentos($hoje))
+            ->concat($this->recebimentos($hoje))
             ->sortBy(fn (AlertaVencimento $a) => $a->data->getTimestamp())
             ->values();
 
@@ -64,6 +65,10 @@ class AlertasVencimentoService
             ->select(['id', 'descricao', 'valor_bruto', 'valor_pago', 'status', 'data_vencimento'])
             ->where('tipo', TipoTransacao::Saida->value)
             ->whereIn('status', StatusTransacao::abertos())
+            // Faturas, guias e contratos aparecem pela própria fonte (com nome e tela certos)
+            ->whereNull('contrato_id')
+            ->whereNotIn('id', ContaConsumoFatura::query()->whereNotNull('transacao_id')->select('transacao_id'))
+            ->whereNotIn('id', ObrigacaoFiscalLancamento::query()->whereNotNull('transacao_id')->select('transacao_id'))
             ->where('data_vencimento', '<=', $hoje->addDays(self::DIAS_ANTES_CONTAS)->toDateString())
             ->orderBy('data_vencimento')
             ->limit(self::LIMITE_POR_FONTE)
@@ -181,6 +186,30 @@ class AlertasVencimentoService
 
                 return $itens;
             });
+    }
+
+    /**
+     * Contas a receber vencidas (pacientes que ainda não pagaram), uma linha por lançamento.
+     *
+     * @return Collection<int, AlertaVencimento>
+     */
+    private function recebimentos(CarbonImmutable $hoje): Collection
+    {
+        return Transacao::query()
+            ->with('paciente:id,nome')
+            ->select(['id', 'descricao', 'paciente_id', 'cliente', 'valor_bruto', 'valor_pago', 'status', 'data_vencimento'])
+            ->where('tipo', TipoTransacao::Entrada->value)
+            ->whereIn('status', StatusTransacao::abertos())
+            ->where('data_vencimento', '<', $hoje->toDateString())
+            ->orderBy('data_vencimento')
+            ->limit(self::LIMITE_POR_FONTE)
+            ->get()
+            ->map(fn (Transacao $t) => new AlertaVencimento(
+                TipoAlertaVencimento::Recebimento,
+                trim(($t->paciente?->nome ?? $t->cliente ?? '') . ($t->paciente?->nome || $t->cliente ? ' — ' : '') . $t->descricao),
+                $t->data_vencimento->toImmutable(),
+                $t->valorAberto(),
+            ));
     }
 
     /** @return Collection<int, AlertaVencimento> */

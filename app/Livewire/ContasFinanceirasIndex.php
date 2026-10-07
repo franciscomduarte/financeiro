@@ -9,6 +9,7 @@ use App\Actions\Financeiro\TransferirEntreContasAction;
 use App\Enums\TipoContaFinanceira;
 use App\Enums\TipoTransacao;
 use App\Models\ContaFinanceira;
+use App\Models\RecebivelCartao;
 use App\Models\TransacaoBaixa;
 use App\Models\Transferencia;
 use App\Services\SaldoContasService;
@@ -47,6 +48,13 @@ class ContasFinanceirasIndex extends Component
     public string $numero        = '';
     public bool $padrao          = false;
     public bool $ativa           = true;
+    // Maquininha
+    public string $prazoCredito     = '30';
+    public string $prazoDebito      = '1';
+    public string $antecipacaoDias  = '1';
+    public string $taxaAntecipacao  = '';
+    public bool $anteciparPadrao    = false;
+    public string $contaLiquidacao  = '';
 
     // ─── Transferência ──────────────────────────────────────────
     public bool $modalTransferencia = false;
@@ -91,6 +99,47 @@ class ContasFinanceirasIndex extends Component
             ->orderByDesc('ativa')->orderByDesc('padrao')->orderBy('nome')
             ->limit(50)
             ->get();
+    }
+
+    /**
+     * Cartão ainda não liberado, por maquininha.
+     *
+     * @return Collection<string, array{valor: float, proxima: ?string}>
+     */
+    #[Computed]
+    public function aLiberar(): Collection
+    {
+        return RecebivelCartao::query()->pendentes()
+            ->groupBy('conta_maquininha_id')
+            ->selectRaw('conta_maquininha_id, SUM(valor) AS valor, MIN(data_prevista) AS proxima')
+            ->toBase()->get()
+            ->mapWithKeys(fn ($r) => [$r->conta_maquininha_id => ['valor' => round((float) $r->valor, 2), 'proxima' => $r->proxima]]);
+    }
+
+    /** @return Collection<int, RecebivelCartao> próximos recebíveis da maquininha aberta no extrato */
+    #[Computed]
+    public function agendaCartao(): Collection
+    {
+        if ($this->contaId === '') {
+            return collect();
+        }
+
+        return RecebivelCartao::query()->pendentes()
+            ->where('conta_maquininha_id', $this->contaId)
+            ->with('transacao:id,descricao')
+            ->select(['id', 'transacao_id', 'parcela', 'total_parcelas', 'antecipado', 'data_prevista', 'valor', 'taxa_antecipacao', 'valor_liquido'])
+            ->orderBy('data_prevista')->limit(30)->get();
+    }
+
+    public function liberarAgora(\App\Actions\Financeiro\LiquidarRecebiveisCartaoAction $liquidar): void
+    {
+        try {
+            $n = $liquidar->execute();
+            $this->flashSucesso = $n ? "{$n} " . ($n === 1 ? 'recebimento liberado' : 'recebimentos liberados') . ' para o banco.' : 'Nada vencido para liberar hoje.';
+            unset($this->saldos, $this->aLiberar, $this->agendaCartao, $this->extrato);
+        } catch (Throwable $e) {
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível liberar');
+        }
     }
 
     /** @return Collection<string, float> */
@@ -202,6 +251,10 @@ class ContasFinanceirasIndex extends Component
         $this->tipoConta = TipoContaFinanceira::Banco->value;
         $this->padrao = false;
         $this->ativa  = true;
+        $this->prazoCredito = '30';
+        $this->prazoDebito = $this->antecipacaoDias = '1';
+        $this->taxaAntecipacao = $this->contaLiquidacao = '';
+        $this->anteciparPadrao = false;
         $this->modalConta = true;
     }
 
@@ -217,6 +270,12 @@ class ContasFinanceirasIndex extends Component
         $this->numero     = (string) $c->numero;
         $this->padrao     = $c->padrao;
         $this->ativa      = $c->ativa;
+        $this->prazoCredito    = (string) $c->prazo_credito_dias;
+        $this->prazoDebito     = (string) $c->prazo_debito_dias;
+        $this->antecipacaoDias = (string) $c->antecipacao_dias;
+        $this->taxaAntecipacao = (float) $c->taxa_antecipacao_mes > 0 ? Dinheiro::paraCampo((float) $c->taxa_antecipacao_mes) : '';
+        $this->anteciparPadrao = $c->antecipar_padrao;
+        $this->contaLiquidacao = (string) $c->conta_liquidacao_id;
         $this->modalConta = true;
     }
 
@@ -230,7 +289,16 @@ class ContasFinanceirasIndex extends Component
             'numero'    => ['nullable', 'string', 'max:30'],
             'padrao'    => ['boolean'],
             'ativa'     => ['boolean'],
-        ], ['nome.required' => 'Dê um nome à conta.', 'nome.unique' => 'Já existe uma conta com esse nome.']);
+            'prazoCredito'    => ['required_if:tipoConta,maquininha', 'nullable', 'integer', 'min:0', 'max:120'],
+            'prazoDebito'     => ['required_if:tipoConta,maquininha', 'nullable', 'integer', 'min:0', 'max:60'],
+            'antecipacaoDias' => ['required_if:tipoConta,maquininha', 'nullable', 'integer', 'min:0', 'max:60'],
+            'taxaAntecipacao' => ['nullable', 'regex:/^\d{1,2}([.,]\d{1,2})?$/'],
+            'anteciparPadrao' => ['boolean'],
+            'contaLiquidacao' => ['nullable', 'uuid', 'different:editandoId', Rule::exists('contas_financeiras', 'id')->where('tenant_id', $this->tenantId())],
+        ], [
+            'nome.required' => 'Dê um nome à conta.', 'nome.unique' => 'Já existe uma conta com esse nome.',
+            'taxaAntecipacao.regex' => 'Use um percentual como 1,99.', '*.required_if' => 'Informe o prazo.',
+        ]);
 
         try {
             DB::transaction(function (): void {
@@ -239,6 +307,13 @@ class ContasFinanceirasIndex extends Component
                     'agencia' => $this->agencia ?: null, 'numero' => $this->numero ?: null,
                     'padrao' => $this->padrao && $this->ativa, 'ativa' => $this->ativa,
                 ];
+                if ($this->tipoConta === TipoContaFinanceira::Maquininha->value) {
+                    $dados += [
+                        'prazo_credito_dias' => (int) $this->prazoCredito, 'prazo_debito_dias' => (int) $this->prazoDebito,
+                        'antecipacao_dias' => (int) $this->antecipacaoDias, 'taxa_antecipacao_mes' => Dinheiro::numero($this->taxaAntecipacao),
+                        'antecipar_padrao' => $this->anteciparPadrao, 'conta_liquidacao_id' => $this->contaLiquidacao ?: null,
+                    ];
+                }
                 $conta = $this->editandoId
                     ? tap(ContaFinanceira::query()->findOrFail($this->editandoId))->update($dados)
                     : ContaFinanceira::query()->create($dados + ['saldo_inicial' => 0]);

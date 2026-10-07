@@ -107,6 +107,31 @@ Schedule::job(new \App\Jobs\BatimentoFilaJob(), 'default')
     ->everyFiveMinutes()
     ->name('batimento-fila');
 
+Artisan::command('financeiro:contas-fixas', function () {
+    $total = 0;
+    app(ClinicaAtual::class)->paraCadaClinica(function () use (&$total): void {
+        $total += app(\App\Actions\Financeiro\TitulosContasFixasAction::class)->execute();
+        \App\Models\Cobranca::query()->whereNull('transacao_id')->whereIn('status', ['PENDING', 'OVERDUE'])->limit(1000)->get()
+            ->each(function (\App\Models\Cobranca $c) use (&$total): void {
+                app(\App\Actions\Financeiro\SincronizarCobrancaAction::class)->execute($c);
+                $total++;
+            });
+    });
+    $this->info("{$total} lançamentos gerados a partir de faturas, guias, contratos e cobranças do Asaas em aberto.");
+})->purpose('Coloca faturas, guias, contratos e cobranças do Asaas em aberto no contas a pagar/receber');
+
+// Contas fixas no contas a pagar: faturas e guias lançadas e o mês de cada contrato ativo
+Schedule::call($porClinica(fn () => app(\App\Actions\Financeiro\TitulosContasFixasAction::class)->execute()))
+    ->dailyAt('06:10')
+    ->name('titulos-contas-fixas')
+    ->withoutOverlapping();
+
+// Recebíveis de cartão: libera da Maquininha para o banco o que venceu (e lança a taxa de antecipação)
+Schedule::call($porClinica(fn () => app(\App\Actions\Financeiro\LiquidarRecebiveisCartaoAction::class)->execute()))
+    ->dailyAt('06:15')
+    ->name('liquidar-recebiveis-cartao')
+    ->withoutOverlapping();
+
 // Backup diário (banco + arquivos) fora da VPS; o monitor avisa se falhar ou atrasar
 Schedule::command('backup:clean')
     ->dailyAt('01:30')
