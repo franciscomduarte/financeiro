@@ -67,8 +67,16 @@
             <label for="tx-categoria" class="label">Categoria <span class="text-red-600">*</span></label>
             <select id="tx-categoria" wire:model="categoria" class="input @error('categoria') border-red-300 @enderror">
                 <option value="">Selecione</option>
-                @foreach ($this->categorias as $cat)
-                    <option value="{{ $cat }}">{{ $cat }}</option>
+                @php $planoDoTipo = \App\Models\PlanoConta::doTipo($this->tipo === 'saida' ? 'saida' : 'entrada'); @endphp
+                @if ($categoria !== '' && ! $planoDoTipo->contains('nome', $categoria))
+                    <option value="{{ $categoria }}">{{ $categoria }}</option>
+                @endif
+                @foreach ($planoDoTipo->groupBy(fn ($c) => $c->grupo->label()) as $grupo => $contasGrupo)
+                    <optgroup label="{{ $grupo }}">
+                        @foreach ($contasGrupo as $c)
+                            <option value="{{ $c->nome }}">{{ $c->nome }}</option>
+                        @endforeach
+                    </optgroup>
                 @endforeach
             </select>
             @error('categoria') <p class="field-error">{{ $message }}</p> @enderror

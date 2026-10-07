@@ -52,6 +52,7 @@ class Transacao extends Model
         'tipo',
         'fase',
         'categoria',
+        'categoria_id',
         'subcategoria',
         'centro_custo',
         'descricao',
@@ -137,6 +138,12 @@ class Transacao extends Model
     public function anexos(): HasMany
     {
         return $this->hasMany(TransacaoAnexo::class, 'transacao_id');
+    }
+
+    /** Conta do plano de contas (grupo da DRE). */
+    public function planoConta(): BelongsTo
+    {
+        return $this->belongsTo(PlanoConta::class, 'categoria_id');
     }
 
     /** Pagamentos/recebimentos (baixas) deste lançamento. */

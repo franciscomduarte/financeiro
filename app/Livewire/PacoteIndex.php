@@ -132,7 +132,7 @@ class PacoteIndex extends Component
             'valorTotal'     => ['required', 'numeric', 'min:0.01', 'max:999999.99'],
             'validade'       => ['nullable', 'date', 'after_or_equal:today'],
             'formaPagamento' => ['required', Rule::in(self::formasDePagamento())],
-            'categoria'      => ['required', Rule::in(Transacao::CATEGORIAS_ENTRADA)],
+            'categoria'      => ['required', Rule::in(\App\Models\PlanoConta::nomes('entrada'))],
         ], [
             'pacienteId.required'      => 'Escolha o paciente na lista.',
             'nome.required'            => 'Dê um nome ao pacote. Ex.: 10 sessões de laser.',
@@ -210,7 +210,7 @@ class PacoteIndex extends Component
             'resumo'     => $resumo,
             'status'     => StatusPacote::cases(),
             'formas'     => array_map(fn ($v) => FormaPagamento::from($v), self::formasDePagamento()),
-            'categorias' => Transacao::CATEGORIAS_ENTRADA,
+            'categorias' => \App\Models\PlanoConta::nomes('entrada'),
         ])->layout('layouts.app', ['title' => 'Pacotes']);
     }
 }

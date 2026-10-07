@@ -145,7 +145,7 @@ class RecorrenciaIndex extends Component
             'saidasMensais'    => $mensal('saida'),
             'entradasMensais'  => $mensal('entrada'),
             'formasPagamento'  => array_filter(FormaPagamento::cases(), fn (FormaPagamento $f) => $f->parcelas() === 1),
-            'categorias'       => $this->tipoEditando === 'entrada' ? Transacao::CATEGORIAS_ENTRADA : Transacao::CATEGORIAS_SAIDA,
+            'categorias'       => \App\Models\PlanoConta::nomes($this->tipoEditando === 'entrada' ? 'entrada' : 'saida'),
         ])->layout('layouts.app', ['title' => 'Recorrências']);
     }
 }

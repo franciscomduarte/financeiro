@@ -95,6 +95,12 @@ Route::middleware('auth')->group(function (): void {
     // Cada área só abre para os perfis com acesso (RoleUsuario::modulos())
     Route::get('/dashboard', DashboardIndex::class)->name('dashboard')->middleware('modulo:inicio');
     Route::get('/relatorio', RelatorioIndex::class)->name('web.relatorio')->middleware('modulo:relatorios');
+    Route::middleware('modulo:relatorios')->group(function (): void {
+        Route::get('/financeiro/dre', \App\Livewire\DreIndex::class)->name('financeiro.dre');
+        Route::get('/financeiro/fluxo-de-caixa', \App\Livewire\FluxoCaixaIndex::class)->name('financeiro.fluxo');
+        Route::get('/financeiro/exportar/{relatorio}.{formato}', \App\Http\Controllers\ExportarFinanceiroController::class)
+            ->where(['relatorio' => 'dre|fluxo-projetado|fluxo-realizado', 'formato' => 'pdf|csv'])->name('financeiro.exportar');
+    });
     Route::middleware('modulo:pacientes')->group(function (): void {
         Route::get('/pacientes', PacienteIndex::class)->name('pacientes.index');
         Route::get('/pacientes/{id}/exportar', PacienteExportacaoController::class)->name('pacientes.exportar');
@@ -127,6 +133,7 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/financeiro/a-pagar', \App\Livewire\ContasPagarReceber::class)->name('financeiro.pagar')->defaults('tipo', 'saida');
         Route::get('/financeiro/a-receber', \App\Livewire\ContasPagarReceber::class)->name('financeiro.receber')->defaults('tipo', 'entrada');
         Route::get('/financeiro/contas', \App\Livewire\ContasFinanceirasIndex::class)->name('financeiro.contas');
+        Route::get('/financeiro/plano-de-contas', \App\Livewire\PlanoContasIndex::class)->name('financeiro.plano');
         Route::get('/notas-fiscais', NotaFiscalIndex::class)->name('notas-fiscais.index');
         Route::post('/voz/transacao', [VozTransacaoController::class, 'processar'])->name('voz.transacao');
     });

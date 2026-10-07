@@ -6,6 +6,7 @@ namespace App\Actions;
 
 use App\Models\Clinica;
 use App\Models\ContaFinanceira;
+use App\Models\PlanoConta;
 use App\Models\DocumentoCategoria;
 use App\Models\StockCategory;
 use App\Models\TaxaCartao;
@@ -66,6 +67,7 @@ class CriarPadroesClinicaAction
             }
 
             ContaFinanceira::garantirPadroes();
+            PlanoConta::garantirPadroes();
         });
     }
 }

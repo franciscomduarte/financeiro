@@ -22,12 +22,53 @@
 
     <div class="space-y-6">
 
+    {{-- ─── 0. Dinheiro: saldo, o que vence na semana e o que está atrasado ──── --}}
+    @if ($financeiro)
+        @php
+            $f = $financeiro;
+            $brlF = fn ($v) => ((float) $v < 0 ? '− ' : '') . 'R$ ' . number_format(abs((float) $v), 2, ',', '.');
+        @endphp
+        <section class="card p-4 sm:p-5" aria-label="Financeiro">
+            <div class="grid grid-cols-2 gap-4 lg:grid-cols-5">
+                <a href="{{ route('financeiro.contas') }}" wire:navigate class="col-span-2 rounded-xl p-1 hover:bg-stone-50 lg:col-span-1">
+                    <p class="text-sm text-stone-500">Saldo em contas</p>
+                    <p class="mt-1 whitespace-nowrap text-xl font-semibold tabular-nums sm:text-2xl {{ $f['saldo'] < 0 ? 'text-red-700' : 'text-stone-900' }}">{{ $brlF($f['saldo']) }}</p>
+                    <p class="text-xs text-stone-400">em 30 dias: {{ $brlF($f['saldo_30']) }}</p>
+                </a>
+                <a href="{{ route('financeiro.receber', ['filtro' => 'semana']) }}" wire:navigate class="rounded-xl p-1 hover:bg-stone-50">
+                    <p class="text-sm text-stone-500">A receber (7 dias)</p>
+                    <p class="mt-1 whitespace-nowrap text-lg font-semibold tabular-nums text-emerald-700">{{ $brlF($f['receber_semana']) }}</p>
+                    @if ($f['receber_vencido'] > 0) <p class="text-xs font-medium text-red-700">{{ $brlF($f['receber_vencido']) }} atrasado</p> @endif
+                </a>
+                <a href="{{ route('financeiro.pagar', ['filtro' => 'semana']) }}" wire:navigate class="rounded-xl p-1 hover:bg-stone-50">
+                    <p class="text-sm text-stone-500">A pagar (7 dias)</p>
+                    <p class="mt-1 text-lg font-semibold tabular-nums text-stone-900">{{ $brlF($f['pagar_semana']) }}</p>
+                    @if ($f['pagar_vencido'] > 0) <p class="text-xs font-medium text-red-700">{{ $brlF($f['pagar_vencido']) }} vencido</p> @endif
+                </a>
+                <a href="{{ route('financeiro.dre') }}" wire:navigate class="col-span-2 rounded-xl p-1 hover:bg-stone-50 lg:col-span-2">
+                    <p class="text-sm text-stone-500">Resultado do mês (DRE)</p>
+                    <p class="mt-1 text-lg font-semibold tabular-nums {{ $f['resultado_mes'] < 0 ? 'text-red-700' : 'text-emerald-700' }}">{{ $brlF($f['resultado_mes']) }}</p>
+                    <p class="text-xs text-stone-400">sobre {{ $brlF($f['faturamento_mes']) }} faturados</p>
+                </a>
+            </div>
+            <a href="{{ route('financeiro.fluxo') }}" wire:navigate class="mt-3 block rounded-xl p-1 hover:bg-stone-50">
+                <div class="flex items-center justify-between text-xs text-stone-500">
+                    <span>Saldo previsto nos próximos 30 dias</span>
+                    @if ($f['menor_saldo'] < 0)
+                        <span class="font-medium text-red-700">fica negativo em {{ $f['menor_saldo_em']?->format('d/m') }}</span>
+                    @endif
+                </div>
+                <x-financeiro.grafico-saldo :pontos="$f['projecao']" :altura="80" class="mt-1" aria-label="Saldo previsto nos próximos 30 dias" />
+            </a>
+        </section>
+    @endif
+
     {{-- ─── 1. KPIs — "Como estou este mês?" ──────────────────────── --}}
     <div class="grid gap-4 sm:grid-cols-3">
         @php
             $kpis = [
-                ['label' => 'Receitas do mês',  'valor' => $receitaMes,  'anterior' => $receitaMesAnterior,  'cor' => 'emerald', 'icone' => 'M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941'],
-                ['label' => 'Despesas do mês',  'valor' => $despesaMes,  'anterior' => $despesaMesAnterior,  'cor' => 'rose',    'icone' => 'M2.25 6L9 12.75l4.286-4.286a11.948 11.948 0 014.306 6.43l.776 2.898m0 0l3.182-5.511m-3.182 5.51l-5.511-3.181', 'inverso' => true],
+                ['label' => 'Entrou no mês',  'valor' => $receitaMes,  'anterior' => $receitaMesAnterior,  'cor' => 'emerald', 'icone' => 'M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941'],
+                ['label' => 'Saiu no mês',  'valor' => $despesaMes,  'anterior' => $despesaMesAnterior,  'cor' => 'rose',    'icone' => 'M2.25 6L9 12.75l4.286-4.286a11.948 11.948 0 014.306 6.43l.776 2.898m0 0l3.182-5.511m-3.182 5.51l-5.511-3.181', 'inverso' => true],
                 ['label' => 'Saldo do mês',     'valor' => $saldoMes,    'anterior' => $saldoMesAnterior,    'cor' => $saldoMes >= 0 ? 'blue' : 'orange', 'icone' => 'M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z'],
             ];
             // Classes completas (Tailwind só gera classes escritas por extenso)
