@@ -38,11 +38,11 @@ class FerramentasAssistente
     {
         $ferramentas = [[
             'name'        => 'passar_para_equipe',
-            'description' => 'Passa a conversa para uma pessoa da equipe e pausa o assistente neste contato. Use quando a pessoa pedir para falar com alguém, '
-                . 'reclamar, fizer pergunta de saúde/médica, pedir desconto ou condição especial, ou perguntar algo que não está nas informações da clínica.',
+            'description' => 'Passa a conversa para uma pessoa da equipe e pausa o assistente neste contato. Use quando a resposta não estiver nas informações da clínica, '
+                . 'quando a pessoa pedir para falar com alguém, reclamar, fizer pergunta de saúde/médica ou pedir desconto ou condição especial.',
             'inputSchema' => [
                 'type'                 => 'object',
-                'properties'           => ['motivo' => ['type' => 'string', 'description' => 'Resumo curto do motivo, para a equipe (ex.: "pediu desconto no pacote de botox").']],
+                'properties'           => ['motivo' => ['type' => 'string', 'description' => 'Motivo para a equipe, com a pergunta da pessoa quando houver (ex.: "Sem resposta no treinamento: faz botox em gestante?").']],
                 'required'             => ['motivo'],
                 'additionalProperties' => false,
             ],

@@ -163,6 +163,28 @@ class AssistenteWhatsAppTest extends TestCase
         $this->assertCount(1, $this->ia->chamadas);
     }
 
+    public function test_so_responde_o_que_sabe_e_passa_a_pergunta_para_a_equipe(): void
+    {
+        $lead = $this->lead('Pode fazer botox grávida?');
+        $instrucoes = app(ResponderLeadAction::class)->instrucoes(AssistenteConfiguracao::atual());
+        $this->assertStringContainsString('Responda SOMENTE com o que está escrito', $instrucoes);
+        $this->assertStringContainsString(AssistenteConfiguracao::RESPOSTA_SEM_INFORMACAO, $instrucoes);
+
+        // Frase própria da clínica; mesmo sem texto do modelo, a pessoa recebe a frase
+        AssistenteConfiguracao::atual()->update(['resposta_sem_informacao' => 'Vou ver com a Dra. e já te falo!']);
+        $this->ia->roteiro[] = function (array $ferramentas, Closure $executar): RespostaAssistente {
+            $executar('passar_para_equipe', ['motivo' => 'Sem resposta no treinamento: Pode fazer botox grávida?']);
+
+            return new RespostaAssistente('');
+        };
+
+        $this->assertSame('passou_para_equipe', app(ResponderLeadAction::class)->execute($lead->id));
+        $this->assertStringContainsString('Vou ver com a Dra. e já te falo!', $this->ia->chamadas[0][0]);
+        Http::assertSent(fn ($r) => ($r['number'] ?? null) === '5561996666333' && ($r['textMessage']['text'] ?? null) === 'Vou ver com a Dra. e já te falo!');
+        Http::assertSent(fn ($r) => ($r['number'] ?? null) === '5561988880000' && str_contains($r['textMessage']['text'] ?? '', 'Pode fazer botox grávida?'));
+        $this->assertNotNull($lead->fresh()->assistente_pausado_em);
+    }
+
     public function test_travas_desligado_limite_recusa_e_espera_por_mensagens_seguidas(): void
     {
         $lead = $this->lead();
@@ -231,11 +253,12 @@ class AssistenteWhatsAppTest extends TestCase
 
         $tela = Livewire::test(AssistenteIndex::class)
             ->set('procedimentoAvaliacaoId', '')->call('salvar')->assertHasErrors('procedimentoAvaliacaoId')
-            ->set('procedimentoAvaliacaoId', (string) $this->avaliacao->id)->set('nome', 'Lia')->set('instrucoes', 'Trate por você.')
+            ->set('procedimentoAvaliacaoId', (string) $this->avaliacao->id)->set('nome', 'Lia')->set('instrucoes', 'Trate por você.')->set('respostaSemInformacao', 'Já te respondo!')
             ->call('salvar')->assertHasNoErrors()->assertSee('Assistente ligado')
             ->call('novoConhecimento')->set('titulo', 'Estacionamento')->set('conteudo', 'Estacionamento gratuito no subsolo.')
             ->call('salvarConhecimento')->assertHasNoErrors()->assertSee('Estacionamento');
         $this->assertSame('Lia', AssistenteConfiguracao::atual()->nome);
+        $this->assertSame('Já te respondo!', AssistenteConfiguracao::atual()->respostaSemInformacao());
         $this->assertSame(2, AssistenteConhecimento::count());
 
         $this->ia->roteiro[] = function (array $ferramentas, Closure $executar): RespostaAssistente {

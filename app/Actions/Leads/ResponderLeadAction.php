@@ -87,11 +87,15 @@ class ResponderLeadAction
         }
 
         $lead->refresh();
-        if ($resposta->texto === '') {
-            return $lead->assistente_pausado_em ? 'passou_para_equipe' : 'nada_a_responder';
+        $texto = $resposta->texto;
+        if ($texto === '' && $lead->assistente_pausado_em !== null) {
+            $texto = $config->respostaSemInformacao(); // passou para a equipe sem dizer nada: a pessoa não fica sem resposta
+        }
+        if ($texto === '') {
+            return 'nada_a_responder';
         }
 
-        return $this->enviar($lead, $resposta->texto) ? ($lead->assistente_pausado_em ? 'passou_para_equipe' : 'respondido') : 'falha_envio';
+        return $this->enviar($lead, $texto) ? ($lead->assistente_pausado_em ? 'passou_para_equipe' : 'respondido') : 'falha_envio';
     }
 
     /**
@@ -148,7 +152,8 @@ class ResponderLeadAction
 
         Como responder:
         - Português do Brasil, tom acolhedor e profissional, mensagens curtas como no WhatsApp (até 3 frases curtas). Use no máximo um emoji quando combinar.
-        - Use só as informações deste texto e o que as ferramentas devolverem. Se não souber, diga que vai verificar com a equipe e use passar_para_equipe. Nunca invente preço, prazo, promoção, resultado ou horário.
+        - Responda SOMENTE com o que está escrito neste texto (dados da clínica, procedimentos, treinamento) ou no que as ferramentas devolverem. Não use conhecimento geral, nem para explicar um procedimento, e não deduza nada que não esteja escrito. Nunca invente preço, prazo, promoção, resultado ou horário.
+        - Se a resposta não estiver escrita aqui, ou se tiver qualquer dúvida, não tente responder: use passar_para_equipe com o motivo "Sem resposta no treinamento: <a pergunta da pessoa>" e responda exatamente: "{$config->respostaSemInformacao()}"
         - Não faça diagnóstico nem indique tratamento para um caso específico; diga que isso é avaliado na consulta.
         - Se perguntarem, diga que é a assistente virtual da clínica.
         - Use passar_para_equipe quando a pessoa pedir para falar com alguém, reclamar, falar de assunto de saúde/urgência, pedir desconto ou condição especial, ou mandar algo que você não entende (áudio, foto, documento).

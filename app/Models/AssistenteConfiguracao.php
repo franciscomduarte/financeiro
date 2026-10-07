@@ -17,7 +17,7 @@ class AssistenteConfiguracao extends Model
     protected $table = 'assistente_configuracoes';
 
     protected $fillable = [
-        'ativo', 'nome', 'instrucoes', 'informar_precos', 'pode_agendar', 'procedimento_avaliacao_id', 'profissional_id',
+        'ativo', 'nome', 'instrucoes', 'resposta_sem_informacao', 'informar_precos', 'pode_agendar', 'procedimento_avaliacao_id', 'profissional_id',
         'limite_respostas_mes', 'respostas_mes', 'mes_referencia',
     ];
 
@@ -29,6 +29,14 @@ class AssistenteConfiguracao extends Model
         'respostas_mes'        => 'integer',
         'mes_referencia'       => 'date',
     ];
+
+    public const RESPOSTA_SEM_INFORMACAO = 'Ótima pergunta! Vou confirmar essa informação com a nossa equipe e te respondo em breve. 😊';
+
+    /** Frase usada quando a resposta não está no treinamento. */
+    public function respostaSemInformacao(): string
+    {
+        return filled($this->resposta_sem_informacao) ? trim((string) $this->resposta_sem_informacao) : self::RESPOSTA_SEM_INFORMACAO;
+    }
 
     /** Configuração da clínica ativa (cria desligada na primeira vez). */
     public static function atual(): self
