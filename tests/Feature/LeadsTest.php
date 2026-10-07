@@ -94,8 +94,21 @@ class LeadsTest extends TestCase
         $msg('556177772222@s.whatsapp.net', 'Bom dia')->assertJson(['status' => 'paciente']);
         $msg('120363000000@g.us', 'grupo')->assertJson(['status' => 'ignored_own_message']);
 
+        // "Webhook by Events" ligado: o evento vem no endereço; token no corpo também vale
+        config(['services.whatsapp.webhook_token' => 'segredo']);
+        $this->postJson('/api/whatsapp/webhook/messages-upsert', [
+            'instance' => 'lc', 'apikey' => 'segredo',
+            'data' => ['key' => ['remoteJid' => '556195555111@s.whatsapp.net', 'fromMe' => false, 'id' => 'Y'], 'pushName' => 'Lia', 'messageType' => 'conversation', 'message' => ['conversation' => 'Oi']],
+        ])->assertJson(['status' => 'lead_criado']);
+        $this->postJson('/api/whatsapp/webhook/messages-upsert', ['instance' => 'lc', 'apikey' => 'errado', 'data' => []])->assertJson(['status' => 'unauthorized']);
+        $this->postJson('/api/whatsapp/webhook/messages-upsert', ['instance' => 'outra', 'apikey' => 'segredo',
+            'data' => ['key' => ['remoteJid' => '556195555222@s.whatsapp.net', 'fromMe' => false, 'id' => 'Z'], 'message' => ['conversation' => 'Oi']],
+        ])->assertJson(['status' => 'ignored_unknown_instance']);
+        config(['services.whatsapp.webhook_token' => null]);
+
         app(ClinicaAtual::class)->definir($this->clinica->fresh());
-        $lead = Lead::sole();
+        $this->assertSame(2, Lead::query()->count());
+        $lead = Lead::query()->where('nome', 'Bia')->sole();
         $this->assertSame('Bia', $lead->nome);
         $this->assertSame('(61) 99666-6333', $lead->telefone);
         $this->assertSame(OrigemLead::WhatsApp, $lead->origem);

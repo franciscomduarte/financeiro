@@ -20,8 +20,13 @@ class WhatsAppWebhookController extends Controller
      * Recebe o webhook da Evolution API.
      * Sempre retorna 200 para evitar retentativas do bot.
      */
-    public function handle(Request $request): JsonResponse
+    public function handle(Request $request, ?string $evento = null): JsonResponse
     {
+        // "Webhook by Events": o evento vem no endereço (messages-upsert) quando não vem no corpo
+        if ($evento !== null && blank($request->input('event'))) {
+            $request->merge(['event' => str_replace('-', '.', $evento)]);
+        }
+
         // Validação do token do webhook (se configurado)
         if (! $this->tokenValido($request)) {
             Log::warning('WhatsApp webhook: token inválido', ['ip' => $request->ip()]);
@@ -75,7 +80,9 @@ class WhatsAppWebhookController extends Controller
         $clinica = Clinica::query()->select(['id', 'nome', 'status', 'evolution_instance', 'whatsapp_numero'])
             ->where('evolution_instance', $instancia)->where('status', '!=', StatusClinica::Bloqueada->value)->first();
         if ($clinica === null) {
-            return 'ignored';
+            Log::warning('WhatsApp webhook: nenhuma clínica com esta instância (confira "Instância" em Dados da clínica)', ['instancia' => $instancia]);
+
+            return 'ignored_unknown_instance';
         }
 
         $m     = (array) $request->input('data.message', []);
@@ -94,6 +101,7 @@ class WhatsAppWebhookController extends Controller
         try {
             $resultado = app(ClinicaAtual::class)->executarComo($clinica, fn () => app(\App\Actions\Leads\RegistrarMensagemWhatsAppAction::class)
                 ->execute(strtok($remoteJid, '@'), mb_substr(trim((string) $request->input('data.pushName', '')), 0, 150) ?: null, $texto));
+            Log::info('WhatsApp webhook: mensagem recebida', ['tenant_id' => $clinica->id, 'resultado' => $resultado]);
         } catch (\Throwable $e) {
             Log::error('WhatsApp webhook: falha ao registrar lead', ['tenant_id' => $clinica->id, 'erro' => $e->getMessage()]);
 
@@ -141,8 +149,10 @@ class WhatsAppWebhookController extends Controller
             return true;
         }
 
-        // Evolution API envia o token no header "apikey"
-        return $request->header('apikey') === $tokenEsperado;
+        // Evolution API envia o token no header "apikey" (algumas versões, no corpo)
+        $recebido = (string) ($request->header('apikey') ?? $request->input('apikey', ''));
+
+        return $recebido !== '' && hash_equals((string) $tokenEsperado, $recebido);
     }
 
     /** Clínica cujo número autorizado (clinicas.whatsapp_numero) enviou a mensagem. */
