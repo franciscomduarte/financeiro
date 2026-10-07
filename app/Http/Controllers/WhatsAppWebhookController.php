@@ -40,13 +40,14 @@ class WhatsAppWebhookController extends Controller
 
         $remoteJid = (string) $request->input('data.key.remoteJid', '');
 
-        // Ignora mensagens enviadas pelo próprio número, grupos e status
-        if ($request->boolean('data.key.fromMe') || str_ends_with($remoteJid, '@g.us') || str_starts_with($remoteJid, 'status@')) {
+        // Ignora mensagens enviadas pelo próprio número, grupos, canais e status
+        if ($request->boolean('data.key.fromMe') || str_ends_with($remoteJid, '@g.us') || str_ends_with($remoteJid, '@newsletter') || str_starts_with($remoteJid, 'status@')) {
             return response()->json(['status' => 'ignored_own_message']);
         }
 
         // Áudio do "WhatsApp da gestão" vira lançamento; o resto pode ser um lead novo
-        $clinica = $this->clinicaDoRemetente($remoteJid);
+        [$telefoneRemetente] = self::contato($request, $remoteJid);
+        $clinica = $telefoneRemetente !== null ? $this->clinicaDoRemetente($telefoneRemetente) : null;
         if ($request->input('data.messageType') !== 'audioMessage' || $clinica === null) {
             return response()->json(['status' => $clinica === null ? $this->registrarLead($request, $remoteJid) : 'ignored']);
         }
@@ -73,8 +74,14 @@ class WhatsAppWebhookController extends Controller
     {
         $evento = str_replace('_', '.', mb_strtolower((string) $request->input('event')));
         $instancia = (string) $request->input('instance', '');
-        if ($evento !== 'messages.upsert' || $instancia === '' || ! str_ends_with($remoteJid, '@s.whatsapp.net')) {
-            return 'ignored';
+        if ($evento !== 'messages.upsert' || $instancia === '') {
+            return $this->ignorar('ignored_event', $request, $remoteJid);
+        }
+
+        // Número do contato: no remoteJid ou, quando o WhatsApp usa o código interno (…@lid), nos campos alternativos
+        [$telefone, $lid] = self::contato($request, $remoteJid);
+        if ($telefone === null && $lid === null) {
+            return $this->ignorar('ignored_jid', $request, $remoteJid);
         }
 
         $clinica = Clinica::query()->select(['id', 'nome', 'status', 'evolution_instance', 'whatsapp_numero'])
@@ -100,7 +107,7 @@ class WhatsAppWebhookController extends Controller
 
         try {
             $resultado = app(ClinicaAtual::class)->executarComo($clinica, fn () => app(\App\Actions\Leads\RegistrarMensagemWhatsAppAction::class)
-                ->execute(strtok($remoteJid, '@'), mb_substr(trim((string) $request->input('data.pushName', '')), 0, 150) ?: null, $texto));
+                ->execute($telefone, mb_substr(trim((string) $request->input('data.pushName', '')), 0, 150) ?: null, $texto, $lid));
             Log::info('WhatsApp webhook: mensagem recebida', ['tenant_id' => $clinica->id, 'resultado' => $resultado]);
         } catch (\Throwable $e) {
             Log::error('WhatsApp webhook: falha ao registrar lead', ['tenant_id' => $clinica->id, 'erro' => $e->getMessage()]);
@@ -138,6 +145,40 @@ class WhatsAppWebhookController extends Controller
         }
 
         return $total;
+    }
+
+    /**
+     * Telefone (só dígitos) e/ou código LID do contato.
+     *
+     * @return array{0: ?string, 1: ?string}
+     */
+    private static function contato(Request $request, string $remoteJid): array
+    {
+        $candidatos = [$remoteJid, (string) $request->input('data.key.senderPn', ''), (string) $request->input('data.key.remoteJidAlt', ''),
+            (string) $request->input('data.key.participantPn', ''), (string) $request->input('data.senderPn', '')];
+
+        $telefone = null;
+        foreach ($candidatos as $jid) {
+            if (str_ends_with($jid, '@s.whatsapp.net')) {
+                $telefone = strtok($jid, '@') ?: null;
+                break;
+            }
+        }
+        $lid = str_ends_with($remoteJid, '@lid') ? (strtok($remoteJid, '@') ?: null) : null;
+
+        return [$telefone, $lid];
+    }
+
+    /** Mensagem descartada: registra o motivo (sem o conteúdo) para diagnóstico. */
+    private function ignorar(string $motivo, Request $request, string $remoteJid): string
+    {
+        Log::info('WhatsApp webhook: mensagem ignorada', [
+            'motivo' => $motivo, 'evento' => (string) $request->input('event'), 'instancia' => (string) $request->input('instance'),
+            'tipo_contato' => str_contains($remoteJid, '@') ? substr($remoteJid, strpos($remoteJid, '@')) : '(vazio)',
+            'campos_key' => array_keys((array) $request->input('data.key', [])),
+        ]);
+
+        return $motivo;
     }
 
     private function tokenValido(Request $request): bool

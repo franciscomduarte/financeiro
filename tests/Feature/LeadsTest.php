@@ -106,8 +106,21 @@ class LeadsTest extends TestCase
         ])->assertJson(['status' => 'ignored_unknown_instance']);
         config(['services.whatsapp.webhook_token' => null]);
 
+        // Contato identificado pelo código do WhatsApp (…@lid): usa o número alternativo, ou o próprio código
+        $lid = fn (string $id, array $key = []) => $this->postJson('/api/whatsapp/webhook', [
+            'event' => 'messages.upsert', 'instance' => 'lc',
+            'data' => ['key' => ['remoteJid' => "{$id}@lid", 'fromMe' => false, 'id' => 'L'] + $key, 'pushName' => 'Rui', 'messageType' => 'conversation', 'message' => ['conversation' => 'Oi']],
+        ]);
+        $lid('187654321098765', ['senderPn' => '556194444333@s.whatsapp.net'])->assertJson(['status' => 'lead_criado']);
+        $lid('111222333444555')->assertJson(['status' => 'lead_criado']);
+        $lid('111222333444555')->assertJson(['status' => 'lead_atualizado']);
+        $this->postJson('/api/whatsapp/webhook', ['event' => 'messages.upsert', 'instance' => 'lc', 'data' => ['key' => ['remoteJid' => 'abc@broadcast', 'fromMe' => false]]])
+            ->assertJson(['status' => 'ignored_jid']);
+
         app(ClinicaAtual::class)->definir($this->clinica->fresh());
-        $this->assertSame(2, Lead::query()->count());
+        $this->assertSame(4, Lead::query()->count());
+        $this->assertSame('(61) 99444-4333', Lead::query()->where('whatsapp_lid', '187654321098765')->value('telefone'));
+        $this->assertNull(Lead::query()->where('whatsapp_lid', '111222333444555')->value('telefone'));
         $lead = Lead::query()->where('nome', 'Bia')->sole();
         $this->assertSame('Bia', $lead->nome);
         $this->assertSame('(61) 99666-6333', $lead->telefone);
