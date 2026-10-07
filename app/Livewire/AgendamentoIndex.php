@@ -193,6 +193,23 @@ class AgendamentoIndex extends Component
         return $service->slotsDisponiveis($this->criarProfissionalId, $this->criarData, $duracao);
     }
 
+    /** Horário digitado fora da lista de livres no agendamento novo (encaixe): o motivo do aviso, ou null. */
+    #[Computed]
+    public function conflitoCriar(): ?string
+    {
+        if (! self::horaValida($this->criarSlot) || in_array($this->criarSlot, $this->horariosDisponiveis, true)
+            || ! $this->criarProfissionalId || ! $this->criarData || $this->duracaoTotal === 0) {
+            return null;
+        }
+
+        return app(AgendamentoService::class)->conflito($this->criarProfissionalId, $this->criarData, $this->criarSlot, $this->duracaoTotal);
+    }
+
+    private static function horaValida(string $hora): bool
+    {
+        return (bool) preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $hora);
+    }
+
     #[Computed]
     public function horariosReagendar(): array
     {
@@ -218,7 +235,7 @@ class AgendamentoIndex extends Component
     #[Computed]
     public function conflitoReagendar(): ?string
     {
-        if (! preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $this->reagendarSlot) || in_array($this->reagendarSlot, $this->horariosReagendar, true)) {
+        if (! self::horaValida($this->reagendarSlot) || in_array($this->reagendarSlot, $this->horariosReagendar, true)) {
             return null;
         }
         $agendamento = $this->agendamentoReagendar();

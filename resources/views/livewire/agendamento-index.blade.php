@@ -541,7 +541,8 @@
                             </div>
                             @if (empty($criarSlot))
                                 @if ($criarSlotSugerido && ! in_array($criarSlotSugerido, $this->horariosDisponiveis, true))
-                                    <p class="hint !text-amber-700">O horário das {{ $criarSlotSugerido }}, escolhido no calendário, não está livre para esse profissional e procedimento. Escolha outro.</p>
+                                    <p class="hint !text-amber-700">O horário das {{ $criarSlotSugerido }}, escolhido no calendário, não está livre para esse profissional e procedimento.
+                                        <button type="button" wire:click="$set('criarSlot', '{{ $criarSlotSugerido }}')" class="font-medium underline underline-offset-2">Encaixar às {{ $criarSlotSugerido }}</button> ou escolha outro.</p>
                                 @else
                                     <p class="hint">Escolha um horário para continuar.</p>
                                 @endif
@@ -549,9 +550,27 @@
                         @else
                             <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 space-y-1">
                                 <p class="font-medium">Nenhum horário livre nesta data.</p>
-                                <p class="text-xs">O profissional não atende neste dia da semana ou a agenda já está cheia. Tente outra data ou <a href="{{ route('agenda.configuracao') }}" class="font-medium underline underline-offset-2">ajuste os horários</a>.</p>
+                                <p class="text-xs">O profissional não atende neste dia da semana ou a agenda já está cheia. Tente outra data, digite o horário abaixo para encaixar ou <a href="{{ route('agenda.configuracao') }}" class="font-medium underline underline-offset-2">ajuste os horários</a>.</p>
                             </div>
                         @endif
+
+                        {{-- Encaixe: qualquer horário, com aviso se não estiver livre --}}
+                        @php $criarForaDaLista = $criarSlot !== '' && ! in_array($criarSlot, $this->horariosDisponiveis, true); @endphp
+                        <div class="mt-4">
+                            <label for="criar-outro" class="label">Outro horário</label>
+                            <input id="criar-outro" type="time" step="300" class="input w-36"
+                                   value="{{ $criarForaDaLista ? $criarSlot : '' }}"
+                                   x-on:change="$wire.set('criarSlot', $event.target.value)">
+                            @if ($criarForaDaLista && $this->conflitoCriar)
+                                <p class="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800" role="alert">
+                                    <span class="font-medium">Atenção:</span> {{ $this->conflitoCriar }} Você pode encaixar mesmo assim.
+                                </p>
+                            @elseif ($criarForaDaLista)
+                                <p class="hint">Horário livre.</p>
+                            @else
+                                <p class="hint">Para encaixar num horário que não está na lista.</p>
+                            @endif
+                        </div>
                     @elseif ($criarSlotSugerido)
                         <p class="text-sm text-stone-600">Horário escolhido: <span class="font-semibold tabular-nums text-stone-900">{{ $criarSlotSugerido }}</span>. Agora escolha profissional e procedimento.</p>
                     @else
@@ -590,7 +609,7 @@
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
                         </svg>
-                        Confirmar agendamento
+                        {{ $criarSlot !== '' && $this->conflitoCriar ? 'Encaixar mesmo assim' : 'Confirmar agendamento' }}
                     </button>
                 </div>
             </div>

@@ -115,10 +115,10 @@ class WhatsAppService
 
     public function enviarTexto(string $numero, string $mensagem): bool
     {
-        $resposta = $this->enviar('sendText', [
-            'number'      => $numero,
-            'textMessage' => ['text' => $mensagem],
-        ]);
+        // v2 recebe o texto direto; v1 dentro de textMessage
+        $resposta = $this->enviar('sendText', (int) config('evolution.versao') >= 2
+            ? ['number' => $numero, 'text' => $mensagem]
+            : ['number' => $numero, 'textMessage' => ['text' => $mensagem]]);
 
         if ($resposta === null) {
             return false;

@@ -169,6 +169,27 @@ class LeadsTest extends TestCase
         $this->assertSame(3, LeadInteracao::query()->where('lead_id', $lead->id)->count()); // recebida, resposta do celular, resposta do sistema
     }
 
+    public function test_evolution_v2_envia_texto_no_formato_novo_e_le_numero_alternativo(): void
+    {
+        config(['evolution.versao' => 2]);
+        $this->actingAs(User::factory()->create(['role' => 'recepcao']));
+
+        // v2: contato @lid chega com o número em remoteJidAlt
+        app(ClinicaAtual::class)->definir(null);
+        $this->postJson('/api/whatsapp/webhook', [
+            'event' => 'messages.upsert', 'instance' => 'lc',
+            'data'  => ['key' => ['remoteJid' => '99887766554433@lid', 'remoteJidAlt' => '556193332222@s.whatsapp.net', 'fromMe' => false, 'id' => 'V2A'],
+                'pushName' => 'Lu', 'messageType' => 'conversation', 'message' => ['conversation' => 'Oi!']],
+        ])->assertJson(['status' => 'lead_criado']);
+        app(ClinicaAtual::class)->definir($this->clinica->fresh());
+        $lead = Lead::sole();
+        $this->assertSame('(61) 99333-2222', $lead->telefone);
+
+        Livewire::test(LeadIndex::class)->call('abrir', $lead->id)->set('resposta', 'Olá, Lu!')->call('enviarWhatsApp')->assertSet('flashErro', null);
+        Http::assertSent(fn ($r) => str_contains($r->url(), '/message/sendText/lc') && ($r['text'] ?? null) === 'Olá, Lu!'
+            && $r['number'] === '5561993332222' && ! isset($r['textMessage']));
+    }
+
     public function test_responder_lead_sem_numero_usa_o_codigo_do_whatsapp_e_mostra_falha(): void
     {
         $this->actingAs(User::factory()->create(['role' => 'recepcao']));

@@ -80,6 +80,31 @@ class ReagendarAgendamentoTest extends TestCase
         $this->assertSame(StatusAgendamento::Reagendado, $bia->fresh()->status);
     }
 
+    public function test_agendamento_novo_aceita_encaixe_com_aviso(): void
+    {
+        $botox = Procedimento::create(['nome' => 'Botox', 'duracao_minutos' => 60, 'valor' => 900, 'ativo' => true]);
+        $this->agendar('Carla', '11:00', '12:00', [$botox->id]);
+        $dani = Paciente::create(['nome' => 'Dani', 'telefone' => '(61) 98888-1234']);
+
+        Livewire::test(AgendamentoIndex::class)
+            ->call('abrirModalCriar')
+            ->set('criarPacienteId', $dani->id)
+            ->set('criarProfissionalId', $this->profissional->id)
+            ->set('criarProcedimentoIds', [$botox->id])
+            ->set('criarData', '2026-10-12')
+            ->assertSee('Outro horário')
+            ->set('criarSlot', '10:30')
+            ->assertSee('Já tem Carla das 11:00 às 12:00.')
+            ->assertSee('Encaixar mesmo assim')
+            ->call('salvarAgendamento')
+            ->assertHasNoErrors()
+            ->assertSet('flashSucesso', 'Agendamento criado.');
+
+        $novo = Agendamento::query()->where('paciente_id', $dani->id)->sole();
+        $this->assertSame('2026-10-12 10:30', $novo->inicio_em->format('Y-m-d H:i'));
+        $this->assertSame('2026-10-12 11:30', $novo->fim_em->format('Y-m-d H:i'));
+    }
+
     public function test_motivos_do_conflito(): void
     {
         $proc = Procedimento::create(['nome' => 'Botox', 'duracao_minutos' => 60, 'valor' => 900, 'ativo' => true]);
