@@ -19,12 +19,19 @@ class LeadInteracao extends Model
 
     protected $table = 'lead_interacoes';
 
-    protected $fillable = ['lead_id', 'user_id', 'tipo', 'texto'];
+    protected $fillable = ['lead_id', 'user_id', 'tipo', 'texto', 'mensagem_id'];
 
     protected $casts = ['tipo' => TipoInteracaoLead::class];
 
     public function autor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /** Mensagem da conversa no WhatsApp (recebida, ou enviada com id da Evolution). */
+    public function ehMensagemWhatsApp(): bool
+    {
+        return $this->tipo === TipoInteracaoLead::WhatsAppRecebido
+            || ($this->tipo === TipoInteracaoLead::WhatsAppEnviado && $this->mensagem_id !== null);
     }
 }

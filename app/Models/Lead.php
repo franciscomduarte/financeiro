@@ -35,7 +35,7 @@ class Lead extends Model
 
     public function interacoes(): HasMany
     {
-        return $this->hasMany(LeadInteracao::class, 'lead_id')->latest('created_at');
+        return $this->hasMany(LeadInteracao::class, 'lead_id')->latest('created_at')->orderByDesc('id'); // id (UUID v7) desempata no mesmo segundo
     }
 
     public function procedimento(): BelongsTo
@@ -70,5 +70,13 @@ class Lead extends Model
         $d = \App\Support\Telefone::nacional($this->telefone);
 
         return $d === null ? null : 'https://wa.me/55' . $d . ($texto ? '?text=' . rawurlencode($texto) : '');
+    }
+
+    /** Conversa direto no WhatsApp Web (computador), sem a página intermediária do wa.me. */
+    public function whatsappWebLink(?string $texto = null): ?string
+    {
+        $d = \App\Support\Telefone::nacional($this->telefone);
+
+        return $d === null ? null : 'https://web.whatsapp.com/send?phone=55' . $d . ($texto ? '&text=' . rawurlencode($texto) : '');
     }
 }

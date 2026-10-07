@@ -27,7 +27,7 @@ class CriarLeadAction
      *               observacoes?: ?string, responsavel_id?: ?int, proximo_contato_em?: ?string, consentimento?: bool}  $dados
      * @return array{0: Lead, 1: bool}  [lead, foi criado agora]
      */
-    public function execute(array $dados, OrigemLead $origem, TipoInteracaoLead $entrada = TipoInteracaoLead::Criado, ?string $texto = null, bool $avisarEquipe = false): array
+    public function execute(array $dados, OrigemLead $origem, TipoInteracaoLead $entrada = TipoInteracaoLead::Criado, ?string $texto = null, bool $avisarEquipe = false, ?string $mensagemId = null): array
     {
         $nome     = mb_substr(trim((string) $dados['nome']), 0, 150);
         $chave    = Telefone::chave($dados['telefone'] ?? null);
@@ -43,7 +43,7 @@ class CriarLeadAction
             throw new InvalidArgumentException('Informe um telefone com DDD ou um e-mail.');
         }
 
-        return DB::transaction(function () use ($dados, $origem, $entrada, $texto, $avisarEquipe, $nome, $chave, $email, $lid): array {
+        return DB::transaction(function () use ($dados, $origem, $entrada, $texto, $avisarEquipe, $nome, $chave, $email, $lid, $mensagemId): array {
             $existente = Lead::query()
                 ->whereIn('etapa', array_map(fn ($e) => $e->value, EtapaLead::abertas()))
                 ->where(fn ($q) => $q->when($chave, fn ($w) => $w->where('telefone_chave', $chave))
@@ -53,7 +53,7 @@ class CriarLeadAction
                 ->first();
 
             if ($existente !== null) {
-                $this->interacao($existente, $entrada, $texto ?? 'Novo contato pelo canal ' . $origem->label() . '.');
+                $this->interacao($existente, $entrada, $texto ?? 'Novo contato pelo canal ' . $origem->label() . '.', $mensagemId);
                 $existente->update(['ultima_interacao_em' => now()]);
 
                 return [$existente, false];
@@ -79,7 +79,7 @@ class CriarLeadAction
                 'ultima_interacao_em' => now(),
             ]);
 
-            $this->interacao($lead, $entrada, $texto);
+            $this->interacao($lead, $entrada, $texto, $mensagemId);
             if ($paciente = BuscarPacienteDoLead::porContato($chave, $email)) {
                 $this->interacao($lead, TipoInteracaoLead::Nota, "Telefone/e-mail já cadastrado como paciente: {$paciente->nome}.");
             }
@@ -94,8 +94,8 @@ class CriarLeadAction
         });
     }
 
-    private function interacao(Lead $lead, TipoInteracaoLead $tipo, ?string $texto): void
+    private function interacao(Lead $lead, TipoInteracaoLead $tipo, ?string $texto, ?string $mensagemId = null): void
     {
-        LeadInteracao::create(['lead_id' => $lead->id, 'user_id' => auth()->id(), 'tipo' => $tipo, 'texto' => $texto]);
+        LeadInteracao::create(['lead_id' => $lead->id, 'user_id' => auth()->id(), 'tipo' => $tipo, 'texto' => $texto, 'mensagem_id' => $mensagemId]);
     }
 }
