@@ -38,6 +38,10 @@ return [
     'anthropic' => [
         'key'   => env('ANTHROPIC_API_KEY'),
         'model' => env('ANTHROPIC_MODEL', 'claude-haiku-4-5-20251001'),
+        // Assistente que responde os leads no WhatsApp
+        'modelo_assistente'  => env('ANTHROPIC_MODELO_ASSISTENTE', 'claude-sonnet-5-5'),
+        'esforco_assistente' => env('ANTHROPIC_ESFORCO_ASSISTENTE', 'low'),
+        'espera_assistente'  => (int) env('ANTHROPIC_ESPERA_ASSISTENTE', 15), // segundos para juntar mensagens seguidas
     ],
 
     'openai' => [

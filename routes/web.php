@@ -125,6 +125,7 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/pacotes', PacoteIndex::class)->name('pacotes.index');
     });
     Route::get('/leads', \App\Livewire\LeadIndex::class)->name('leads.index')->middleware('modulo:leads');
+    Route::get('/leads/assistente', \App\Livewire\AssistenteIndex::class)->name('leads.assistente')->middleware('modulo:dados_clinica');
     Route::get('/notificacoes', NotificacaoIndex::class)->name('notificacoes.index')->middleware('modulo:notificacoes');
     Route::get('/comissoes', ComissaoIndex::class)->name('comissoes.index')->middleware('modulo:relatorios');
     Route::middleware('modulo:lancamentos')->group(function (): void {
