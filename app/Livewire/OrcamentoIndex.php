@@ -246,7 +246,7 @@ class OrcamentoIndex extends Component
     {
         $this->validate([
             'aprovarForma'     => ['required', Rule::in(PacoteIndex::formasDePagamento())],
-            'aprovarCategoria' => ['required', Rule::in(Transacao::CATEGORIAS_ENTRADA)],
+            'aprovarCategoria' => ['required', Rule::in(\App\Models\PlanoConta::nomes('entrada'))],
             'aprovarValidade'  => ['nullable', 'date', 'after_or_equal:today'],
         ], [
             'aprovarCategoria.required' => 'Escolha a categoria da receita.',
@@ -311,7 +311,7 @@ class OrcamentoIndex extends Component
             'resumo'     => $resumo,
             'status'     => StatusOrcamento::cases(),
             'formas'     => array_map(fn ($v) => FormaPagamento::from($v), PacoteIndex::formasDePagamento()),
-            'categorias' => Transacao::CATEGORIAS_ENTRADA,
+            'categorias' => \App\Models\PlanoConta::nomes('entrada'),
         ])->layout('layouts.app', ['title' => 'Orçamentos']);
     }
 }

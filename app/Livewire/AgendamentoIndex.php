@@ -513,7 +513,7 @@ class AgendamentoIndex extends Component
         if ($this->concluirLancarReceita) {
             $this->validate([
                 'concluirValor'          => 'required|numeric|min:0.01|max:999999.99',
-                'concluirCategoria'      => ['required', 'in:' . implode(',', Transacao::CATEGORIAS_ENTRADA)],
+                'concluirCategoria'      => ['required', \Illuminate\Validation\Rule::in(\App\Models\PlanoConta::nomes('entrada'))],
                 'concluirFormaPagamento' => ['required', 'in:' . implode(',', array_map(
                     fn (FormaPagamento $f) => $f->value,
                     array_filter(FormaPagamento::cases(), fn (FormaPagamento $f) => $f !== FormaPagamento::AportePessoal),

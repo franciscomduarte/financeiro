@@ -15,11 +15,6 @@ class TransacaoExtracaoService
         'credito_9x',  'credito_10x', 'credito_11x', 'credito_12x',
     ];
 
-    private const CATEGORIAS = [
-        'entrada' => Transacao::CATEGORIAS_ENTRADA,
-        'saida'   => Transacao::CATEGORIAS_SAIDA,
-    ];
-
     public function __construct(private readonly LlmService $llm) {}
 
     /** Extrai dados de um texto livre usando a LLM e retorna array normalizado. */
@@ -36,7 +31,7 @@ class TransacaoExtracaoService
         $tipo  = in_array($dados['tipo'] ?? '', ['entrada', 'saida'], true) ? $dados['tipo'] : 'saida';
         $hoje  = now()->format('Y-m-d');
 
-        $categoriasValidas = self::CATEGORIAS[$tipo];
+        $categoriasValidas = \App\Models\PlanoConta::nomes($tipo);
         $categoriaLlm      = (string) ($dados['categoria'] ?? '');
         $categoria         = in_array($categoriaLlm, $categoriasValidas, true) ? $categoriaLlm : 'Outros';
 

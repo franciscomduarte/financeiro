@@ -14,7 +14,7 @@ return [
         'pacote_sessoes', 'pacotes', 'paciente_acessos', 'pacientes', 'parcelamentos', 'procedimentos', 'profissionais', 'prontuario_anexos', 'prontuario_evolucoes', 'prontuario_fotos', 'prontuario_modelos',
         'pesquisas_satisfacao', 'plano_tratamento_itens', 'planos_tratamento', 'prontuario_orientacoes', 'prontuario_termos', 'recorrencias', 'relacionamento_contatos', 'stock_batches', 'stock_categories',
         'stock_movements', 'stock_products', 'taxas_cartao', 'transacao_anexos', 'transacao_baixas', 'transacoes', 'transferencias',
-        'contas_financeiras',
+        'contas_financeiras', 'plano_contas',
     ],
 
     // Fuso da clínica (igual ao app.timezone: tudo é gravado e exibido na hora de Brasília)

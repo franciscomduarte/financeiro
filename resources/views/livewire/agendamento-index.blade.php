@@ -781,7 +781,7 @@
                         <label for="concluir-categoria" class="label">Categoria <span class="text-rose-600">*</span></label>
                         <select id="concluir-categoria" wire:model="concluirCategoria" class="{{ $campo }} @error('concluirCategoria') !border-red-300 @enderror">
                             <option value="">Selecione</option>
-                            @foreach (\App\Models\Transacao::CATEGORIAS_ENTRADA as $cat)
+                            @foreach (\App\Models\PlanoConta::nomes('entrada') as $cat)
                                 <option value="{{ $cat }}">{{ $cat }}</option>
                             @endforeach
                         </select>

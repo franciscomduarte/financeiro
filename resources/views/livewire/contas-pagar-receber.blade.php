@@ -35,7 +35,7 @@
             <button type="button" wire:click="$set('filtro', '{{ $chave }}')"
                     class="card p-4 text-left transition hover:border-rose-200 {{ $filtro === $chave ? 'ring-2 ring-rose-500/40' : '' }}">
                 <p class="text-sm text-stone-500">{{ $rotulo }}</p>
-                <p class="mt-1 text-xl font-semibold tabular-nums {{ $cor }}">{{ $brl($valor) }}</p>
+                <p class="mt-1 whitespace-nowrap text-lg font-semibold tabular-nums sm:text-xl {{ $cor }}">{{ $brl($valor) }}</p>
                 <p class="text-xs text-stone-400">{{ $qtd }} {{ $qtd === 1 ? 'conta' : 'contas' }}</p>
             </button>
         @endforeach

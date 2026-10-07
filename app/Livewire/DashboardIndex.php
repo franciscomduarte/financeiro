@@ -8,6 +8,7 @@ use App\Models\Contrato;
 use App\Models\ContaConsumoFatura;
 use App\Models\ObrigacaoFiscalLancamento;
 use App\Models\Transacao;
+use App\Models\TransacaoBaixa;
 use App\Services\AlertasVencimentoService;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
@@ -22,25 +23,32 @@ class DashboardIndex extends Component
         $inicioMA = $hoje->copy()->subMonth()->startOfMonth()->toDateString();
         $fimMA    = $hoje->copy()->subMonth()->endOfMonth()->toDateString();
 
-        // ─── KPIs ───────────────────────────────────────────────
-        $receitaMes         = (float) Transacao::where('tipo', 'entrada')->where('status', 'pago')->whereBetween('data_pagamento', [$inicioM, $fimM])->sum('valor_bruto');
-        $despesaMes         = (float) Transacao::where('tipo', 'saida')->where('status', 'pago')->whereBetween('data_pagamento', [$inicioM, $fimM])->sum('valor_bruto');
-        $receitaMesAnterior = (float) Transacao::where('tipo', 'entrada')->where('status', 'pago')->whereBetween('data_pagamento', [$inicioMA, $fimMA])->sum('valor_bruto');
-        $despesaMesAnterior = (float) Transacao::where('tipo', 'saida')->where('status', 'pago')->whereBetween('data_pagamento', [$inicioMA, $fimMA])->sum('valor_bruto');
+        // ─── KPIs: o que entrou e saiu de fato (baixas, já com juros, descontos e taxa da maquininha) ──
+        $movimentado = fn (string $tipo, string $de, string $ate): float => (float) TransacaoBaixa::query()
+            ->where('tipo', $tipo)->whereBetween('data', [$de, $ate])->sum('valor_movimentado');
+        $receitaMes         = $movimentado('entrada', $inicioM, $fimM);
+        $despesaMes         = $movimentado('saida', $inicioM, $fimM);
+        $receitaMesAnterior = $movimentado('entrada', $inicioMA, $fimMA);
+        $despesaMesAnterior = $movimentado('saida', $inicioMA, $fimMA);
 
         $saldoMes         = $receitaMes - $despesaMes;
         $saldoMesAnterior = $receitaMesAnterior - $despesaMesAnterior;
 
         // ─── Gráfico fluxo — últimos 6 meses ───────────────────
-        $fluxo = collect(range(5, 0))->map(function (int $i) use ($hoje): array {
-            $ref    = $hoje->copy()->subMonths($i);
-            $inicio = $ref->copy()->startOfMonth()->toDateString();
-            $fim    = $ref->copy()->endOfMonth()->toDateString();
+        $porMes = TransacaoBaixa::query()
+            ->whereBetween('data', [$hoje->copy()->subMonths(5)->startOfMonth()->toDateString(), $fimM])
+            ->groupBy(\Illuminate\Support\Facades\DB::raw("to_char(data, 'YYYY-MM')"), 'tipo')
+            ->selectRaw("to_char(data, 'YYYY-MM') AS mes, tipo AS tipo_raw, SUM(valor_movimentado) AS total")
+            ->toBase()->get()
+            ->groupBy('mes');
+        $fluxo = collect(range(5, 0))->map(function (int $i) use ($hoje, $porMes): array {
+            $ref   = $hoje->copy()->subMonths($i);
+            $linha = $porMes->get($ref->format('Y-m'), collect());
 
             return [
                 'label'   => $ref->isoFormat('MMM/YY'),
-                'receita' => (float) Transacao::where('tipo', 'entrada')->where('status', 'pago')->whereBetween('data_pagamento', [$inicio, $fim])->sum('valor_bruto'),
-                'despesa' => (float) Transacao::where('tipo', 'saida')->where('status', 'pago')->whereBetween('data_pagamento', [$inicio, $fim])->sum('valor_bruto'),
+                'receita' => (float) ($linha->firstWhere('tipo_raw', 'entrada')->total ?? 0),
+                'despesa' => (float) ($linha->firstWhere('tipo_raw', 'saida')->total ?? 0),
             ];
         });
 
@@ -58,7 +66,12 @@ class DashboardIndex extends Component
 
         $custoMinimo = $this->custoMinimoMensal();
 
+        $financeiro = auth()->user()?->pode(\App\Enums\Modulo::Lancamentos)
+            ? app(\App\Services\PainelFinanceiroService::class)->resumo()
+            : null;
+
         return view('livewire.dashboard-index', [
+            'financeiro'         => $financeiro,
             // KPIs
             'receitaMes'         => $receitaMes,
             'despesaMes'         => $despesaMes,

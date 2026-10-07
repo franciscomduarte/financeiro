@@ -7,6 +7,7 @@ namespace App\Observers;
 use App\Actions\Financeiro\BaixarTransacaoAction;
 use App\Enums\StatusTransacao;
 use App\Models\ContaFinanceira;
+use App\Models\PlanoConta;
 use App\Models\Transacao;
 use App\Models\TransacaoBaixa;
 
@@ -23,6 +24,26 @@ class TransacaoObserver
     public function creating(Transacao $transacao): void
     {
         $transacao->data_vencimento ??= $transacao->data_competencia;
+    }
+
+    /** Categoria sempre ligada ao plano de contas (o nome continua gravado para telas e relatórios antigos). */
+    public function saving(Transacao $transacao): void
+    {
+        $tipo = $transacao->tipo?->value ?? (string) $transacao->getAttribute('tipo');
+
+        if ($transacao->categoria_id !== null && ($transacao->isDirty('categoria_id') || $transacao->isDirty('tipo'))) {
+            $conta = PlanoConta::query()->select(['id', 'nome', 'tipo'])->find($transacao->categoria_id);
+            if ($conta !== null && $conta->tipo->value === $tipo) {
+                $transacao->categoria = $conta->nome;
+
+                return;
+            }
+            $transacao->categoria_id = null;
+        }
+
+        if ($transacao->categoria_id === null || $transacao->isDirty(['categoria', 'tipo', 'subcategoria'])) {
+            $transacao->categoria_id = PlanoConta::resolver($tipo, $transacao->categoria, $transacao->subcategoria)?->id;
+        }
     }
 
     public function saved(Transacao $transacao): void

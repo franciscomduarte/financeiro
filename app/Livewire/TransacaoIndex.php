@@ -111,12 +111,12 @@ class TransacaoIndex extends Component
     // ─── Categorias ─────────────────────────────────────────────
     public function getCategoriasEntradaProperty(): array
     {
-        return Transacao::CATEGORIAS_ENTRADA;
+        return \App\Models\PlanoConta::nomes('entrada');
     }
 
     public function getCategoriasSaidaProperty(): array
     {
-        return Transacao::CATEGORIAS_SAIDA;
+        return \App\Models\PlanoConta::nomes('saida');
     }
 
     #[Computed]
@@ -696,7 +696,7 @@ class TransacaoIndex extends Component
             'contasFinanceiras' => \App\Models\ContaFinanceira::query()->ativas()->select(['id', 'nome'])->orderByDesc('padrao')->orderBy('nome')->limit(50)->get(),
             'formasPagamento'   => FormaPagamento::cases(),
             'recorrenciasEnum'  => RecorrenciaTransacao::cases(),
-            'todasCategorias'   => array_values(array_unique([...Transacao::CATEGORIAS_ENTRADA, ...Transacao::CATEGORIAS_SAIDA])),
+            'todasCategorias'   => array_values(array_unique([...\App\Models\PlanoConta::nomes('entrada'), ...\App\Models\PlanoConta::nomes('saida')])),
             'totalEntradas'     => $totalEntradas,
             'totalSaidas'       => $totalSaidas,
             'saldo'             => $saldo,
