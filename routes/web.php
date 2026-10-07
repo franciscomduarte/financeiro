@@ -68,6 +68,12 @@ Route::get('/redefinir-senha/{token}', [EsqueciSenhaController::class, 'showRese
 Route::post('/redefinir-senha', [EsqueciSenhaController::class, 'reset'])->name('password.update');
 
 // ─── Rotas protegidas ───────────────────────────────────────────
+// Formulário público de contato da clínica (vira lead): /c/{slug}/contato?origem=instagram
+Route::get('/c/{slug}/contato', [\App\Http\Controllers\FormularioLeadController::class, 'mostrar'])
+    ->middleware('throttle:60,1')->name('leads.formulario');
+Route::post('/c/{slug}/contato', [\App\Http\Controllers\FormularioLeadController::class, 'enviar'])
+    ->middleware('throttle:6,1')->name('leads.formulario.enviar');
+
 // Pesquisa de satisfação (link enviado ao paciente, sem login)
 Route::middleware('throttle:30,1')->group(function (): void {
     Route::get('/avaliacao/{token}', [AvaliacaoController::class, 'mostrar'])->name('avaliacao.mostrar');
@@ -112,6 +118,7 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/orcamentos/{id}/pdf', OrcamentoPdfController::class)->name('orcamentos.pdf');
         Route::get('/pacotes', PacoteIndex::class)->name('pacotes.index');
     });
+    Route::get('/leads', \App\Livewire\LeadIndex::class)->name('leads.index')->middleware('modulo:leads');
     Route::get('/notificacoes', NotificacaoIndex::class)->name('notificacoes.index')->middleware('modulo:notificacoes');
     Route::get('/comissoes', ComissaoIndex::class)->name('comissoes.index')->middleware('modulo:relatorios');
     Route::middleware('modulo:lancamentos')->group(function (): void {
