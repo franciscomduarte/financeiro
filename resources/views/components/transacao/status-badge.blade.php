@@ -3,6 +3,7 @@
     $classes = match ($status) {
         \App\Enums\StatusTransacao::Pago      => ['bg-emerald-50 text-emerald-700', 'bg-emerald-500'],
         \App\Enums\StatusTransacao::Pendente  => ['bg-amber-50 text-amber-700', 'bg-amber-500'],
+        \App\Enums\StatusTransacao::Parcial   => ['bg-sky-50 text-sky-700', 'bg-sky-500'],
         \App\Enums\StatusTransacao::Cancelado => ['bg-stone-100 text-stone-600', 'bg-stone-400'],
     };
 @endphp

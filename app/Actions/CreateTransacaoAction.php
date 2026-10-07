@@ -46,6 +46,8 @@ class CreateTransacaoAction
                 'imposto_estimado'        => $valores['imposto_estimado'],
                 'valor_liquido'           => $valores['valor_liquido'],
                 'data_competencia'        => $data['data_competencia'],
+                'data_vencimento'         => $data['data_vencimento'] ?? $data['data_competencia'],
+                'conta_financeira_id'     => $data['conta_financeira_id'] ?? null,
                 // Pago sempre tem data de pagamento (o Dashboard soma por ela)
                 'data_pagamento'          => $data['data_pagamento']
                     ?? ($status === StatusTransacao::Pago ? now()->toDateString() : null),

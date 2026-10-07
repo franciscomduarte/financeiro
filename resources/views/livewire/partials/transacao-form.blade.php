@@ -177,30 +177,32 @@
     {{-- Datas --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-            <label for="tx-competencia" class="label">Data de competência <span class="text-red-600">*</span></label>
+            <label for="tx-competencia" class="label">Competência <span class="text-red-600">*</span></label>
             <input
                 id="tx-competencia"
                 type="date"
-                wire:model="dataCompetencia"
+                wire:model.blur="dataCompetencia"
                 class="input @error('dataCompetencia') border-red-300 @enderror"
             >
             @error('dataCompetencia')
                 <p class="field-error">{{ $message }}</p>
             @else
-                <p class="hint">O mês em que o valor conta no resultado.</p>
+                <p class="hint">O mês a que a receita ou despesa pertence.</p>
             @enderror
         </div>
         <div>
-            <label for="tx-pagamento" class="label">
-                Data de pagamento @if ($status === 'pago') <span class="text-red-600">*</span> @endif
-            </label>
+            <label for="tx-vencimento" class="label">Vencimento</label>
             <input
-                id="tx-pagamento"
+                id="tx-vencimento"
                 type="date"
-                wire:model="dataPagamento"
-                class="input @error('dataPagamento') border-red-300 @enderror"
+                wire:model="dataVencimento"
+                class="input @error('dataVencimento') border-red-300 @enderror"
             >
-            @error('dataPagamento') <p class="field-error">{{ $message }}</p> @enderror
+            @error('dataVencimento')
+                <p class="field-error">{{ $message }}</p>
+            @else
+                <p class="hint">Quando deve ser pago ou recebido. Em branco, usa a competência.</p>
+            @enderror
         </div>
     </div>
 
@@ -209,11 +211,40 @@
         <label for="tx-status" class="label">Situação <span class="text-red-600">*</span></label>
         <select id="tx-status" wire:model.live="status" class="input @error('status') border-red-300 @enderror">
             @foreach ($statusEnum as $st)
+                @continue($st === \App\Enums\StatusTransacao::Parcial && $status !== 'parcial')
                 <option value="{{ $st->value }}">{{ $st->label() }}</option>
             @endforeach
         </select>
         @error('status') <p class="field-error">{{ $message }}</p> @enderror
+        @if ($status === 'parcial')
+            <p class="hint">Pagamentos parciais são registrados em Contas a pagar/receber.</p>
+        @endif
     </div>
+
+    @if ($status === 'pago')
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label for="tx-pagamento" class="label">Data de pagamento <span class="text-red-600">*</span></label>
+                <input
+                    id="tx-pagamento"
+                    type="date"
+                    wire:model="dataPagamento"
+                    class="input @error('dataPagamento') border-red-300 @enderror"
+                >
+                @error('dataPagamento') <p class="field-error">{{ $message }}</p> @enderror
+            </div>
+            <div>
+                <label for="tx-conta" class="label">{{ $this->tipo === 'saida' ? 'Saiu de' : 'Entrou em' }}</label>
+                <select id="tx-conta" wire:model="contaFinanceiraId" class="input @error('contaFinanceiraId') border-red-300 @enderror">
+                    <option value="">Sugerida pela forma de pagamento</option>
+                    @foreach ($contasFinanceiras as $cf)
+                        <option value="{{ $cf->id }}">{{ $cf->nome }}</option>
+                    @endforeach
+                </select>
+                @error('contaFinanceiraId') <p class="field-error">{{ $message }}</p> @enderror
+            </div>
+        </div>
+    @endif
 
     {{-- Repetição: só ao criar; depois é gerenciada na aba Recorrências --}}
     @if ($transacaoEditandoId === null)

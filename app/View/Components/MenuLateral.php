@@ -42,6 +42,9 @@ class MenuLateral extends Component
     ];
 
     private const ICONES_EXTRA = [
+        'a_pagar'    => 'M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25V13.5zm0 2.25h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25V18zm2.498-6.75h.007v.008h-.007v-.008zm0 2.25h.007v.008h-.007V13.5zm0 2.25h.007v.008h-.007v-.008zm0 2.25h.007v.008h-.007V18zm2.504-6.75h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V13.5zm0 2.25h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V18zm2.498-6.75h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V13.5zM8.25 6h7.5v2.25h-7.5V6zM12 2.25c-1.892 0-3.758.11-5.593.322C5.307 2.7 4.5 3.65 4.5 4.757V19.5a2.25 2.25 0 002.25 2.25h10.5a2.25 2.25 0 002.25-2.25V4.757c0-1.108-.806-2.057-1.907-2.185A48.507 48.507 0 0012 2.25z',
+        'a_receber'  => 'M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+        'bancos'     => 'M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z',
         'conta'      => 'M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z',
         'plataforma' => 'M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21',
     ];
@@ -60,6 +63,9 @@ class MenuLateral extends Component
         'comissoes.index'       => 'relatorios',
         'notas-fiscais.index'   => 'lancamentos',
         'transacoes.index'      => 'lancamentos',
+        'financeiro.pagar'      => 'lancamentos',
+        'financeiro.receber'    => 'lancamentos',
+        'financeiro.contas'     => 'lancamentos',
         'web.relatorio'         => 'relatorios',
         'taxas-cartao.index'    => 'taxas',
         'estoque.index'         => 'estoque',
@@ -120,6 +126,9 @@ class MenuLateral extends Component
                 ['Cobranças', 'cobrancas.index', 'cobrancas.*', 'cobrancas'],
             ]),
             $this->grupo('Financeiro', [
+                ['Contas a pagar', 'financeiro.pagar', 'financeiro.pagar', 'a_pagar'],
+                ['Contas a receber', 'financeiro.receber', 'financeiro.receber', 'a_receber'],
+                ['Caixa e bancos', 'financeiro.contas', 'financeiro.contas', 'bancos'],
                 ['Lançamentos', 'transacoes.index', 'transacoes.*', 'lancamentos'],
                 ['Notas fiscais', 'notas-fiscais.index', 'notas-fiscais.*', 'documentos'],
                 ['Comissões', 'comissoes.index', 'comissoes.*', 'comissoes'],

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions;
 
 use App\Models\Clinica;
+use App\Models\ContaFinanceira;
 use App\Models\DocumentoCategoria;
 use App\Models\StockCategory;
 use App\Models\TaxaCartao;
@@ -12,7 +13,8 @@ use App\Support\ClinicaAtual;
 
 /**
  * Configurações iniciais de uma clínica nova: categorias de documentos e de estoque e as
- * modalidades de pagamento com taxa zerada (a clínica ajusta conforme a maquininha dela).
+ * modalidades de pagamento com taxa zerada (a clínica ajusta conforme a maquininha dela) e as contas
+ * financeiras padrão (caixa, conta bancária e maquininha).
  * Nada de pacientes ou lançamentos.
  */
 class CriarPadroesClinicaAction
@@ -62,6 +64,8 @@ class CriarPadroesClinicaAction
             foreach (self::MODALIDADES as $modalidade) {
                 TaxaCartao::create(['modalidade' => $modalidade, 'percentual' => 0, 'ativo' => true]);
             }
+
+            ContaFinanceira::garantirPadroes();
         });
     }
 }

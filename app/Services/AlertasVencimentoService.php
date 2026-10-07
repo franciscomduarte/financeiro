@@ -61,18 +61,18 @@ class AlertasVencimentoService
     private function despesas(CarbonImmutable $hoje): Collection
     {
         return Transacao::query()
-            ->select(['id', 'descricao', 'valor_bruto', 'data_competencia'])
+            ->select(['id', 'descricao', 'valor_bruto', 'valor_pago', 'status', 'data_vencimento'])
             ->where('tipo', TipoTransacao::Saida->value)
-            ->where('status', StatusTransacao::Pendente->value)
-            ->where('data_competencia', '<=', $hoje->addDays(self::DIAS_ANTES_CONTAS)->toDateString())
-            ->orderBy('data_competencia')
+            ->whereIn('status', StatusTransacao::abertos())
+            ->where('data_vencimento', '<=', $hoje->addDays(self::DIAS_ANTES_CONTAS)->toDateString())
+            ->orderBy('data_vencimento')
             ->limit(self::LIMITE_POR_FONTE)
             ->get()
             ->map(fn (Transacao $t) => new AlertaVencimento(
                 TipoAlertaVencimento::Despesa,
                 $t->descricao,
-                $t->data_competencia->toImmutable(),
-                (float) $t->valor_bruto,
+                $t->data_vencimento->toImmutable(),
+                $t->valorAberto(),
             ));
     }
 
