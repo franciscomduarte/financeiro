@@ -62,6 +62,14 @@
                     @error('instrucoes') <p class="field-error">{{ $message }}</p> @enderror
                 </div>
 
+                <div>
+                    <label for="a-sem-info" class="label">Quando não souber a resposta, ele diz</label>
+                    <input id="a-sem-info" type="text" wire:model="respostaSemInformacao" maxlength="300" class="input"
+                           placeholder="{{ \App\Models\AssistenteConfiguracao::RESPOSTA_SEM_INFORMACAO }}">
+                    <p class="hint">Ele só responde o que está no treinamento. Fora disso, manda esta frase e passa a pergunta para a equipe no WhatsApp da gestão.</p>
+                    @error('respostaSemInformacao') <p class="field-error">{{ $message }}</p> @enderror
+                </div>
+
                 <div class="space-y-2">
                     <label class="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-stone-800">
                         <input type="checkbox" wire:model="informarPrecos" class="h-5 w-5 rounded border-stone-300 text-rose-600">

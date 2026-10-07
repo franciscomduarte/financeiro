@@ -26,6 +26,7 @@ class AssistenteIndex extends Component
     public bool $ativo = false;
     public string $nome = 'Assistente';
     public string $instrucoes = '';
+    public string $respostaSemInformacao = '';
     public bool $informarPrecos = true;
     public bool $podeAgendar = true;
     public string $procedimentoAvaliacaoId = '';
@@ -52,6 +53,7 @@ class AssistenteIndex extends Component
         $this->ativo                   = $c->ativo;
         $this->nome                    = $c->nome;
         $this->instrucoes              = (string) $c->instrucoes;
+        $this->respostaSemInformacao   = (string) $c->resposta_sem_informacao;
         $this->informarPrecos          = $c->informar_precos;
         $this->podeAgendar             = $c->pode_agendar;
         $this->procedimentoAvaliacaoId = (string) $c->procedimento_avaliacao_id;
@@ -102,6 +104,7 @@ class AssistenteIndex extends Component
         $this->validate([
             'nome'                    => 'required|string|max:60',
             'instrucoes'              => 'nullable|string|max:5000',
+            'respostaSemInformacao'   => 'nullable|string|max:300',
             'procedimentoAvaliacaoId' => ['nullable', Rule::exists('procedimentos', 'id')],
             'profissionalId'          => ['nullable', Rule::exists('profissionais', 'id')],
             'limiteRespostasMes'      => 'required|integer|min:0|max:100000',
@@ -119,6 +122,7 @@ class AssistenteIndex extends Component
                 'ativo'                     => $this->ativo,
                 'nome'                      => trim($this->nome),
                 'instrucoes'                => trim($this->instrucoes) ?: null,
+                'resposta_sem_informacao'   => trim($this->respostaSemInformacao) ?: null,
                 'informar_precos'           => $this->informarPrecos,
                 'pode_agendar'              => $this->podeAgendar,
                 'procedimento_avaliacao_id' => $this->procedimentoAvaliacaoId !== '' ? (int) $this->procedimentoAvaliacaoId : null,
