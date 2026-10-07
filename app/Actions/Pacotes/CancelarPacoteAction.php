@@ -20,7 +20,16 @@ class CancelarPacoteAction
             throw new RuntimeException('Só pacotes ativos podem ser cancelados.');
         }
 
-        $pacote->update(['status' => StatusPacote::Cancelado]);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($pacote): void {
+            $pacote->update(['status' => StatusPacote::Cancelado]);
+
+            // Venda ainda não paga: a conta a receber deixa de existir. Já paga: a devolução é combinada com o paciente.
+            $venda = $pacote->transacao_id ? \App\Models\Transacao::query()->find($pacote->transacao_id) : null;
+            if ($venda !== null && $venda->status === \App\Enums\StatusTransacao::Pendente && (float) $venda->valor_pago <= 0
+                && ! \App\Models\Pacote::query()->where('transacao_id', $venda->id)->whereKeyNot($pacote->id)->where('status', StatusPacote::Ativo->value)->exists()) {
+                app(\App\Actions\UpdateTransacaoAction::class)->execute($venda, ['status' => \App\Enums\StatusTransacao::Cancelado->value]);
+            }
+        });
 
         Log::warning('[Pacotes] pacote cancelado', [
             'pacote_id' => $pacote->id, 'saldo_cancelado' => $pacote->saldo(), 'user_id' => auth()->id(),

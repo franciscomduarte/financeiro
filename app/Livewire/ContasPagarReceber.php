@@ -66,6 +66,7 @@ class ContasPagarReceber extends Component
     public string $baixaDesconto = '';
     public string $baixaObs      = '';
     public bool $baixaEncargos   = false;
+    public string $baixaCartao   = 'padrao'; // padrao | parcelado | antecipado
 
     // ─── Detalhe ────────────────────────────────────────────────
     public ?string $detalheId = null;
@@ -231,6 +232,7 @@ class ContasPagarReceber extends Component
         $this->baixaDesconto = '';
         $this->baixaObs      = '';
         $this->baixaEncargos = false;
+        $this->baixaCartao   = 'padrao';
         unset($this->transacaoBaixa);
     }
 
@@ -246,6 +248,19 @@ class ContasPagarReceber extends Component
         if ($sugerida) {
             $this->baixaConta = $sugerida->id;
         }
+    }
+
+    /** Recebimento no crédito numa conta Maquininha: pergunta se antecipa ou recebe mês a mês. */
+    public function perguntaAntecipar(): ?ContaFinanceira
+    {
+        if ($this->aPagar() || ! str_starts_with($this->baixaForma, 'credito')) {
+            return null;
+        }
+        $conta = $this->contas->firstWhere('id', $this->baixaConta);
+
+        return $conta?->tipo === \App\Enums\TipoContaFinanceira::Maquininha
+            ? ContaFinanceira::query()->select(['id', 'antecipar_padrao', 'taxa_antecipacao_mes', 'prazo_credito_dias', 'antecipacao_dias'])->find($conta->id)
+            : null;
     }
 
     /** Total que sai/entra da conta, para conferência no formulário. */
@@ -284,6 +299,7 @@ class ContasPagarReceber extends Component
                 'multa'               => Dinheiro::numero($this->baixaMulta),
                 'desconto'            => Dinheiro::numero($this->baixaDesconto),
                 'observacoes'         => $this->baixaObs ?: null,
+                'antecipar'           => $this->baixaCartao === 'padrao' ? null : $this->baixaCartao === 'antecipado',
             ]);
             $t->refresh();
             $this->flashSucesso = match (true) {

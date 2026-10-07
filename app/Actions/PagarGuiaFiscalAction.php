@@ -37,6 +37,15 @@ class PagarGuiaFiscalAction
             [$ano, $mes] = explode('-', $lancamento->competencia);
             $dataCompetencia = sprintf('%s-%s-01', $ano, $mes);
 
+            if ($lancamento->transacao_id && ($titulo = \App\Models\Transacao::query()->find($lancamento->transacao_id)) && $titulo->status->emAberto()) {
+                app(\App\Actions\UpdateTransacaoAction::class)->execute($titulo, [
+                    'valor_bruto' => $valorTotal, 'forma_pagamento' => $data['forma_pagamento'], 'status' => StatusTransacao::Pago->value, 'data_pagamento' => $dataPagamento,
+                ]);
+                $lancamento->refresh()->update(['status' => StatusLancamentoFiscal::Pago, 'data_pagamento' => $dataPagamento, 'numero_autenticacao' => $data['numero_autenticacao'] ?? null]);
+
+                return $lancamento->fresh();
+            }
+
             $transacao = $this->createTransacao->execute([
                 'tipo'             => TipoTransacao::Saida->value,
                 'fase'             => FaseTransacao::Operacao->value,

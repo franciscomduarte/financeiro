@@ -73,6 +73,7 @@ class TransacaoIndex extends Component
     public string $dataPagamento    = '';
     public string $dataVencimento   = '';
     public string $contaFinanceiraId = '';
+    public string $recebimentoCartao = 'padrao'; // padrao | parcelado | antecipado
     public string $status           = 'pendente';
     public string $recorrencia      = 'unica';
     public string $recorrenciaAte   = '';
@@ -499,6 +500,7 @@ class TransacaoIndex extends Component
         $this->dataPagamento   = '';
         $this->dataVencimento  = '';
         $this->contaFinanceiraId = '';
+        $this->recebimentoCartao = 'padrao';
         $this->status          = 'pendente';
         $this->recorrencia     = 'unica';
         $this->recorrenciaAte  = '';
@@ -551,6 +553,7 @@ class TransacaoIndex extends Component
             'data_pagamento'   => $this->dataPagamento ?: null,
             'data_vencimento'  => $this->dataVencimento ?: $this->dataCompetencia,
             'conta_financeira_id' => $this->contaFinanceiraId ?: null,
+            'antecipar_cartao' => $this->recebimentoCartao === 'padrao' ? null : $this->recebimentoCartao === 'antecipado',
             'status'           => $this->status,
             'recorrencia'      => $this->recorrencia,
             'observacoes'      => $this->observacoes ?: null,

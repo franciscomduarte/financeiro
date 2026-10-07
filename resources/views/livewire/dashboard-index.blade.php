@@ -33,7 +33,7 @@
                 <a href="{{ route('financeiro.contas') }}" wire:navigate class="col-span-2 rounded-xl p-1 hover:bg-stone-50 lg:col-span-1">
                     <p class="text-sm text-stone-500">Saldo em contas</p>
                     <p class="mt-1 whitespace-nowrap text-xl font-semibold tabular-nums sm:text-2xl {{ $f['saldo'] < 0 ? 'text-red-700' : 'text-stone-900' }}">{{ $brlF($f['saldo']) }}</p>
-                    <p class="text-xs text-stone-400">em 30 dias: {{ $brlF($f['saldo_30']) }}</p>
+                    <p class="text-xs text-stone-400">@if ($f['a_liberar'] > 0) {{ $brlF($f['a_liberar']) }} ainda na maquininha · @endif em 30 dias: {{ $brlF($f['saldo_30']) }}</p>
                 </a>
                 <a href="{{ route('financeiro.receber', ['filtro' => 'semana']) }}" wire:navigate class="rounded-xl p-1 hover:bg-stone-50">
                     <p class="text-sm text-stone-500">A receber (7 dias)</p>

@@ -17,6 +17,9 @@ class EstornarBaixaAction
         DB::transaction(function () use ($baixa): void {
             /** @var Transacao $t */
             $t = Transacao::query()->lockForUpdate()->findOrFail($baixa->transacao_id);
+            if ($baixa->recebiveis()->whereNotNull('liquidado_em')->exists()) {
+                throw new \RuntimeException('Parte deste recebimento no cartão já foi liberada para o banco. Desfaça a transferência no extrato antes.');
+            }
             $baixa->delete();
             $t->recalcularPagamento();
 

@@ -252,6 +252,16 @@
                 @error('contaFinanceiraId') <p class="field-error">{{ $message }}</p> @enderror
             </div>
         </div>
+        @if ($this->tipo === 'entrada' && str_starts_with($formaPagamento, 'credito'))
+            <div>
+                <label for="tx-cartao" class="label">A maquininha libera</label>
+                <select id="tx-cartao" wire:model="recebimentoCartao" class="input">
+                    <option value="padrao">Como está configurado na Maquininha</option>
+                    <option value="parcelado">Mês a mês (cada parcela no seu prazo)</option>
+                    <option value="antecipado">Antecipado (com a taxa de antecipação)</option>
+                </select>
+            </div>
+        @endif
     @endif
 
     {{-- Repetição: só ao criar; depois é gerenciada na aba Recorrências --}}

@@ -17,7 +17,7 @@ class PainelFinanceiroService
     ) {}
 
     /**
-     * @return array{saldo: float, receber_semana: float, pagar_semana: float, receber_vencido: float, pagar_vencido: float,
+     * @return array{saldo: float, a_liberar: float, receber_semana: float, pagar_semana: float, receber_vencido: float, pagar_vencido: float,
      *               resultado_mes: float, faturamento_mes: float, projecao: array<int, array{data: CarbonImmutable, saldo: float}>,
      *               saldo_30: float, menor_saldo: float, menor_saldo_em: ?CarbonImmutable}
      */
@@ -43,7 +43,8 @@ class PainelFinanceiroService
         $dre      = $this->dre->mes(CarbonImmutable::today()->startOfMonth());
 
         return [
-            'saldo'           => $projecao['saldo_hoje'],
+            'saldo'           => round($projecao['saldo_hoje'] + $projecao['a_liberar_cartao'], 2),
+            'a_liberar'       => $projecao['a_liberar_cartao'],
             'receber_semana'  => round((float) $r->receber_semana, 2),
             'pagar_semana'    => round((float) $r->pagar_semana, 2),
             'receber_vencido' => round((float) $r->receber_vencido, 2),

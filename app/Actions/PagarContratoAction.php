@@ -31,6 +31,17 @@ class PagarContratoAction
 
             $fornecedorNome = $contrato->fornecedor?->nome_fantasia ?? 'Fornecedor';
 
+            [$inicioMes, $fimMes] = [$dataCompetencia, \Carbon\CarbonImmutable::parse($dataCompetencia)->endOfMonth()->toDateString()];
+            $titulo = \App\Models\Transacao::query()->where('contrato_id', $contrato->id)
+                ->whereBetween('data_competencia', [$inicioMes, $fimMes])
+                ->whereIn('status', StatusTransacao::abertos())->first();
+
+            if ($titulo !== null) {
+                $transacao = app(\App\Actions\UpdateTransacaoAction::class)->execute($titulo, [
+                    'valor_bruto' => $valor, 'forma_pagamento' => $data['forma_pagamento'], 'status' => StatusTransacao::Pago->value,
+                    'data_pagamento' => $dataPagamento,
+                ]);
+            } else {
             $transacao = $this->createTransacao->execute([
                 'tipo'             => TipoTransacao::Saida->value,
                 'fase'             => FaseTransacao::Operacao->value,
@@ -44,17 +55,21 @@ class PagarContratoAction
                 'data_pagamento'   => $dataPagamento,
                 'status'           => StatusTransacao::Pago->value,
                 'observacoes'      => $data['observacoes'] ?: 'Pagamento de contrato lançado automaticamente.',
+                'contrato_id'      => $contrato->id,
             ]);
+            }
 
-            return ContratoPagamento::create([
-                'contrato_id'     => $contrato->id,
-                'competencia'     => $competencia,
+            // O pagamento do mês é registrado pela sincronização do lançamento; completa os dados
+            $pagamento = ContratoPagamento::query()->firstOrNew(['contrato_id' => $contrato->id, 'competencia' => $competencia]);
+            $pagamento->fill([
                 'valor'           => $valor,
                 'data_pagamento'  => $dataPagamento,
                 'forma_pagamento' => $data['forma_pagamento'],
                 'transacao_id'    => $transacao->id,
                 'observacoes'     => $data['observacoes'] ?: null,
-            ]);
+            ])->save();
+
+            return $pagamento;
         });
     }
 }

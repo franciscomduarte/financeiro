@@ -23,7 +23,7 @@ class LancarFaturaAction
                 ? StatusFatura::Recebida
                 : StatusFatura::Pendente;
 
-            return ContaConsumoFatura::create([
+            $fatura = ContaConsumoFatura::create([
                 'conta_consumo_id' => $conta->id,
                 'competencia'      => $data['competencia'],
                 'data_vencimento'  => $data['data_vencimento'],
@@ -32,6 +32,10 @@ class LancarFaturaAction
                 'status'           => $status,
                 'observacoes'      => $data['observacoes'] ?? null,
             ]);
+            // Com valor, já entra no contas a pagar
+            app(\App\Actions\Financeiro\TitulosContasFixasAction::class)->fatura($fatura);
+
+            return $fatura->fresh();
         });
     }
 }

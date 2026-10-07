@@ -8,6 +8,7 @@ use App\Enums\GrupoPlanoContas;
 use App\Enums\StatusTransacao;
 use App\Enums\TipoTransacao;
 use App\Models\ContaFinanceira;
+use App\Models\RecebivelCartao;
 use App\Models\Recorrencia;
 use App\Models\Transacao;
 use App\Models\TransacaoBaixa;
@@ -106,7 +107,7 @@ class FluxoCaixaService
      * Saldo projetado dos próximos $dias dias, semana a semana, e a curva diária.
      * Contas vencidas aparecem à parte (não entram na curva: não se sabe quando serão pagas).
      *
-     * @return array{saldo_hoje: float, semanas: array<int, array{inicio: CarbonImmutable, fim: CarbonImmutable, entradas: float, saidas: float, saldo: float}>,
+     * @return array{saldo_hoje: float, a_liberar_cartao: float, semanas: array<int, array{inicio: CarbonImmutable, fim: CarbonImmutable, entradas: float, saidas: float, saldo: float}>,
      *               diario: array<int, array{data: CarbonImmutable, saldo: float}>, vencidos_receber: float, vencidos_pagar: float,
      *               entradas: float, saidas: float, saldo_final: float, menor_saldo: float, menor_saldo_em: ?CarbonImmutable}
      */
@@ -160,7 +161,22 @@ class FluxoCaixaService
                 }
             });
 
-        $saldoHoje = $this->saldoTotal($hoje); // saldo atual; o que vence hoje e ainda está em aberto entra na curva
+        // Cartão: o que a maquininha ainda vai liberar não está disponível hoje; entra na data prevista
+        $aLiberar = 0.0;
+        RecebivelCartao::query()->pendentes()
+            ->groupBy('data_prevista')
+            ->selectRaw('data_prevista AS data, SUM(valor) AS valor, SUM(valor_liquido) AS liquido')
+            ->toBase()->get()
+            ->each(function ($r) use (&$mov, &$aLiberar, $hoje, $fim): void {
+                $aLiberar += (float) $r->valor;
+                $data = CarbonImmutable::parse($r->data);
+                $data = $data->lt($hoje) ? $hoje : $data;
+                if ($data->lte($fim)) {
+                    $mov[$data->toDateString()][0] = ($mov[$data->toDateString()][0] ?? 0) + (float) $r->liquido;
+                }
+            });
+
+        $saldoHoje = $this->saldoTotal($hoje) - $aLiberar; // disponível agora; o que vence hoje e ainda está em aberto entra na curva
         $saldo = $saldoHoje;
         $diario = [];
         $semanas = [];
@@ -190,6 +206,7 @@ class FluxoCaixaService
 
         return [
             'saldo_hoje'       => round($saldoHoje, 2),
+            'a_liberar_cartao' => round($aLiberar, 2),
             'semanas'          => array_values($semanas),
             'diario'           => $diario,
             'vencidos_receber' => round($vencidosReceber, 2),

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Observers;
 
 use App\Actions\Financeiro\BaixarTransacaoAction;
+use App\Actions\Financeiro\GerarRecebiveisCartaoAction;
+use App\Actions\Financeiro\SincronizarOrigemTituloAction;
 use App\Enums\StatusTransacao;
 use App\Models\ContaFinanceira;
 use App\Models\PlanoConta;
@@ -56,15 +58,15 @@ class TransacaoObserver
             } elseif ($transacao->wasChanged(['valor_bruto', 'taxa_operacional', 'data_pagamento', 'conta_financeira_id', 'forma_pagamento'])) {
                 $this->realinhar($transacao);
             }
-
-            return;
-        }
-
-        if ($mudouStatus && in_array($transacao->status, [StatusTransacao::Pendente, StatusTransacao::Cancelado], true)
+        } elseif ($mudouStatus && in_array($transacao->status, [StatusTransacao::Pendente, StatusTransacao::Cancelado], true)
             && (float) $transacao->valor_pago > 0) {
             $transacao->baixas()->get()->each->delete();
             $transacao->valor_pago = 0;
             $transacao->saveQuietly();
+        }
+
+        if ($mudouStatus || $transacao->wasChanged('data_pagamento')) {
+            app(SincronizarOrigemTituloAction::class)->execute($transacao);
         }
     }
 
@@ -77,7 +79,8 @@ class TransacaoObserver
                 return;
             }
             $taxa = BaixarTransacaoAction::taxaProporcional($t, $restante);
-            (new TransacaoBaixa())->forceFill([
+            $baixa = new TransacaoBaixa();
+            $baixa->forceFill([
                 'tenant_id'           => $t->tenant_id,
                 'transacao_id'        => $t->id,
                 'conta_financeira_id' => $conta,
@@ -89,6 +92,7 @@ class TransacaoObserver
                 'forma_pagamento'     => $t->forma_pagamento,
                 'user_id'             => auth()->id(),
             ])->save();
+            app(GerarRecebiveisCartaoAction::class)->execute($baixa, $t->anteciparCartao);
         }
         $this->sincronizarValorPago($t);
     }
@@ -119,6 +123,7 @@ class TransacaoObserver
             $baixa->conta_financeira_id = $t->conta_financeira_id;
         }
         $baixa->save();
+        app(GerarRecebiveisCartaoAction::class)->execute($baixa, $t->anteciparCartao ?? $baixa->antecipado);
         $this->sincronizarValorPago($t);
     }
 

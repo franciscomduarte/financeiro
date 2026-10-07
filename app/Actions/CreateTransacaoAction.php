@@ -30,7 +30,9 @@ class CreateTransacaoAction
 
             $status = StatusTransacao::from($data['status'] ?? StatusTransacao::Pendente->value);
 
-            $transacao = Transacao::create([
+            $transacao = new Transacao();
+            $transacao->anteciparCartao = isset($data['antecipar_cartao']) ? (bool) $data['antecipar_cartao'] : null;
+            $transacao->fill([
                 'tipo'                    => $tipo,
                 'fase'                    => $data['fase'],
                 'categoria'               => $data['categoria'],
@@ -41,6 +43,7 @@ class CreateTransacaoAction
                 'paciente_id'             => $data['paciente_id'] ?? null,
                 'agendamento_id'          => $data['agendamento_id'] ?? null,
                 'fornecedor_id'           => $data['fornecedor_id'] ?? null,
+                'contrato_id'             => $data['contrato_id'] ?? null,
                 'valor_bruto'             => $data['valor_bruto'],
                 'taxa_operacional'        => $valores['taxa_operacional'],
                 'imposto_estimado'        => $valores['imposto_estimado'],
@@ -61,6 +64,7 @@ class CreateTransacaoAction
                 'recorrencia_id'          => $data['recorrencia_id'] ?? null,
                 'observacoes'             => $data['observacoes'] ?? null,
             ]);
+            $transacao->save();
 
             return $transacao;
         });

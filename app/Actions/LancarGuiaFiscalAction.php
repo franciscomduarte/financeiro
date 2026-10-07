@@ -14,7 +14,7 @@ class LancarGuiaFiscalAction
     public function execute(ObrigacaoFiscal $obrigacao, array $data): ObrigacaoFiscalLancamento
     {
         return DB::transaction(function () use ($obrigacao, $data): ObrigacaoFiscalLancamento {
-            return ObrigacaoFiscalLancamento::create([
+            $guia = ObrigacaoFiscalLancamento::create([
                 'obrigacao_fiscal_id' => $obrigacao->id,
                 'competencia'         => $data['competencia'],
                 'data_vencimento'     => $data['data_vencimento'],
@@ -25,6 +25,9 @@ class LancarGuiaFiscalAction
                 'status'              => StatusLancamentoFiscal::Pendente,
                 'observacoes'         => $data['observacoes'] ?? null,
             ]);
+            app(\App\Actions\Financeiro\TitulosContasFixasAction::class)->guia($guia);
+
+            return $guia->fresh();
         });
     }
 }

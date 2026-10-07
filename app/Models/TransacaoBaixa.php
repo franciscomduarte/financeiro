@@ -23,7 +23,7 @@ class TransacaoBaixa extends Model
 
     protected $fillable = [
         'transacao_id', 'conta_financeira_id', 'tipo', 'data', 'valor', 'juros', 'multa', 'desconto', 'taxa',
-        'valor_movimentado', 'forma_pagamento', 'observacoes', 'user_id',
+        'valor_movimentado', 'forma_pagamento', 'antecipado', 'observacoes', 'user_id',
     ];
 
     protected $casts = [
@@ -36,6 +36,7 @@ class TransacaoBaixa extends Model
         'desconto'          => 'decimal:2',
         'taxa'              => 'decimal:2',
         'valor_movimentado' => 'decimal:2',
+        'antecipado'        => 'boolean',
     ];
 
     public function transacao(): BelongsTo
@@ -46,6 +47,11 @@ class TransacaoBaixa extends Model
     public function conta(): BelongsTo
     {
         return $this->belongsTo(ContaFinanceira::class, 'conta_financeira_id');
+    }
+
+    public function recebiveis(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(RecebivelCartao::class, 'transacao_baixa_id');
     }
 
     public function usuario(): BelongsTo

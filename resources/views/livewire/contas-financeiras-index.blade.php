@@ -44,6 +44,9 @@
                     <button type="button" wire:click="editarConta('{{ $c->id }}')" class="btn-ghost -mr-2 -mt-1 min-h-[44px] px-3 text-sm">Editar</button>
                 </div>
                 <p class="mt-2 text-xl font-semibold tabular-nums {{ $saldo < 0 ? 'text-red-700' : 'text-stone-900' }}">{{ $brl($saldo) }}</p>
+                @if ($lib = $this->aLiberar[$c->id] ?? null)
+                    <p class="text-xs text-sky-700">{{ $brl($lib['valor']) }} a liberar · próxima em {{ \Carbon\Carbon::parse($lib['proxima'])->format('d/m') }}</p>
+                @endif
                 @if ($c->saldo_inicial_em)
                     <p class="text-xs text-stone-400">saldo conferido em {{ $c->saldo_inicial_em->format('d/m/Y') }}</p>
                 @else
@@ -76,6 +79,23 @@
                     <button type="button" wire:click="fecharExtrato" class="btn-ghost min-h-[44px]" aria-label="Fechar extrato">✕</button>
                 </div>
             </div>
+            @if ($ext['conta']->tipo === \App\Enums\TipoContaFinanceira::Maquininha && $this->agendaCartao->isNotEmpty())
+                <div class="border-b border-stone-100 bg-sky-50/50 px-4 py-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <p class="text-sm font-medium text-stone-900">A liberar para o banco</p>
+                        <button type="button" wire:click="liberarAgora" class="btn-ghost min-h-[44px] text-sm">Liberar vencidos</button>
+                    </div>
+                    <div class="mt-1 divide-y divide-sky-100 text-xs">
+                        @foreach ($this->agendaCartao as $r)
+                            <div class="flex items-center gap-3 py-1.5">
+                                <span class="w-12 shrink-0 tabular-nums {{ $r->data_prevista->lte(today()) ? 'font-medium text-amber-700' : 'text-stone-500' }}">{{ $r->data_prevista->format('d/m') }}</span>
+                                <span class="min-w-0 flex-1 truncate text-stone-700">{{ $r->transacao?->descricao }} · {{ $r->antecipado ? 'antecipado' : "parcela {$r->parcela}/{$r->total_parcelas}" }}</span>
+                                <span class="shrink-0 tabular-nums text-stone-900">{{ $brl($r->valor_liquido) }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
             <div class="flex items-center justify-between bg-stone-50 px-4 py-2 text-sm">
                 <span class="text-stone-500">Saldo anterior</span>
                 <span class="font-medium tabular-nums">{{ $brl($ext['anterior']) }}</span>
@@ -132,6 +152,36 @@
                             <div><label class="label" for="conta-ag">Agência</label><input id="conta-ag" type="text" inputmode="numeric" wire:model="agencia" class="input" maxlength="20"></div>
                             <div><label class="label" for="conta-num">Conta</label><input id="conta-num" type="text" inputmode="numeric" wire:model="numero" class="input" maxlength="30"></div>
                         </div>
+                    @endif
+                    @if ($tipoConta === 'maquininha')
+                        <fieldset class="space-y-3 rounded-xl border border-stone-200 p-3">
+                            <legend class="px-1 text-sm font-medium text-stone-700">Recebimento do cartão</legend>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div><label class="label" for="mq-credito">Crédito (dias)</label><input id="mq-credito" type="number" inputmode="numeric" min="0" wire:model="prazoCredito" class="input"></div>
+                                <div><label class="label" for="mq-debito">Débito (dias)</label><input id="mq-debito" type="number" inputmode="numeric" min="0" wire:model="prazoDebito" class="input"></div>
+                                <div><label class="label" for="mq-antecipa">Antecipado (dias)</label><input id="mq-antecipa" type="number" inputmode="numeric" min="0" wire:model="antecipacaoDias" class="input"></div>
+                            </div>
+                            <p class="hint -mt-1">Crédito parcelado: cada parcela cai no prazo × número da parcela (30, 60, 90 dias...).</p>
+                            @error('prazoCredito') <p class="field-error">{{ $message }}</p> @enderror
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="label" for="mq-taxa">Antecipação (% ao mês)</label>
+                                    <input id="mq-taxa" type="text" inputmode="decimal" wire:model="taxaAntecipacao" class="input tabular-nums" placeholder="1,99">
+                                    @error('taxaAntecipacao') <p class="field-error">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label class="label" for="mq-liq">Libera em</label>
+                                    <select id="mq-liq" wire:model="contaLiquidacao" class="input">
+                                        <option value="">Conta padrão</option>
+                                        @foreach ($this->contas->where('ativa', true)->where('id', '!=', $editandoId) as $cl) <option value="{{ $cl->id }}">{{ $cl->nome }}</option> @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <label class="relative flex min-h-[44px] items-center gap-3 text-sm text-stone-700">
+                                <input type="checkbox" wire:model="anteciparPadrao" class="h-5 w-5 rounded border-stone-300 text-rose-600">
+                                Antecipar as vendas no crédito por padrão
+                            </label>
+                        </fieldset>
                     @endif
                     <label class="relative flex min-h-[44px] items-center gap-3 text-sm text-stone-700">
                         <input type="checkbox" wire:model="padrao" class="h-5 w-5 rounded border-stone-300 text-rose-600">

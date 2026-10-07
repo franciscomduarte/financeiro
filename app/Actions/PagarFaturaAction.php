@@ -28,6 +28,16 @@ class PagarFaturaAction
             [$ano, $mes] = explode('-', $fatura->competencia);
             $dataCompetencia = sprintf('%s-%s-01', $ano, $mes);
 
+            // Já está no contas a pagar: quita o mesmo lançamento
+            if ($fatura->transacao_id && ($titulo = \App\Models\Transacao::query()->find($fatura->transacao_id)) && $titulo->status->emAberto()) {
+                app(\App\Actions\UpdateTransacaoAction::class)->execute($titulo, [
+                    'valor_bruto' => $valor, 'forma_pagamento' => $data['forma_pagamento'], 'status' => StatusTransacao::Pago->value, 'data_pagamento' => $dataPagamento,
+                ]);
+                $fatura->refresh()->update(['status' => StatusFatura::Paga, 'valor' => $valor, 'data_pagamento' => $dataPagamento]);
+
+                return $fatura->fresh();
+            }
+
             $transacao = $this->createTransacao->execute([
                 'tipo'             => TipoTransacao::Saida->value,
                 'fase'             => FaseTransacao::Operacao->value,
