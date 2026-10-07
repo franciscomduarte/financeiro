@@ -37,15 +37,18 @@ class CriarLeadAction
         if ($nome === '') {
             throw new InvalidArgumentException('Informe o nome.');
         }
-        if ($chave === null && $email === null) {
+        $lid      = filled($dados['whatsapp_lid'] ?? null) ? mb_substr((string) $dados['whatsapp_lid'], 0, 40) : null;
+
+        if ($chave === null && $email === null && $lid === null) {
             throw new InvalidArgumentException('Informe um telefone com DDD ou um e-mail.');
         }
 
-        return DB::transaction(function () use ($dados, $origem, $entrada, $texto, $avisarEquipe, $nome, $chave, $email): array {
+        return DB::transaction(function () use ($dados, $origem, $entrada, $texto, $avisarEquipe, $nome, $chave, $email, $lid): array {
             $existente = Lead::query()
                 ->whereIn('etapa', array_map(fn ($e) => $e->value, EtapaLead::abertas()))
                 ->where(fn ($q) => $q->when($chave, fn ($w) => $w->where('telefone_chave', $chave))
-                    ->when($email, fn ($w) => $w->orWhere('email', $email)))
+                    ->when($email, fn ($w) => $w->orWhere('email', $email))
+                    ->when($lid, fn ($w) => $w->orWhere('whatsapp_lid', $lid)))
                 ->lockForUpdate()
                 ->first();
 
@@ -63,6 +66,7 @@ class CriarLeadAction
                 'nome'                => $nome,
                 'telefone'            => Telefone::formatar($dados['telefone'] ?? null),
                 'telefone_chave'      => $chave,
+                'whatsapp_lid'        => $lid,
                 'email'               => $email,
                 'origem'              => $origem,
                 'procedimento_id'     => $procedimentoId,

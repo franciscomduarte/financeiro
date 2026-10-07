@@ -18,6 +18,9 @@ use Illuminate\Support\Facades\Route;
 // ─── Webhooks públicos (sem autenticação) ────────────────────────────────────
 Route::post('/whatsapp/webhook', [WhatsAppWebhookController::class, 'handle'])
     ->name('whatsapp.webhook');
+// Evolution com "Webhook by Events" ligado acrescenta o evento ao endereço (/messages-upsert, /messages-update...)
+Route::post('/whatsapp/webhook/{evento}', [WhatsAppWebhookController::class, 'handle'])
+    ->where('evento', '[a-z0-9-]+')->name('whatsapp.webhook.evento');
 
 Route::post('/webhooks/brevo/{token}', \App\Http\Controllers\BrevoWebhookController::class)
     ->middleware('throttle:600,1')->name('webhook.brevo');
