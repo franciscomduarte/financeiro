@@ -36,6 +36,8 @@ class MonitorarSistemaCommand extends Command
         'jobs_falharam'         => 'tarefas com falha',
         'erros_repetidos'       => 'erros no sistema',
         'notificacoes_falhando' => 'notificações aos pacientes',
+        'backup_falhou'         => 'backup',
+        'backup_atrasado'       => 'backup',
     ];
 
     public function handle(SaudeSistemaService $saude): int

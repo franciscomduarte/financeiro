@@ -107,6 +107,19 @@ Schedule::job(new \App\Jobs\BatimentoFilaJob(), 'default')
     ->everyFiveMinutes()
     ->name('batimento-fila');
 
+// Backup diário (banco + arquivos) fora da VPS; o monitor avisa se falhar ou atrasar
+Schedule::command('backup:clean')
+    ->dailyAt('01:30')
+    ->name('backup-limpeza')
+    ->when(fn () => \App\Services\SaudeSistemaService::backupConfigurado())
+    ->withoutOverlapping();
+
+Schedule::command('backup:run')
+    ->dailyAt('02:00')
+    ->name('backup-diario')
+    ->when(fn () => \App\Services\SaudeSistemaService::backupConfigurado())
+    ->withoutOverlapping(120);
+
 // Confere fila, falhas e erros e avisa o dono da plataforma
 Schedule::command('sistema:monitorar')
     ->everyFiveMinutes()

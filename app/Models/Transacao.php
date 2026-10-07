@@ -10,12 +10,15 @@ use App\Enums\FormaPagamento;
 use App\Enums\RecorrenciaTransacao;
 use App\Enums\StatusTransacao;
 use App\Enums\TipoTransacao;
+use App\Observers\TransacaoObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+#[ObservedBy(TransacaoObserver::class)]
 class Transacao extends Model
 {
     use BelongsToClinica, HasFactory, HasUuids;
@@ -61,8 +64,11 @@ class Transacao extends Model
         'imposto_estimado',
         'valor_liquido',
         'data_competencia',
+        'data_vencimento',
         'data_pagamento',
+        'valor_pago',
         'forma_pagamento',
+        'conta_financeira_id',
         'num_parcelas',
         'parcela_atual',
         'status',
@@ -83,7 +89,9 @@ class Transacao extends Model
         'taxa_operacional'        => 'decimal:2',
         'imposto_estimado'        => 'decimal:2',
         'valor_liquido'           => 'decimal:2',
+        'valor_pago'              => 'decimal:2',
         'data_competencia'        => 'date',
+        'data_vencimento'         => 'date',
         'data_pagamento'          => 'date',
         'data_inicio_recorrencia' => 'date',
         'num_parcelas'            => 'integer',
@@ -129,5 +137,59 @@ class Transacao extends Model
     public function anexos(): HasMany
     {
         return $this->hasMany(TransacaoAnexo::class, 'transacao_id');
+    }
+
+    /** Pagamentos/recebimentos (baixas) deste lançamento. */
+    public function baixas(): HasMany
+    {
+        return $this->hasMany(TransacaoBaixa::class, 'transacao_id');
+    }
+
+    /** Conta prevista para pagar/receber (sugestão na hora da baixa). */
+    public function conta(): BelongsTo
+    {
+        return $this->belongsTo(ContaFinanceira::class, 'conta_financeira_id');
+    }
+
+    /** Quanto ainda falta pagar/receber. */
+    public function valorAberto(): float
+    {
+        if ($this->status === StatusTransacao::Cancelado) {
+            return 0.0;
+        }
+
+        return max(0.0, round((float) $this->valor_bruto - (float) $this->valor_pago, 2));
+    }
+
+    /** Dias de atraso (0 quando em dia ou já quitado). */
+    public function diasAtraso(): int
+    {
+        if (! $this->status->emAberto() || $this->data_vencimento === null || ! $this->data_vencimento->lt(today())) {
+            return 0;
+        }
+
+        return (int) $this->data_vencimento->diffInDays(today());
+    }
+
+    /**
+     * Refaz valor pago, situação e data de pagamento a partir das baixas (sem disparar o observer).
+     * Lançamento cancelado continua cancelado.
+     */
+    public function recalcularPagamento(): void
+    {
+        $baixas = $this->baixas()->get(['valor', 'data']);
+        $pago   = round((float) $baixas->sum('valor'), 2);
+
+        $this->valor_pago = $pago;
+        if ($this->status !== StatusTransacao::Cancelado) {
+            $quitado = $pago > 0 && $pago >= round((float) $this->valor_bruto, 2) - 0.004;
+            $this->status = match (true) {
+                $quitado  => StatusTransacao::Pago,
+                $pago > 0 => StatusTransacao::Parcial,
+                default   => StatusTransacao::Pendente,
+            };
+            $this->data_pagamento = $quitado ? $baixas->max('data') : null;
+        }
+        $this->saveQuietly();
     }
 }

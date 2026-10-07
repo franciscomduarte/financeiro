@@ -71,6 +71,8 @@ class TransacaoIndex extends Component
     public string $formaPagamento   = 'pix';
     public string $dataCompetencia  = '';
     public string $dataPagamento    = '';
+    public string $dataVencimento   = '';
+    public string $contaFinanceiraId = '';
     public string $status           = 'pendente';
     public string $recorrencia      = 'unica';
     public string $recorrenciaAte   = '';
@@ -220,6 +222,16 @@ class TransacaoIndex extends Component
             $this->recorrencia = RecorrenciaTransacao::Mensal->value;
             $this->tipo        = 'saida';
         }
+
+        // Atalhos de Contas a pagar/receber: novo lançamento do tipo certo ou edição direta
+        if (in_array(request()->query('novo'), ['saida', 'entrada'], true)) {
+            $this->abrirModalCriar();
+            $this->tipo = (string) request()->query('novo');
+        }
+        $editar = request()->query('editar');
+        if (is_string($editar) && \Illuminate\Support\Str::isUuid($editar) && Transacao::query()->whereKey($editar)->exists()) {
+            $this->abrirModalEditar($editar);
+        }
     }
 
     public function abrirModalCriar(): void
@@ -250,6 +262,8 @@ class TransacaoIndex extends Component
         $this->formaPagamento      = $transacao->forma_pagamento->value;
         $this->dataCompetencia     = $transacao->data_competencia?->format('Y-m-d') ?? '';
         $this->dataPagamento       = $transacao->data_pagamento?->format('Y-m-d') ?? '';
+        $this->dataVencimento      = $transacao->data_vencimento?->format('Y-m-d') ?? '';
+        $this->contaFinanceiraId   = $transacao->conta_financeira_id ?? '';
         $this->status              = $transacao->status->value;
         $this->recorrencia         = $transacao->recorrencia->value;
         $this->editandoRecorrente  = $transacao->recorrencia_id !== null;
@@ -402,8 +416,8 @@ class TransacaoIndex extends Component
     {
         try {
             $transacao = Transacao::findOrFail($id);
-            if ($transacao->status !== StatusTransacao::Pendente) {
-                $this->flashErro = 'Só lançamentos pendentes podem ser marcados como pagos.';
+            if (! $transacao->status->emAberto()) {
+                $this->flashErro = 'Só lançamentos em aberto podem ser marcados como pagos.';
                 return;
             }
             app(UpdateTransacaoAction::class)->execute($transacao, [
@@ -483,6 +497,8 @@ class TransacaoIndex extends Component
         $this->formaPagamento  = 'pix';
         $this->dataCompetencia = '';
         $this->dataPagamento   = '';
+        $this->dataVencimento  = '';
+        $this->contaFinanceiraId = '';
         $this->status          = 'pendente';
         $this->recorrencia     = 'unica';
         $this->recorrenciaAte  = '';
@@ -506,6 +522,8 @@ class TransacaoIndex extends Component
             'formaPagamento'   => ['required', Rule::enum(FormaPagamento::class)],
             'dataCompetencia'  => 'required|date',
             'dataPagamento'    => 'nullable|date|required_if:status,pago',
+            'dataVencimento'   => 'nullable|date',
+            'contaFinanceiraId' => ['nullable', 'uuid', Rule::exists('contas_financeiras', 'id')->where('tenant_id', app(\App\Support\ClinicaAtual::class)->id())],
             'status'           => ['required', Rule::enum(StatusTransacao::class)],
             'recorrencia'      => ['required', Rule::enum(RecorrenciaTransacao::class)],
             'recorrenciaAte'   => 'nullable|date|after_or_equal:dataCompetencia',
@@ -531,6 +549,8 @@ class TransacaoIndex extends Component
             'num_parcelas'     => FormaPagamento::from($this->formaPagamento)->parcelas(),
             'data_competencia' => $this->dataCompetencia,
             'data_pagamento'   => $this->dataPagamento ?: null,
+            'data_vencimento'  => $this->dataVencimento ?: $this->dataCompetencia,
+            'conta_financeira_id' => $this->contaFinanceiraId ?: null,
             'status'           => $this->status,
             'recorrencia'      => $this->recorrencia,
             'observacoes'      => $this->observacoes ?: null,
@@ -673,6 +693,7 @@ class TransacaoIndex extends Component
             'tiposEnum'         => TipoTransacao::cases(),
             'fasesEnum'         => FaseTransacao::cases(),
             'statusEnum'        => StatusTransacao::cases(),
+            'contasFinanceiras' => \App\Models\ContaFinanceira::query()->ativas()->select(['id', 'nome'])->orderByDesc('padrao')->orderBy('nome')->limit(50)->get(),
             'formasPagamento'   => FormaPagamento::cases(),
             'recorrenciasEnum'  => RecorrenciaTransacao::cases(),
             'todasCategorias'   => array_values(array_unique([...Transacao::CATEGORIAS_ENTRADA, ...Transacao::CATEGORIAS_SAIDA])),

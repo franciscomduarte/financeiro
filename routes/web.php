@@ -124,6 +124,9 @@ Route::middleware('auth')->group(function (): void {
     Route::middleware('modulo:lancamentos')->group(function (): void {
         Route::get('/transacoes', TransacaoIndex::class)->name('transacoes.index');
         Route::get('/transacoes/recorrencias', RecorrenciaIndex::class)->name('transacoes.recorrencias');
+        Route::get('/financeiro/a-pagar', \App\Livewire\ContasPagarReceber::class)->name('financeiro.pagar')->defaults('tipo', 'saida');
+        Route::get('/financeiro/a-receber', \App\Livewire\ContasPagarReceber::class)->name('financeiro.receber')->defaults('tipo', 'entrada');
+        Route::get('/financeiro/contas', \App\Livewire\ContasFinanceirasIndex::class)->name('financeiro.contas');
         Route::get('/notas-fiscais', NotaFiscalIndex::class)->name('notas-fiscais.index');
         Route::post('/voz/transacao', [VozTransacaoController::class, 'processar'])->name('voz.transacao');
     });
