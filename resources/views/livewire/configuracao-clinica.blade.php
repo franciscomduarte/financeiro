@@ -208,6 +208,20 @@
                 <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
                     Tudo pronto para emitir {{ $clinica->nfse_homologacao ? 'em homologação (notas de teste, sem valor fiscal)' : 'notas de verdade (produção)' }}.
                 </div>
+
+                <div class="flex flex-col gap-3 rounded-xl border border-stone-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-stone-700">
+                    <div class="text-sm">
+                        <p class="font-medium text-stone-900 dark:text-stone-100">Aviso automático da Focus</p>
+                        @if ($clinica->avisoNfseAtivo())
+                            <p class="text-emerald-700 dark:text-emerald-400">Ativo desde {{ $clinica->nfse_webhook_em->format('d/m/Y H:i') }}: a situação das notas chega na hora.</p>
+                        @else
+                            <p class="text-stone-500">{{ $clinica->nfse_webhook_em ? 'Mudou o ambiente ou a conta: ative de novo.' : 'Desligado: a situação das notas é conferida a cada poucos minutos.' }} Ative para saber na hora quando a prefeitura autoriza ou recusa.</p>
+                        @endif
+                    </div>
+                    <button type="button" wire:click="ativarAvisoNfse" wire:loading.attr="disabled" class="btn-secondary min-h-11 shrink-0">
+                        {{ $clinica->avisoNfseAtivo() ? 'Ativar de novo' : 'Ativar aviso automático' }}
+                    </button>
+                </div>
             @endif
 
             <div class="grid gap-4 sm:grid-cols-2">

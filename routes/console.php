@@ -132,6 +132,12 @@ Schedule::call($porClinica(fn () => app(\App\Actions\Financeiro\LiquidarRecebive
     ->name('liquidar-recebiveis-cartao')
     ->withoutOverlapping();
 
+// NFS-e: nenhuma nota fica presa em "processando" (reenvia, consulta de novo ou desiste após 48 h)
+Schedule::call($porClinica(fn () => app(\App\Actions\NotaFiscal\RevisarNotasProcessandoAction::class)->execute()))
+    ->everyFifteenMinutes()
+    ->name('nfse-revisar-processando')
+    ->withoutOverlapping();
+
 // Backup diário (banco + arquivos) fora da VPS; o monitor avisa se falhar ou atrasar
 Schedule::command('backup:clean')
     ->dailyAt('01:30')

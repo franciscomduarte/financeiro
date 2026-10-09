@@ -182,7 +182,12 @@ class ConfiguracaoClinica extends Component
             'nfseAliquotaIss.max'   => 'A alíquota do ISS vai de 0 a 10%.',
         ]);
 
+        // Outra conta da Focus ou outro padrão: o aviso cadastrado deixa de valer e precisa ser ativado de novo
+        $clinica  = $this->clinica();
+        $invalida = filled($this->nfseToken) || ($clinica->nfse_padrao ?? \App\Enums\PadraoNfse::Municipal)->value !== $this->nfsePadrao;
+
         $this->salvar($action, [
+            ...($invalida ? ['nfse_webhook_em' => null] : []),
             'nfse_token'                => $this->nfseToken,
             'nfse_homologacao'          => $this->nfseHomologacao,
             'inscricao_municipal'       => trim($this->inscricaoMunicipal) ?: null,
@@ -196,6 +201,16 @@ class ConfiguracaoClinica extends Component
             'nfse_codigo_tributacao_nacional' => preg_replace('/\D/', '', $this->nfseCodigoNacional) ?: null,
         ]);
         $this->nfseToken = '';
+    }
+
+    public function ativarAvisoNfse(\App\Actions\NotaFiscal\AtivarAvisoNfseAction $action): void
+    {
+        try {
+            $action->execute();
+            $this->flashSucesso = 'Aviso automático ativado: a situação das notas passa a chegar na hora.';
+        } catch (Throwable $e) {
+            $this->flashErro = $this->mensagemDeErro($e);
+        }
     }
 
     public function removerSegredo(string $campo, AtualizarConfiguracaoClinicaAction $action): void

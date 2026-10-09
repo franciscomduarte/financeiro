@@ -171,6 +171,10 @@
                                 <input id="nf-email" type="email" wire:model="tomadorEmail" maxlength="150" class="input" placeholder="Ex.: maria@email.com">
                                 @error('tomadorEmail') <p class="field-error">{{ $message }}</p> @enderror
                             </div>
+                            <p class="text-sm font-medium text-stone-700 sm:col-span-2 dark:text-stone-300">
+                                Endereço do tomador <span class="font-normal text-stone-500">(opcional; algumas prefeituras exigem)</span>
+                            </p>
+                            @include('livewire.partials.campos-endereco', ['prefixo' => 'nf-end'])
                             <div class="sm:col-span-2">
                                 <label for="nf-desc" class="label">Descrição do serviço</label>
                                 <textarea id="nf-desc" wire:model="discriminacao" rows="4" maxlength="2000" class="input"></textarea>

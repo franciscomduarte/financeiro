@@ -89,6 +89,27 @@ class FocusNfeService
         return ['status' => (string) $resposta->json('status', 'cancelado'), 'mensagem' => $this->mensagemDeErro($resposta)];
     }
 
+    /**
+     * Cadastra o gatilho (webhook) da Focus para o CNPJ da clínica: a cada mudança de situação
+     * da nota, a Focus chama $url mandando $token no cabeçalho Authorization.
+     *
+     * @return array{ok: bool, mensagem: ?string}
+     */
+    public function cadastrarGatilho(PadraoNfse $padrao, string $url, string $token): array
+    {
+        $resposta = $this->cliente()->post('/v2/hooks', [
+            'cnpj'          => preg_replace('/\D/', '', (string) $this->clinica()->cnpj),
+            'event'         => $padrao->evento(),
+            'url'           => $url,
+            'authorization' => $token,
+        ]);
+        $this->registrar('gatilho', $padrao, '-', $resposta);
+
+        return $resposta->successful()
+            ? ['ok' => true, 'mensagem' => null]
+            : ['ok' => false, 'mensagem' => $this->mensagemDeErro($resposta) ?? 'A Focus NFe recusou o cadastro do aviso (HTTP ' . $resposta->status() . ').'];
+    }
+
     /** Registra a resposta da Focus (sem o corpo da nota, que tem dados do paciente). */
     private function registrar(string $operacao, PadraoNfse $padrao, string $referencia, Response $resposta): void
     {

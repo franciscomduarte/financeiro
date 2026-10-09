@@ -47,10 +47,13 @@ class Clinica extends Model
         'nfse_discriminacao_padrao',
         'nfse_padrao',
         'nfse_codigo_tributacao_nacional',
+        'nfse_webhook_token',
+        'nfse_webhook_em',
+        'nfse_webhook_homologacao',
     ];
 
     /** Segredos nunca vão para arrays/JSON. */
-    protected $hidden = ['evolution_api_key', 'asaas_api_key', 'asaas_webhook_token', 'nfse_token'];
+    protected $hidden = ['evolution_api_key', 'asaas_api_key', 'asaas_webhook_token', 'nfse_token', 'nfse_webhook_token'];
 
     protected $casts = [
         'status'              => StatusClinica::class,
@@ -61,6 +64,9 @@ class Clinica extends Model
         'asaas_api_key'       => 'encrypted',
         'asaas_webhook_token' => 'encrypted',
         'nfse_token'          => 'encrypted',
+        'nfse_webhook_token'  => 'encrypted',
+        'nfse_webhook_em'     => 'datetime',
+        'nfse_webhook_homologacao' => 'boolean',
         'nfse_homologacao'    => 'boolean',
         'nfse_optante_simples' => 'boolean',
         'nfse_aliquota_iss'   => 'decimal:2',
@@ -82,6 +88,13 @@ class Clinica extends Model
         return $this->belongsToMany(User::class, 'clinica_user')
             ->withPivot('papel')
             ->withTimestamps();
+    }
+
+    /** Aviso automático da Focus cadastrado para o ambiente atual (homologação ou produção). */
+    public function avisoNfseAtivo(): bool
+    {
+        return $this->nfse_webhook_em !== null && filled($this->nfse_webhook_token)
+            && $this->nfse_webhook_homologacao === (bool) $this->nfse_homologacao;
     }
 
     /** O que falta preencher para emitir NFS-e (vazio = pronto). */

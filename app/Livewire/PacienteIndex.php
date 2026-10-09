@@ -19,6 +19,7 @@ use Throwable;
 
 class PacienteIndex extends Component
 {
+    use Concerns\CamposEndereco;
     use Concerns\MensagemDeErro;
     use WithFileUploads, WithPagination;
 
@@ -100,7 +101,7 @@ class PacienteIndex extends Component
 
     public function salvar(CreatePacienteAction $action, UploadFotoPacienteAction $uploadAction): void
     {
-        $this->validate($this->rules());
+        $this->validate($this->rules(), $this->mensagensEndereco());
 
         try {
             $paciente = $action->execute($this->dadosFormulario());
@@ -138,6 +139,7 @@ class PacienteIndex extends Component
         $this->estadoCivil        = $paciente->estado_civil ?? '';
         $this->profissao          = $paciente->profissao ?? '';
         $this->endereco           = $paciente->endereco ?? '';
+        $this->preencherEndereco($paciente);
         $this->origem             = $paciente->origem ?? '';
         $this->status             = $paciente->status->value;
         $this->foto               = null;
@@ -151,7 +153,7 @@ class PacienteIndex extends Component
 
     public function atualizar(UpdatePacienteAction $action, UploadFotoPacienteAction $uploadAction): void
     {
-        $this->validate($this->rules());
+        $this->validate($this->rules(), $this->mensagensEndereco());
 
         try {
             $paciente = Paciente::findOrFail($this->pacienteEditandoId);
@@ -308,6 +310,7 @@ class PacienteIndex extends Component
             'estadoCivil'      => ['nullable', 'string', 'max:30'],
             'profissao'        => ['nullable', 'string', 'max:100'],
             'endereco'         => ['nullable', 'string', 'max:255'],
+            ...$this->regrasEndereco(),
             'origem'           => ['nullable', 'string', 'max:50'],
             'status'           => ['required', 'in:ativo,inativo'],
             'foto'             => ['nullable', 'image', 'max:2048', 'mimes:jpg,jpeg,png,webp'],
@@ -333,6 +336,7 @@ class PacienteIndex extends Component
             'estado_civil'      => $this->estadoCivil ?: null,
             'profissao'         => trim($this->profissao) ?: null,
             'endereco'          => trim($this->endereco) ?: null,
+            ...$this->dadosEndereco(),
             'origem'            => trim($this->origem) ?: null,
             'status'            => $this->status,
         ];
@@ -363,6 +367,7 @@ class PacienteIndex extends Component
         $this->estadoCivil        = '';
         $this->profissao          = '';
         $this->endereco           = '';
+        $this->resetEndereco();
         $this->origem             = '';
         $this->status             = 'ativo';
         $this->foto               = null;

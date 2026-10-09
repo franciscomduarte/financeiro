@@ -20,7 +20,7 @@ class NotaFiscal extends Model
 
     protected $fillable = [
         'transacao_id', 'paciente_id', 'user_id', 'referencia', 'status', 'homologacao', 'valor', 'discriminacao',
-        'tomador_nome', 'tomador_cpf', 'tomador_email', 'numero', 'codigo_verificacao', 'url', 'url_xml',
+        'tomador_nome', 'tomador_cpf', 'tomador_email', 'tomador_endereco', 'data_competencia', 'ultima_consulta_em', 'numero', 'codigo_verificacao', 'url', 'url_xml',
         'mensagem_erro', 'consultas', 'autorizada_em', 'cancelada_em', 'justificativa_cancelamento', 'padrao',
     ];
 
@@ -32,6 +32,9 @@ class NotaFiscal extends Model
         'consultas'     => 'integer',
         'autorizada_em' => 'datetime',
         'cancelada_em'  => 'datetime',
+        'tomador_endereco'   => 'array',
+        'data_competencia'   => 'date',
+        'ultima_consulta_em' => 'datetime',
     ];
 
     public function transacao(): BelongsTo

@@ -75,11 +75,16 @@
         </datalist>
     </div>
 
-    <div class="sm:col-span-2">
-        <label for="paciente-endereco" class="label">Endereço</label>
-        <input id="paciente-endereco" wire:model="endereco" type="text" maxlength="255" autocomplete="street-address"
-               placeholder="Ex.: Rua 12, 300, apto 101, Águas Claras, Brasília/DF" class="input">
-    </div>
+    {{-- Endereço (vai na nota fiscal) --}}
+    @include('livewire.partials.campos-endereco', ['prefixo' => 'paciente-end'])
+
+    @if ($endereco !== '')
+        <div class="sm:col-span-2">
+            <label for="paciente-endereco" class="label">Endereço anotado antes (texto livre)</label>
+            <input id="paciente-endereco" wire:model="endereco" type="text" maxlength="255" class="input">
+            <p class="hint">Passe para os campos acima e apague daqui quando puder.</p>
+        </div>
+    @endif
 
     {{-- Status --}}
     <div>
