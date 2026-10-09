@@ -92,11 +92,16 @@
                                 <div wire:key="cal-bloq-{{ $chave }}-{{ $b['id'] }}"
                                      class="pointer-events-none absolute inset-x-0 z-[5] flex flex-col overflow-hidden border-y border-stone-300/70 px-2 py-1 {{ $b['dia_inteiro'] ? 'justify-start' : 'justify-end' }}"
                                      style="top: {{ ($ini - $faixaIni) * $pxPorMin }}px; height: {{ ($fimSeg - $ini) * $pxPorMin }}px; background-color: color-mix(in srgb, var(--color-stone-100) 85%, transparent); background-image: repeating-linear-gradient(135deg, color-mix(in srgb, var(--color-stone-300) 55%, transparent) 0 6px, transparent 6px 12px);">
-                                    <p class="truncate text-[11px] font-semibold text-stone-600"
-                                       style="{{ $b['dia_inteiro'] ? 'margin-top' : 'margin-bottom' }}: {{ $i * 16 }}px">
+                                    {{-- Só a etiqueta é clicável: o resto do bloqueio deixa clicar nos horários de outras profissionais --}}
+                                    <button type="button" wire:click="removerBloqueio({{ $b['id'] }})"
+                                            wire:confirm="Excluir este bloqueio{{ $b['rotulo'] === 'Todos os profissionais' ? ' de todos os profissionais' : '' }}? O horário volta a ficar livre para agendamentos."
+                                            title="Excluir bloqueio"
+                                            class="pointer-events-auto max-w-full self-start truncate rounded px-1 text-left text-[11px] font-semibold text-stone-600 hover:bg-stone-200 hover:text-stone-900"
+                                            style="{{ $b['dia_inteiro'] ? 'margin-top' : 'margin-bottom' }}: {{ $i * 16 }}px">
                                         <span class="mr-1 inline-block h-1.5 w-1.5 rounded-full align-middle" style="background-color: {{ $b['cor'] }}"></span>Bloqueado{{ $b['motivo'] ? ' · ' . $b['motivo'] : '' }}
                                         @if (! $filtroProfissionalId) <span class="font-normal text-stone-500">· {{ $b['rotulo'] }}</span> @endif
-                                    </p>
+                                        <span class="font-normal text-stone-400">✕</span>
+                                    </button>
                                 </div>
                             @endif
                         @endforeach
