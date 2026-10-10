@@ -45,6 +45,7 @@ class PacienteIndex extends Component
     // ─── Campos do formulário ───────────────────────────────────
     public string $nome             = '';
     public string $cpf              = '';
+    public string $rg               = '';
     public string $dataNascimento   = '';
     public string $telefone         = '';
     public string $email            = '';
@@ -143,6 +144,7 @@ class PacienteIndex extends Component
         $this->pacienteEditandoId = $id;
         $this->nome               = $paciente->nome;
         $this->cpf                = $paciente->cpf ?? '';
+        $this->rg                 = $paciente->rg ?? '';
         $this->dataNascimento     = $paciente->data_nascimento?->toDateString() ?? '';
         $this->telefone           = $paciente->telefone ?? '';
         $this->email              = $paciente->email ?? '';
@@ -316,6 +318,7 @@ class PacienteIndex extends Component
                 'nullable', 'string', 'max:14',
                 Rule::unique('pacientes', 'cpf')->ignore($this->pacienteEditandoId),
             ],
+            'rg'               => ['nullable', 'string', 'max:20'],
             'dataNascimento'   => ['nullable', 'date', 'before:today'],
             'telefone'         => ['nullable', 'string', 'max:20'],
             'email'            => ['nullable', 'email', 'max:150'],
@@ -342,6 +345,7 @@ class PacienteIndex extends Component
         $dados = [
             'nome'              => $this->nome,
             'cpf'               => $this->cpf ?: null,
+            'rg'                => trim($this->rg) ?: null,
             'data_nascimento'   => $this->dataNascimento ?: null,
             'telefone'          => $this->telefone ?: null,
             'email'             => $this->email ?: null,
@@ -373,6 +377,7 @@ class PacienteIndex extends Component
     {
         $this->nome               = '';
         $this->cpf                = '';
+        $this->rg                 = '';
         $this->dataNascimento     = '';
         $this->telefone           = '';
         $this->email              = '';

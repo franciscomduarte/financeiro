@@ -41,6 +41,7 @@ class AnonimizarPacienteAction
             $paciente->forceFill([
                 'nome'                      => "Paciente anonimizado {$codigo}",
                 'cpf'                       => null,
+                'rg'                        => null,
                 'data_nascimento'           => null,
                 'telefone'                  => null,
                 'email'                     => null,

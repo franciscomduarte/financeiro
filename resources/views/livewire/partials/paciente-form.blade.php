@@ -16,6 +16,13 @@
         @error('cpf') <p class="field-error">{{ $message }}</p> @enderror
     </div>
 
+    {{-- RG --}}
+    <div>
+        <label for="paciente-rg" class="label">RG</label>
+        <input id="paciente-rg" wire:model="rg" type="text" maxlength="20" placeholder="Ex.: 1.234.567 SSP/DF" class="input">
+        @error('rg') <p class="field-error">{{ $message }}</p> @enderror
+    </div>
+
     {{-- Data de nascimento --}}
     <div>
         <label for="paciente-nascimento" class="label">Data de nascimento</label>
