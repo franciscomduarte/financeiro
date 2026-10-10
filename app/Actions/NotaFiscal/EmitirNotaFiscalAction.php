@@ -70,7 +70,7 @@ class EmitirNotaFiscalAction
                 'transacao_id'  => $transacao->id,
                 'paciente_id'   => $transacao->paciente_id,
                 'user_id'       => auth()->id(),
-                'referencia'    => 'nf-' . Str::lower((string) Str::ulid()),
+                'referencia'    => 'nf' . Str::lower((string) Str::ulid()), // só letras e números (regra da Focus para a ref)
                 'status'        => StatusNotaFiscal::Processando,
                 'homologacao'   => $clinica->nfse_homologacao,
                 'padrao'        => $clinica->nfse_padrao,
