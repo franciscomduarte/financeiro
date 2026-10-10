@@ -31,6 +31,21 @@ trait MensagemDeErro
         return rtrim($padrao, " .:") . '. Tente de novo em instantes.';
     }
 
+    /** Em modo somente leitura não abre formulário de criar/editar: avisa na tela e devolve true. */
+    protected function somenteLeituraAvisado(): bool
+    {
+        $clinicaAtual = app(\App\Support\ClinicaAtual::class);
+        if (! $clinicaAtual->somenteLeitura()) {
+            return false;
+        }
+
+        if (property_exists($this, 'flashErro')) {
+            $this->flashErro = $clinicaAtual->mensagemSomenteLeitura();
+        }
+
+        return true;
+    }
+
     private static function erroDeNegocio(Throwable $e): bool
     {
         if ($e instanceof QueryException || $e instanceof PDOException || $e instanceof \Error) {

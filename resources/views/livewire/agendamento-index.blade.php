@@ -41,6 +41,7 @@
     {{-- ─── Cabeçalho ───────────────────────────────────────────────────── --}}
     <x-ui.page-header titulo="Agenda" subtitulo="Veja os atendimentos do dia e marque novos horários.">
         <x-slot:acoes>
+            @podeEditar
             <button type="button" wire:click="abrirModalNovoBloqueio(null, null, '{{ $filtroProfissionalId }}')" class="btn-secondary">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
                 Bloquear horário
@@ -51,6 +52,7 @@
                 </svg>
                 Novo agendamento
             </button>
+            @endpodeEditar
         </x-slot:acoes>
     </x-ui.page-header>
 
@@ -180,7 +182,7 @@
                     titulo="Nenhum agendamento neste dia"
                     texto="Os atendimentos marcados para a data escolhida aparecem aqui."
                     icone="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5">
-                    <button wire:click="abrirModalCriar" class="btn-primary">Novo agendamento</button>
+                    @podeEditar<button wire:click="abrirModalCriar" class="btn-primary">Novo agendamento</button>@endpodeEditar
                 </x-ui.empty-state>
             @endif
         @else

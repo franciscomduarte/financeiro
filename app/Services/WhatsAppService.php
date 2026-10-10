@@ -255,6 +255,9 @@ class WhatsAppService
     private function enviar(string $acao, array $payload): ?Response
     {
         $this->ultimoIdMensagem = null;
+        if ($this->clinicaAtual->leituraPorPerfil()) {
+            $this->clinicaAtual->garantirEscrita(); // perfil "Somente consulta" não manda mensagem
+        }
         $credenciais = $this->credenciais();
         if ($credenciais === null) {
             return null;

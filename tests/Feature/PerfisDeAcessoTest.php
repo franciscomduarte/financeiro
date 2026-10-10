@@ -60,6 +60,7 @@ class PerfisDeAcessoTest extends TestCase
             'recepção'     => ['recepcao', ['/agenda', '/pacientes', '/cobrancas'], ['/dashboard', '/transacoes', '/relatorio', '/estoque', '/fornecedores', '/agenda/configuracao', '/admin/usuarios']],
             'profissional' => ['profissional', ['/agenda', '/pacientes', '/estoque'], ['/dashboard', '/transacoes', '/cobrancas', '/fornecedores', '/admin/clinica']],
             'financeiro'   => ['financeiro', ['/dashboard', '/transacoes', '/transacoes/recorrencias', '/relatorio', '/cobrancas', '/taxas-cartao', '/estoque', '/fornecedores', '/documentos'], ['/agenda', '/pacientes', '/admin/usuarios']],
+            'consulta'     => ['consulta', ['/agenda', '/pacientes', '/leads'], ['/dashboard', '/transacoes', '/cobrancas', '/estoque', '/agenda/configuracao', '/notificacoes', '/admin/usuarios', '/admin/clinica']],
             'admin'        => ['admin', ['/dashboard', '/agenda', '/pacientes', '/transacoes', '/agenda/configuracao', '/admin/usuarios', '/admin/clinica'], []],
         ];
     }

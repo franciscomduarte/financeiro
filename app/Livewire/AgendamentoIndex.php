@@ -313,12 +313,18 @@ class AgendamentoIndex extends Component
     // ─── Modal Criar ──────────────────────────────────────────────
     public function abrirModalCriar(): void
     {
+        if ($this->somenteLeituraAvisado()) {
+            return;
+        }
         $this->resetCriarForm();
         $this->modalCriar = true;
     }
 
     public function novoNoHorario(string $data, string $hora): void
     {
+        if ($this->somenteLeituraAvisado()) {
+            return;
+        }
         $inicio = CarbonImmutable::createFromFormat('!Y-m-d H:i', "{$data} {$hora}");
         if ($inicio === false || $inicio->format('Y-m-d H:i') !== "{$data} {$hora}") {
             return;

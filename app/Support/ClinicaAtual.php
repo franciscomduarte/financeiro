@@ -23,6 +23,9 @@ class ClinicaAtual
     /** Dono da plataforma vendo a clínica para dar suporte (sempre somente leitura). */
     private bool $suporte = false;
 
+    /** Usuário da requisição tem o perfil "Somente consulta" (não muda ao trocar de clínica em executarComo). */
+    private bool $leituraPorPerfil = false;
+
     public function definir(?Clinica $clinica): void
     {
         $this->clinica = $clinica;
@@ -70,19 +73,32 @@ class ClinicaAtual
         return $this->suporte && $this->clinica !== null;
     }
 
+    /** Marca a requisição como do perfil "Somente consulta" (DefinirClinicaAtual). */
+    public function definirLeituraPorPerfil(bool $somenteLeitura): void
+    {
+        $this->leituraPorPerfil = $somenteLeitura;
+    }
+
+    public function leituraPorPerfil(): bool
+    {
+        return $this->leituraPorPerfil;
+    }
+
     public function somenteLeitura(): bool
     {
-        return $this->emSuporte() || (bool) $this->clinica?->somenteLeitura();
+        return $this->emSuporte() || $this->leituraPorPerfil || (bool) $this->clinica?->somenteLeitura();
     }
 
     public function mensagemSomenteLeitura(): string
     {
-        return $this->emSuporte()
-            ? \App\Exceptions\ClinicaSomenteLeituraException::SUPORTE
-            : \App\Exceptions\ClinicaSomenteLeituraException::TESTE_ENCERRADO;
+        return match (true) {
+            $this->emSuporte()      => \App\Exceptions\ClinicaSomenteLeituraException::SUPORTE,
+            $this->leituraPorPerfil => \App\Exceptions\ClinicaSomenteLeituraException::PERFIL,
+            default                 => \App\Exceptions\ClinicaSomenteLeituraException::TESTE_ENCERRADO,
+        };
     }
 
-    /** Barra gravações quando a clínica ativa está em modo somente leitura (teste encerrado ou suporte). */
+    /** Barra gravações em modo somente leitura (teste encerrado, suporte ou perfil somente consulta). */
     public function garantirEscrita(): void
     {
         if (! $this->somenteLeitura()) {
