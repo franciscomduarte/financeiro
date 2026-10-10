@@ -74,6 +74,12 @@ class Paciente extends Model
             : null;
     }
 
+    /** Conversa no WhatsApp (fora do funil de leads). */
+    public function mensagensWhatsApp(): HasMany
+    {
+        return $this->hasMany(PacienteMensagem::class);
+    }
+
     public function agendamentos(): HasMany
     {
         return $this->hasMany(Agendamento::class, 'paciente_id');

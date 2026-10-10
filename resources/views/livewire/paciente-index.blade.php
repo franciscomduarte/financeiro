@@ -74,8 +74,11 @@
                 <option value="ativo">Ativos</option>
                 <option value="inativo">Inativos</option>
             </select>
-            @if ($busca || $filtroStatus)
-                <button wire:click="$set('busca', ''); $set('filtroStatus', '')" class="btn-ghost whitespace-nowrap">
+            <label class="flex min-h-11 items-center gap-2 whitespace-nowrap text-sm text-stone-700">
+                <input type="checkbox" wire:model.live="soMensagensNovas" class="h-5 w-5 rounded border-stone-300 text-rose-600 focus:ring-rose-300"> Com mensagem nova
+            </label>
+            @if ($busca || $filtroStatus || $soMensagensNovas)
+                <button wire:click="$set('busca', ''); $set('filtroStatus', ''); $set('soMensagensNovas', false)" class="btn-ghost whitespace-nowrap">
                     Limpar filtros
                 </button>
             @endif
@@ -126,7 +129,7 @@
                                 </div>
                             @endif
                             <div class="min-w-0 flex-1">
-                                <p class="truncate text-sm font-medium text-stone-900">{{ $paciente->nome }}</p>
+                                <p class="truncate text-sm font-medium text-stone-900">{{ $paciente->nome }} @if ($paciente->mensagens_novas) <span class="badge ml-1 bg-emerald-50 align-middle text-emerald-700" title="Mensagens novas no WhatsApp">💬 {{ $paciente->mensagens_novas }}</span> @endif</p>
                                 <p class="truncate text-xs text-stone-500">{{ $paciente->telefone ?? $paciente->email ?? 'Sem contato' }}</p>
                             </div>
                             @if ($paciente->status->value === 'ativo')
@@ -171,6 +174,7 @@
                                                 class="block max-w-full truncate text-left font-medium text-stone-900 hover:text-rose-700 transition-colors">
                                             {{ $paciente->nome }}
                                         </button>
+                                        @if ($paciente->mensagens_novas) <span class="badge ml-1 bg-emerald-50 align-middle text-emerald-700" title="Mensagens novas no WhatsApp">💬 {{ $paciente->mensagens_novas }}</span> @endif
                                         @if ($paciente->email)
                                             <p class="text-xs text-stone-500 truncate">{{ $paciente->email }}</p>
                                         @endif
@@ -364,6 +368,10 @@
                             @endif
                         </dl>
                     @endif
+                    @unless ($p->anonimizado())
+                        <livewire:conversa-whatsapp-paciente :paciente-id="$p->id" :key="'conversa-'.$p->id" />
+                    @endunless
+
 
                     {{-- Cobrança --}}
                     @if ($p->valor_mensalidade > 0 || $p->forma_pagamento)

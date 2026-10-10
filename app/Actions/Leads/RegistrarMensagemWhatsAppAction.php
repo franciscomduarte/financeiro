@@ -17,14 +17,18 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Mensagem no WhatsApp da clínica (rodar com a clínica ativa).
- * Recebida: número desconhecido vira lead "Novo" (com aviso à equipe); lead em aberto ganha a mensagem na conversa; paciente é ignorado.
- * Enviada pela clínica (celular ou WhatsApp Web): entra na conversa do lead em aberto e conta como contato feito.
+ * Recebida: número desconhecido vira lead "Novo" (com aviso à equipe); lead em aberto ganha a mensagem na conversa;
+ * paciente não vira lead: a conversa fica na ficha dele.
+ * Enviada pela clínica (celular ou WhatsApp Web): entra na conversa do lead em aberto (conta como contato feito) ou na ficha do paciente.
  */
 class RegistrarMensagemWhatsAppAction
 {
-    public function __construct(private readonly CriarLeadAction $criar) {}
+    public function __construct(
+        private readonly CriarLeadAction $criar,
+        private readonly \App\Actions\Pacientes\RegistrarMensagemPacienteAction $registrarPaciente,
+    ) {}
 
-    /** @return string o que foi feito: lead_criado | lead_atualizado | resposta_registrada | duplicada | paciente | ignorado */
+    /** @return string o que foi feito: lead_criado | lead_atualizado | resposta_registrada | duplicada | paciente | paciente_resposta | ignorado */
     public function execute(?string $telefone, ?string $nome, string $texto, ?string $lid = null, ?string $mensagemId = null, bool $daClinica = false): string
     {
         $chave = Telefone::chave($telefone);
@@ -82,18 +86,15 @@ class RegistrarMensagemWhatsAppAction
 
             return $resultado;
         }
+        // Quem já é paciente não vira lead: a conversa (nos dois sentidos) fica na ficha
+        $pacienteId = $this->pacienteDoContato($chave, $lid);
+        if ($pacienteId !== null) {
+            $this->registrarPaciente->execute($pacienteId, $texto, $daClinica, $mensagemId);
+
+            return $daClinica ? 'paciente_resposta' : 'paciente';
+        }
         if ($daClinica) {
-            return 'ignorado'; // conversa da clínica com quem não é lead
-        }
-        if ($chave !== null && BuscarPacienteDoLead::porContato($chave, null) !== null) {
-            return 'paciente';
-        }
-        // Contato já marcado como "Já é paciente" (ex.: número diferente do da ficha): não vira lead de novo
-        if (Lead::query()->where('etapa', EtapaLead::JaPaciente)
-            ->where(fn ($q) => $q->when($chave, fn ($w) => $w->where('telefone_chave', $chave))
-                ->when(filled($lid), fn ($w) => $w->orWhere('whatsapp_lid', $lid)))
-            ->exists()) {
-            return 'paciente';
+            return 'ignorado'; // conversa da clínica com quem não é lead nem paciente
         }
 
         [$lead] = $this->criar->execute(
@@ -107,6 +108,20 @@ class RegistrarMensagemWhatsAppAction
         }
 
         return 'lead_criado';
+    }
+
+    /** Paciente pelo telefone da ficha ou pelo lead marcado como "Já é paciente" (que pode ter outro número). */
+    private function pacienteDoContato(?string $chave, ?string $lid): ?string
+    {
+        if ($chave !== null && ($paciente = BuscarPacienteDoLead::porContato($chave, null)) !== null) {
+            return $paciente->id;
+        }
+
+        return Lead::query()->where('etapa', EtapaLead::JaPaciente)
+            ->whereHas('paciente', fn ($p) => $p->whereNull('anonimizado_em'))
+            ->where(fn ($q) => $q->when($chave, fn ($w) => $w->where('telefone_chave', $chave))
+                ->when(filled($lid), fn ($w) => $w->orWhere('whatsapp_lid', $lid)))
+            ->latest('updated_at')->value('paciente_id');
     }
 
     /** Assistente ligado: responde depois de alguns segundos (junta mensagens seguidas). */

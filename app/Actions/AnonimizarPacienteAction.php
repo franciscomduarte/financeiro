@@ -48,6 +48,14 @@ class AnonimizarPacienteAction
                 'anamnese'                  => null,
                 'observacoes'               => null,
                 'endereco'                  => null,
+                'cep'                       => null,
+                'logradouro'                => null,
+                'numero'                    => null,
+                'complemento'               => null,
+                'bairro'                    => null,
+                'cidade'                    => null,
+                'uf'                        => null,
+                'codigo_municipio'          => null,
                 'profissao'                 => null,
                 'estado_civil'              => null,
                 'valor_mensalidade'         => 0,
@@ -60,6 +68,9 @@ class AnonimizarPacienteAction
             // Observações dos atendimentos podem conter dados de saúde
             $paciente->agendamentos()->withoutGlobalScopes([\App\Models\Scopes\ProfissionalScope::class])
                 ->update(['observacoes' => null, 'motivo_cancelamento' => null]);
+
+            // Conversas no WhatsApp identificam a pessoa
+            \App\Models\PacienteMensagem::query()->where('paciente_id', $paciente->id)->delete();
 
             $this->registro->registrar($paciente, AcaoAcessoPaciente::Anonimizou);
         });
