@@ -19,6 +19,15 @@ enum PadraoNfse: string
         };
     }
 
+    /** Evento do gatilho (webhook) da Focus NFe para este padrão. */
+    public function evento(): string
+    {
+        return match ($this) {
+            self::Municipal => 'nfse',
+            self::Nacional  => 'nfsen',
+        };
+    }
+
     public function label(): string
     {
         return match ($this) {

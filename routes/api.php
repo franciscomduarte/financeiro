@@ -28,6 +28,10 @@ Route::post('/webhooks/brevo/{token}', \App\Http\Controllers\BrevoWebhookControl
 Route::post('/webhook/asaas', [CobrancaController::class, 'webhook'])
     ->name('webhook.asaas');
 
+// Focus NFe: aviso de que a situação de uma NFS-e mudou (autorizada, recusada, cancelada)
+Route::post('/webhook/nfse', \App\Http\Controllers\NotaFiscalWebhookController::class)
+    ->middleware('throttle:120,1')->name('webhook.nfse');
+
 Route::middleware(['auth:sanctum', 'clinica'])->prefix('v1')->name('api.v1.')->group(function (): void {
 
     // Transações, anexos e download seguro de anexo

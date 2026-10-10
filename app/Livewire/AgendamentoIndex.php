@@ -30,6 +30,7 @@ use Throwable;
 
 class AgendamentoIndex extends Component
 {
+    use Concerns\FormularioBloqueio;
     use Concerns\MensagemDeErro;
     use WithPagination;
 
@@ -328,6 +329,14 @@ class AgendamentoIndex extends Component
         $this->criarSlotSugerido   = $hora;
         $this->criarProfissionalId = $this->filtroProfissionalId;
         $this->modalCriar          = true;
+    }
+
+    /** "Bloquear este horário" no modal aberto a partir do calendário. */
+    public function bloquearNoHorario(): void
+    {
+        [$data, $hora, $profissional] = [$this->criarData, $this->criarSlotSugerido, $this->criarProfissionalId ?: $this->filtroProfissionalId];
+        $this->fecharModalCriar();
+        $this->abrirModalNovoBloqueio($data, $hora ?: null, $profissional ?: null);
     }
 
     public function fecharModalCriar(): void

@@ -12,7 +12,8 @@ use Illuminate\Foundation\Queue\Queueable;
 
 /**
  * Consulta a nota na Focus NFe até a prefeitura responder. Repete com intervalos crescentes
- * (até ~2 horas); depois disso a nota segue "processando" e a tela permite consultar à mão.
+ * (até ~2 horas). Depois disso, o aviso automático da Focus e a varredura periódica
+ * (RevisarNotasProcessandoAction) continuam acompanhando a nota.
  */
 class ConsultarNotaFiscalJob implements ShouldQueue
 {
@@ -21,6 +22,9 @@ class ConsultarNotaFiscalJob implements ShouldQueue
     public const MAX_CONSULTAS = 12;
 
     public int $tries = 3;
+
+    /** @var array<int, int> Focus/prefeitura instável (erro 5xx): espera antes de tentar de novo */
+    public array $backoff = [60, 300];
 
     public function __construct(public readonly string $notaId) {}
 

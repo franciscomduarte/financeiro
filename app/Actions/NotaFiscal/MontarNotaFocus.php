@@ -25,6 +25,18 @@ class MontarNotaFocus
         if ($nota->tomador_email !== null) {
             $tomador['email'] = $nota->tomador_email; // a Focus manda a nota por e-mail ao tomador
         }
+        if ($nota->tomador_endereco) {
+            $e = $nota->tomador_endereco;
+            $tomador['endereco'] = array_filter([
+                'logradouro'       => $e['logradouro'] ?? null,
+                'numero'           => $e['numero'] ?? null,
+                'complemento'      => $e['complemento'] ?? null,
+                'bairro'           => $e['bairro'] ?? null,
+                'codigo_municipio' => $e['codigo_municipio'] ?? null,
+                'uf'               => $e['uf'] ?? null,
+                'cep'              => $e['cep'] ?? null,
+            ], fn ($v) => $v !== null && $v !== '');
+        }
 
         return [
             'data_emissao'             => now(config('clinica.fuso_horario'))->toIso8601String(),
@@ -56,10 +68,16 @@ class MontarNotaFocus
     {
         $agora = now(config('clinica.fuso_horario'));
         $doc   = $nota->tomador_cpf !== null ? [(strlen($nota->tomador_cpf) === 14 ? 'cnpj_tomador' : 'cpf_tomador') => $nota->tomador_cpf] : [];
+        $e     = $nota->tomador_endereco ?? [];
+
+        // Competência = data do lançamento (nunca depois da emissão)
+        $competencia = $nota->data_competencia !== null && $nota->data_competencia->toDateString() < $agora->toDateString()
+            ? $nota->data_competencia->toDateString()
+            : $agora->toDateString();
 
         return array_filter([
             'data_emissao'                   => $agora->toIso8601String(),
-            'data_competencia'               => $agora->toDateString(),
+            'data_competencia'               => $competencia,
             'codigo_municipio_emissora'      => $clinica->codigo_municipio,
             'cnpj_prestador'                 => preg_replace('/\D/', '', (string) $clinica->cnpj),
             'inscricao_municipal_prestador'  => preg_replace('/\D/', '', (string) $clinica->inscricao_municipal) ?: null,
@@ -68,6 +86,12 @@ class MontarNotaFocus
             ...$doc,
             'razao_social_tomador'           => $nota->tomador_nome,
             'email_tomador'                  => $nota->tomador_email,
+            'codigo_municipio_tomador'       => $e['codigo_municipio'] ?? null,
+            'cep_tomador'                    => $e['cep'] ?? null,
+            'logradouro_tomador'             => $e['logradouro'] ?? null,
+            'numero_tomador'                 => $e['numero'] ?? null,
+            'complemento_tomador'            => $e['complemento'] ?? null,
+            'bairro_tomador'                 => $e['bairro'] ?? null,
             'codigo_municipio_prestacao'     => $clinica->codigo_municipio,
             'codigo_tributacao_nacional_iss' => $clinica->nfse_codigo_tributacao_nacional,
             'codigo_tributacao_municipal_iss' => $clinica->nfse_codigo_tributario,

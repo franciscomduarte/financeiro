@@ -21,7 +21,7 @@ class AtualizarSituacaoNotaFiscalAction
     {
         $r = $this->focus->consultar($nota->padrao, $nota->referencia);
 
-        $dados = ['consultas' => $nota->consultas + 1];
+        $dados = ['consultas' => $nota->consultas + 1, 'ultima_consulta_em' => now()];
 
         match ($r['status']) {
             'autorizado' => $dados += [

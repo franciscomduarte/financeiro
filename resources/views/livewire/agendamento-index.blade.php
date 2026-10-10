@@ -41,6 +41,10 @@
     {{-- ─── Cabeçalho ───────────────────────────────────────────────────── --}}
     <x-ui.page-header titulo="Agenda" subtitulo="Veja os atendimentos do dia e marque novos horários.">
         <x-slot:acoes>
+            <button type="button" wire:click="abrirModalNovoBloqueio(null, null, '{{ $filtroProfissionalId }}')" class="btn-secondary">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                Bloquear horário
+            </button>
             <button wire:click="abrirModalCriar" class="btn-primary">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
@@ -352,6 +356,12 @@
                 <div>
                     <h2 class="text-lg font-semibold text-stone-900">Novo agendamento</h2>
                     <p class="mt-0.5 text-sm text-stone-500">Escolha paciente, profissional e horário.</p>
+                    @if ($criarSlotSugerido)
+                        <button type="button" wire:click="bloquearNoHorario" class="mt-1 inline-flex min-h-[44px] items-center gap-1.5 text-sm font-medium text-stone-600 underline underline-offset-2 hover:text-stone-900">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                            Bloquear este horário em vez de agendar
+                        </button>
+                    @endif
                 </div>
                 <button wire:click="fecharModalCriar" aria-label="Fechar"
                         class="-mr-2 -mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-colors">
@@ -1002,4 +1012,5 @@
     </div>
     @endif
 
+    @include('livewire.partials.modal-bloqueio')
 </div>

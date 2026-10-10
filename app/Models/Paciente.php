@@ -41,6 +41,14 @@ class Paciente extends Model
         'estado_civil',
         'profissao',
         'endereco',
+        'cep',
+        'logradouro',
+        'numero',
+        'complemento',
+        'bairro',
+        'cidade',
+        'uf',
+        'codigo_municipio',
         'origem',
     ];
 

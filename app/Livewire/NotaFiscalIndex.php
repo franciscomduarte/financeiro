@@ -24,6 +24,7 @@ use Throwable;
 /** Notas fiscais de serviço (NFS-e): emissão a partir das receitas, acompanhamento e cancelamento. */
 class NotaFiscalIndex extends Component
 {
+    use Concerns\CamposEndereco;
     use Concerns\MensagemDeErro;
     use WithPagination;
 
@@ -90,6 +91,7 @@ class NotaFiscalIndex extends Component
         $this->flashSucesso = $this->flashErro = null;
         $this->resetValidation();
         $this->reset('buscaReceita', 'transacaoId', 'tomadorNome', 'tomadorCpf', 'tomadorEmail', 'discriminacao');
+        $this->resetEndereco();
         $this->modalEmitir = true;
     }
 
@@ -102,7 +104,7 @@ class NotaFiscalIndex extends Component
     /** Preenche o tomador com o paciente da receita e monta a descrição do serviço. */
     public function escolherReceita(string $id): void
     {
-        $t = Transacao::query()->with('paciente:id,nome,cpf,email')
+        $t = Transacao::query()->with('paciente:id,nome,cpf,email,cep,logradouro,numero,complemento,bairro,cidade,uf,codigo_municipio')
             ->select(['id', 'descricao', 'cliente', 'paciente_id', 'tipo'])
             ->where('tipo', TipoTransacao::Entrada)->find($id);
         if ($t === null) {
@@ -117,6 +119,7 @@ class NotaFiscalIndex extends Component
         $this->tomadorNome   = (string) ($t->paciente?->nome ?? $t->cliente);
         $this->tomadorCpf    = (string) $t->paciente?->cpf;
         $this->tomadorEmail  = (string) $t->paciente?->email;
+        $this->preencherEndereco($t->paciente);
         $this->discriminacao = trim($padrao . "\n" . $t->descricao);
         unset($this->receitaEscolhida);
     }
@@ -130,7 +133,9 @@ class NotaFiscalIndex extends Component
             'tomadorCpf'    => ['nullable', 'string', 'max:18'],
             'tomadorEmail'  => ['nullable', 'email', 'max:150'],
             'discriminacao' => ['required', 'string', 'min:5', 'max:2000'],
+            ...$this->regrasEndereco(),
         ], [
+            ...$this->mensagensEndereco(),
             'transacaoId.required'   => 'Escolha a receita.',
             'tomadorNome.required'   => 'Informe o nome de quem recebe a nota.',
             'discriminacao.required' => 'Descreva o serviço prestado.',
@@ -142,6 +147,7 @@ class NotaFiscalIndex extends Component
                 'tomador_nome'  => $this->tomadorNome,
                 'tomador_cpf'   => $this->tomadorCpf,
                 'tomador_email' => $this->tomadorEmail,
+                'tomador_endereco' => $this->dadosEndereco(),
             ]);
             $this->modalEmitir  = false;
             $this->flashSucesso = 'Nota enviada para a prefeitura. Em instantes a situação muda para "Emitida".';
