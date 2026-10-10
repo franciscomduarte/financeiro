@@ -134,4 +134,40 @@ class ConversaPacienteTest extends TestCase
         $this->assertNull($ana->logradouro);
         $this->assertNull($ana->codigo_municipio);
     }
+
+    public function test_assistente_ligado_responde_o_paciente_avisa_a_equipe_e_nao_repete(): void
+    {
+        \App\Models\AssistenteConfiguracao::create(['ativo' => true, 'nome' => 'Assistente']);
+
+        $this->webhook('Oi, posso remarcar?', 'P1')->assertJson(['status' => 'paciente']);
+
+        $resposta = PacienteMensagem::where('do_assistente', true)->sole();
+        $this->assertTrue($resposta->enviada);
+        $this->assertStringStartsWith('Olá, Ana! 😊 Aqui é a assistente virtual da', $resposta->texto);
+        Http::assertSent(fn ($r) => str_contains($r->url(), '/message/sendText/lc') && $r['number'] === '5561977772222'
+            && str_contains($r['textMessage']['text'], 'já avisei a nossa equipe'));
+        // Equipe avisada no WhatsApp da gestão, com o que o paciente escreveu
+        Http::assertSent(fn ($r) => $r['number'] === '5561988880000' && str_contains($r['textMessage']['text'], 'Paciente Ana Paula')
+            && str_contains($r['textMessage']['text'], 'Oi, posso remarcar?'));
+
+        // Nova mensagem logo depois: o assistente não repete (a conversa já foi encaminhada)
+        $this->webhook('Pode ser quinta?', 'P2');
+        $this->assertSame(1, PacienteMensagem::where('do_assistente', true)->count());
+
+        // Na ficha aparece como resposta do assistente
+        $this->actingAs(User::factory()->create(['role' => 'recepcao']));
+        Livewire::test(ConversaWhatsappPaciente::class, ['pacienteId' => $this->ana->id])->assertSee('🤖 Assistente');
+    }
+
+    public function test_assistente_desligado_ou_equipe_ja_conversando_nao_responde(): void
+    {
+        $this->webhook('Oi', 'P1'); // sem assistente configurado
+        $this->assertSame(0, PacienteMensagem::where('enviada', true)->count());
+
+        \App\Models\AssistenteConfiguracao::create(['ativo' => true, 'nome' => 'Assistente']);
+        $this->webhook('Respondendo pelo celular', 'C1', daClinica: true); // equipe já falou com ela
+        $this->webhook('Obrigada!', 'P2');
+        $this->assertSame(0, PacienteMensagem::where('do_assistente', true)->count());
+        Http::assertNothingSent();
+    }
 }

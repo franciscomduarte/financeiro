@@ -17,7 +17,7 @@
                 <div class="max-w-[85%] rounded-2xl px-3 py-2 text-sm shadow-sm {{ $m->enviada ? 'rounded-br-sm bg-emerald-100 text-emerald-950' : 'rounded-bl-sm bg-surface text-stone-800' }}">
                     <p class="whitespace-pre-line break-words">{{ $m->texto }}</p>
                     <p class="mt-0.5 text-right text-[11px] {{ $m->enviada ? 'text-emerald-800/70' : 'text-stone-400' }}">
-                        {{ $m->enviada ? ($m->autor ? explode(' ', $m->autor->name)[0] . ' · ' : 'Celular da clínica · ') : '' }}{{ $quando($m->created_at) }}
+                        {{ $m->enviada ? ($m->do_assistente ? '🤖 Assistente · ' : ($m->autor ? explode(' ', $m->autor->name)[0] . ' · ' : 'Celular da clínica · ')) : '' }}{{ $quando($m->created_at) }}
                     </p>
                 </div>
             </div>

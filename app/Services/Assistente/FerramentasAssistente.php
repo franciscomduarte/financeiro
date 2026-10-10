@@ -16,6 +16,8 @@ use App\Models\LeadInteracao;
 use App\Models\Paciente;
 use App\Models\Profissional;
 use App\Services\AgendamentoService;
+use App\Support\Documento;
+use App\Support\Telefone;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -67,9 +69,17 @@ class FerramentasAssistente
                     'properties'           => [
                         'data'          => ['type' => 'string', 'description' => 'AAAA-MM-DD'],
                         'hora'          => ['type' => 'string', 'description' => 'HH:MM'],
-                        'nome_completo' => ['type' => ['string', 'null'], 'description' => 'Nome completo, se a pessoa informou; senão null.'],
+                        'nome_completo'   => ['type' => ['string', 'null'], 'description' => 'Nome completo, se a pessoa informou; senão null.'],
+                        'cpf'             => ['type' => ['string', 'null'], 'description' => 'CPF informado, ou null.'],
+                        'rg'              => ['type' => ['string', 'null'], 'description' => 'RG informado, ou null.'],
+                        'email'           => ['type' => ['string', 'null'], 'description' => 'E-mail informado, ou null.'],
+                        'data_nascimento' => ['type' => ['string', 'null'], 'description' => 'Data de nascimento no formato AAAA-MM-DD, ou null.'],
+                        'profissao'       => ['type' => ['string', 'null'], 'description' => 'Profissão informada, ou null.'],
+                        'celular'         => ['type' => ['string', 'null'], 'description' => 'Celular com DDD informado, ou null (usa o número do WhatsApp).'],
+                        'endereco'        => ['type' => ['string', 'null'], 'description' => 'Endereço completo informado, ou null.'],
+                        'como_conheceu'   => ['type' => ['string', 'null'], 'description' => 'Onde a pessoa descobriu a clínica (ex.: Instagram, indicação), ou null.'],
                     ],
-                    'required'             => ['data', 'hora', 'nome_completo'],
+                    'required'             => ['data', 'hora', 'nome_completo', 'cpf', 'rg', 'email', 'data_nascimento', 'profissao', 'celular', 'endereco', 'como_conheceu'],
                     'additionalProperties' => false,
                 ],
             ];
@@ -84,7 +94,7 @@ class FerramentasAssistente
         try {
             return match ($nome) {
                 'consultar_horarios' => $config->podeAgendar() ? $this->horarios($config, $entrada['a_partir_de'] ?? null) : 'Agendamento pelo assistente está desligado.',
-                'agendar_avaliacao'  => $config->podeAgendar() ? $this->agendar($lead, $config, (string) ($entrada['data'] ?? ''), (string) ($entrada['hora'] ?? ''), $entrada['nome_completo'] ?? null, $simulacao) : 'Agendamento pelo assistente está desligado.',
+                'agendar_avaliacao'  => $config->podeAgendar() ? $this->agendar($lead, $config, (string) ($entrada['data'] ?? ''), (string) ($entrada['hora'] ?? ''), $entrada, $simulacao) : 'Agendamento pelo assistente está desligado.',
                 'passar_para_equipe' => $this->passarParaEquipe($lead, (string) ($entrada['motivo'] ?? ''), $simulacao),
                 default              => "Ferramenta desconhecida: {$nome}.",
             };
@@ -144,11 +154,17 @@ class FerramentasAssistente
             : "Horários livres para avaliação ({$this->duracao($config)} min):\n" . implode("\n", $linhas);
     }
 
-    private function agendar(?Lead $lead, AssistenteConfiguracao $config, string $data, string $hora, ?string $nomeCompleto, bool $simulacao): string
+    /** @param array<string, mixed> $cadastro dados que a pessoa informou (nome_completo, cpf, rg, email…) */
+    private function agendar(?Lead $lead, AssistenteConfiguracao $config, string $data, string $hora, array $cadastro, bool $simulacao): string
     {
         $dia = rescue(fn () => CarbonImmutable::createFromFormat('!Y-m-d', $data), null, false);
         if (! $dia || ! preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $hora)) {
             return 'Data ou hora inválida. Use consultar_horarios e tente de novo.';
+        }
+        $nomeCompleto = $this->texto($cadastro['nome_completo'] ?? null, 150);
+        $cpf = Documento::numeros($this->texto($cadastro['cpf'] ?? null, 20)) ?: null;
+        if ($cpf !== null && ! Documento::cpfValido($cpf)) {
+            return 'O CPF informado não é válido. Peça para a pessoa conferir os números antes de agendar.';
         }
         $profissionalId = ($this->livresNoDia($config, $dia)[$hora] ?? [])[0] ?? null;
         if ($profissionalId === null) {
@@ -167,16 +183,13 @@ class FerramentasAssistente
             return 'Já existe uma avaliação agendada para ' . $existente->inicio_em->format('d/m \à\s H:i') . '. Não agende outra; se a pessoa quiser mudar, use passar_para_equipe.';
         }
 
-        $agendamento = DB::transaction(function () use ($lead, $config, $dia, $hora, $nomeCompleto, $profissionalId, $quando): Agendamento {
+        $agendamento = DB::transaction(function () use ($lead, $config, $dia, $hora, $nomeCompleto, $cpf, $cadastro, $profissionalId, $quando): Agendamento {
             $lead = Lead::query()->lockForUpdate()->findOrFail($lead->id);
             $paciente = ($lead->paciente_id ? Paciente::query()->find($lead->paciente_id) : null)
+                ?? ($cpf !== null ? Paciente::query()->whereNull('anonimizado_em')->whereRaw("regexp_replace(coalesce(cpf, ''), '\\D', '', 'g') = ?", [$cpf])->first() : null)
                 ?? BuscarPacienteDoLead::porContato($lead->telefone_chave, $lead->email)
-                ?? Paciente::create([
-                    'nome'     => filled($nomeCompleto) ? mb_substr(trim((string) $nomeCompleto), 0, 150) : $lead->nome,
-                    'telefone' => $lead->telefone,
-                    'email'    => $lead->email,
-                    'origem'   => $lead->origem->label(),
-                ]);
+                ?? Paciente::create(['nome' => $nomeCompleto ?? $lead->nome]);
+            $this->completarCadastro($paciente, $lead, $cpf, $cadastro);
 
             $agendamento = $this->agenda->criar([
                 'paciente_id'       => $paciente->id,
@@ -200,6 +213,41 @@ class FerramentasAssistente
         AvisarEquipeLeadJob::dispatch($lead->id, "📅 O assistente agendou a avaliação de {$lead->nome} para {$quando}.")->afterCommit();
 
         return "Agendado com sucesso para {$quando}. Confirme com a pessoa (ela também recebe a confirmação automática).";
+    }
+
+    /**
+     * Preenche a ficha com o que a pessoa informou no WhatsApp, sem apagar o que já está cadastrado.
+     *
+     * @param array<string, mixed> $cadastro
+     */
+    private function completarCadastro(Paciente $paciente, Lead $lead, ?string $cpf, array $cadastro): void
+    {
+        $email      = $this->texto($cadastro['email'] ?? null, 150);
+        $nascimento = rescue(fn () => CarbonImmutable::createFromFormat('!Y-m-d', (string) $this->texto($cadastro['data_nascimento'] ?? null, 10)), null, false);
+        $celular    = Telefone::formatar($this->texto($cadastro['celular'] ?? null, 20)) ?? $lead->telefone;
+
+        $novos = [
+            'cpf'             => $cpf !== null ? vsprintf('%s%s%s.%s%s%s.%s%s%s-%s%s', str_split($cpf)) : null,
+            'rg'              => $this->texto($cadastro['rg'] ?? null, 20),
+            'email'           => $email !== null && filter_var($email, FILTER_VALIDATE_EMAIL) ? mb_strtolower($email) : $lead->email,
+            'data_nascimento' => $nascimento && $nascimento->isPast() ? $nascimento->toDateString() : null,
+            'profissao'       => $this->texto($cadastro['profissao'] ?? null, 100),
+            'telefone'        => $celular,
+            'endereco'        => $this->texto($cadastro['endereco'] ?? null, 255),
+            'origem'          => $this->texto($cadastro['como_conheceu'] ?? null, 50) ?? $lead->origem->label(),
+        ];
+
+        $faltando = array_filter($novos, fn ($valor, $campo) => $valor !== null && blank($paciente->getAttribute($campo)), ARRAY_FILTER_USE_BOTH);
+        if ($faltando !== []) {
+            $paciente->update($faltando);
+        }
+    }
+
+    private function texto(mixed $valor, int $limite): ?string
+    {
+        $valor = is_scalar($valor) ? trim((string) $valor) : '';
+
+        return $valor !== '' && mb_strtolower($valor) !== 'null' ? mb_substr($valor, 0, $limite) : null;
     }
 
     private function passarParaEquipe(?Lead $lead, string $motivo, bool $simulacao): string

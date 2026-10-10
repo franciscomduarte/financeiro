@@ -9,6 +9,7 @@ use App\Enums\OrigemLead;
 use App\Enums\TipoInteracaoLead;
 use App\Models\Lead;
 use App\Jobs\ResponderLeadJob;
+use App\Jobs\ResponderPacienteJob;
 use App\Models\AssistenteConfiguracao;
 use App\Models\LeadInteracao;
 use App\Support\Telefone;
@@ -26,6 +27,7 @@ class RegistrarMensagemWhatsAppAction
     public function __construct(
         private readonly CriarLeadAction $criar,
         private readonly \App\Actions\Pacientes\RegistrarMensagemPacienteAction $registrarPaciente,
+        private readonly \App\Actions\Agenda\ConfirmarPeloWhatsAppAction $confirmar,
     ) {}
 
     /** @return string o que foi feito: lead_criado | lead_atualizado | resposta_registrada | duplicada | paciente | paciente_resposta | ignorado */
@@ -42,7 +44,7 @@ class RegistrarMensagemWhatsAppAction
         $texto = mb_substr(trim($texto), 0, 2000);
 
         // Lead em aberto vem primeiro: quem agendou pelo assistente já virou paciente e continua a conversa no lead
-        [$resultado, $leadId, $interacaoId] = DB::transaction(function () use ($chave, $telefone, $lid, $texto, $mensagemId, $daClinica): array {
+        [$resultado, $leadId, $interacaoId, $leadPacienteId] = DB::transaction(function () use ($chave, $telefone, $lid, $texto, $mensagemId, $daClinica): array {
             $lead = Lead::query()
                 ->where(fn ($q) => $q->when($chave, fn ($w) => $w->where('telefone_chave', $chave))
                     ->when(filled($lid), fn ($w) => $w->orWhere('whatsapp_lid', $lid)))
@@ -50,7 +52,7 @@ class RegistrarMensagemWhatsAppAction
                 ->lockForUpdate()->first();
 
             if ($lead === null) {
-                return [null, null, null];
+                return [null, null, null, null];
             }
 
             $tipo = $daClinica ? TipoInteracaoLead::WhatsAppEnviado : TipoInteracaoLead::WhatsAppRecebido;
@@ -76,11 +78,12 @@ class RegistrarMensagemWhatsAppAction
             }
             $lead->update($atualizar);
 
-            return [$daClinica ? 'resposta_registrada' : 'lead_atualizado', $lead->id, $interacao->id];
+            return [$daClinica ? 'resposta_registrada' : 'lead_atualizado', $lead->id, $interacao->id, $lead->paciente_id];
         });
 
         if ($resultado !== null) {
-            if (! $daClinica) {
+            // Lead que já agendou e respondeu SIM/NÃO ao pedido de confirmação: a agenda registra e o assistente não entra
+            if (! $daClinica && ! ($leadPacienteId !== null && $this->confirmar->execute($leadPacienteId, $texto))) {
                 $this->agendarResposta($leadId, $interacaoId);
             }
 
@@ -89,7 +92,14 @@ class RegistrarMensagemWhatsAppAction
         // Quem já é paciente não vira lead: a conversa (nos dois sentidos) fica na ficha
         $pacienteId = $this->pacienteDoContato($chave, $lid);
         if ($pacienteId !== null) {
-            $this->registrarPaciente->execute($pacienteId, $texto, $daClinica, $mensagemId);
+            $mensagem = $this->registrarPaciente->execute($pacienteId, $texto, $daClinica, $mensagemId);
+            $respondeuConfirmacao = ! $daClinica && $mensagem->wasRecentlyCreated && $this->confirmar->execute($pacienteId, $texto);
+            if (! $daClinica && ! $respondeuConfirmacao && $mensagem->wasRecentlyCreated && AssistenteConfiguracao::query()->where('ativo', true)->exists()) {
+                // O assistente avisa que a equipe vai responder (junta mensagens seguidas, como nos leads)
+                ResponderPacienteJob::dispatch($pacienteId, $mensagem->id)
+                    ->delay(now()->addSeconds((int) config('services.anthropic.espera_assistente', 15)))
+                    ->afterCommit();
+            }
 
             return $daClinica ? 'paciente_resposta' : 'paciente';
         }

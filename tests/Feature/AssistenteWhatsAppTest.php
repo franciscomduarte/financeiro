@@ -90,7 +90,7 @@ class AssistenteWhatsAppTest extends TestCase
         [$instrucoes, $contexto, $mensagens] = $this->ia->chamadas[0];
         $this->assertStringContainsString('Você é Bia', $instrucoes);
         $this->assertStringContainsString('Pix, débito e até 10x no cartão.', $instrucoes);
-        $this->assertStringContainsString('Botox (30 min, a partir de R$ 1.200,00): Toxina botulínica', $instrucoes);
+        $this->assertStringContainsString('Botox (a partir de R$ 1.200,00; duração: 30 min): Toxina botulínica', $instrucoes);
         $this->assertStringContainsString('Rua das Flores, 10', $instrucoes);
         $this->assertStringContainsString('Contato: Carla', $contexto);
         $this->assertSame([['role' => 'user', 'content' => 'Oi, quanto custa o botox?']], $mensagens);
@@ -271,6 +271,44 @@ class AssistenteWhatsAppTest extends TestCase
         $this->assertStringContainsString('Estacionamento gratuito no subsolo.', $this->ia->chamadas[0][0]);
         $this->assertSame(0, Lead::count()); // simulação não grava nada
     }
+
+    public function test_pede_os_dados_de_cadastro_e_agenda_com_a_ficha_completa(): void
+    {
+        $this->profissionalComGrade();
+        $lead = $this->lead('Quero agendar');
+        $dia  = CarbonImmutable::today()->addDays(2);
+
+        $instrucoes = app(ResponderLeadAction::class)->instrucoes(AssistenteConfiguracao::atual());
+        $this->assertStringContainsString(ResponderLeadAction::PEDIDO_CADASTRO, $instrucoes);
+        $this->assertStringContainsString('Não informe a duração dos procedimentos, a menos que a pessoa pergunte.', $instrucoes);
+
+        $dados = [
+            'data' => $dia->toDateString(), 'hora' => '08:30', 'nome_completo' => 'Carla Souza', 'cpf' => '123.456.789-00',
+            'rg' => '1.234.567 SSP/DF', 'email' => 'Carla@Exemplo.com', 'data_nascimento' => '1990-05-20', 'profissao' => 'Advogada',
+            'celular' => null, 'endereco' => 'QS 1, Águas Claras', 'como_conheceu' => 'Instagram',
+        ];
+        $this->ia->roteiro[] = function (array $ferramentas, Closure $executar) use ($dados): RespostaAssistente {
+            // CPF com dígito errado: não agenda e pede para conferir
+            $this->assertStringContainsString('CPF informado não é válido', $executar('agendar_avaliacao', $dados));
+            $this->assertStringContainsString('Agendado com sucesso', $executar('agendar_avaliacao', ['cpf' => '123.456.789-09'] + $dados));
+
+            return new RespostaAssistente('Prontinho!');
+        };
+
+        app(ResponderLeadAction::class)->execute($lead->id);
+
+        $paciente = $lead->fresh()->paciente;
+        $this->assertSame('Carla Souza', $paciente->nome);
+        $this->assertSame('123.456.789-09', $paciente->cpf);
+        $this->assertSame('1.234.567 SSP/DF', $paciente->rg);
+        $this->assertSame('carla@exemplo.com', $paciente->email);
+        $this->assertSame('1990-05-20', $paciente->data_nascimento->toDateString());
+        $this->assertSame('Advogada', $paciente->profissao);
+        $this->assertSame($lead->telefone, $paciente->telefone); // sem celular informado: usa o do WhatsApp
+        $this->assertSame('QS 1, Águas Claras', $paciente->endereco);
+        $this->assertSame('Instagram', $paciente->origem);
+        $this->assertSame(1, Agendamento::count());
+    }
 }
 
 /** IA falsa: cada chamada consome um passo do roteiro (recebe as ferramentas e o executor). */
@@ -289,4 +327,5 @@ class FakeAssistenteIa implements AssistenteIa
 
         return $passo($ferramentas, Closure::fromCallable($executar));
     }
+
 }

@@ -326,12 +326,18 @@
                 <div class="flex-1 space-y-6 overflow-y-auto px-5 py-5 sm:px-6">
 
                     {{-- Dados de contato --}}
-                    @if ($p->cpf || $p->data_nascimento || $p->telefone || $p->email || $p->endereco || $p->profissao || $p->origem)
+                    @if ($p->cpf || $p->rg || $p->data_nascimento || $p->telefone || $p->email || $p->endereco || $p->profissao || $p->origem)
                         <dl class="grid grid-cols-2 gap-4 rounded-xl bg-stone-50 p-4">
                             @if ($p->cpf)
                                 <div>
                                     <dt class="text-xs text-stone-500">CPF</dt>
                                     <dd class="text-sm font-medium text-stone-800 tabular-nums">{{ $p->cpf }}</dd>
+                                </div>
+                            @endif
+                            @if ($p->rg)
+                                <div>
+                                    <dt class="text-xs text-stone-500">RG</dt>
+                                    <dd class="text-sm font-medium text-stone-800">{{ $p->rg }}</dd>
                                 </div>
                             @endif
                             @if ($p->data_nascimento)

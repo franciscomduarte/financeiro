@@ -116,6 +116,9 @@ class ResponderLeadAction
         );
     }
 
+    /** Dados pedidos para o cadastro e o agendamento (texto enviado como está). */
+    public const PEDIDO_CADASTRO = "Precisamos desses dados para concluir o seu cadastro e seu agendamento.\n\nNome:\nCPF:\nRG:\nE-mail:\nData de Nascimento:\nProfissão:\nCelular:\nEndereço:\nOnde descobriu a clínica?";
+
     /** Parte fixa (vai para o cache): regras, treinamento da clínica e procedimentos. */
     public function instrucoes(AssistenteConfiguracao $config): string
     {
@@ -131,8 +134,9 @@ class ResponderLeadAction
 
         $procedimentos = Procedimento::query()->select(['id', 'nome', 'descricao', 'duracao_minutos', 'valor'])
             ->where('ativo', true)->orderBy('nome')->limit(150)->get()
-            ->map(fn (Procedimento $p) => "- {$p->nome} ({$p->duracao_minutos} min"
-                . ($config->informar_precos && (float) $p->valor > 0 ? ', a partir de R$ ' . number_format((float) $p->valor, 2, ',', '.') : '') . ')'
+            ->map(fn (Procedimento $p) => "- {$p->nome} ("
+                . ($config->informar_precos && (float) $p->valor > 0 ? 'a partir de R$ ' . number_format((float) $p->valor, 2, ',', '.') . '; ' : '')
+                . "duração: {$p->duracao_minutos} min)"
                 . (filled($p->descricao) ? ': ' . trim((string) $p->descricao) : ''))
             ->implode("\n");
 
@@ -141,10 +145,14 @@ class ResponderLeadAction
             ->map(fn (AssistenteConhecimento $c) => "### {$c->titulo}\n" . trim($c->conteudo))
             ->implode("\n\n");
 
+        $cadastro = 'Quando a pessoa quiser agendar, antes de tudo envie exatamente esta mensagem (cada item numa linha):' . "\n"
+            . '"' . self::PEDIDO_CADASTRO . '"' . "\n"
+            . 'Se a pessoa não mandar algum dado, peça só o que faltou, uma vez; não insista. Nome é obrigatório; o celular pode ser o próprio WhatsApp.';
         $agenda = $config->podeAgendar()
-            ? "Você pode agendar a avaliação ({$config->procedimentoAvaliacao?->nome}). Antes de oferecer horários, use consultar_horarios; ofereça 2 ou 3 opções. "
-              . 'Quando a pessoa escolher, confirme o dia e a hora com ela e use agendar_avaliacao. Pergunte o nome completo se ainda não souber. Nunca diga que agendou sem a ferramenta confirmar.'
-            : 'Você não agenda. Quando a pessoa quiser agendar, use passar_para_equipe.';
+            ? $cadastro . "\n- Você pode agendar a avaliação ({$config->procedimentoAvaliacao?->nome}). Depois de receber os dados, use consultar_horarios e ofereça 2 ou 3 opções. "
+              . 'Quando a pessoa escolher, confirme o dia e a hora com ela e use agendar_avaliacao passando os dados que ela informou (data de nascimento em AAAA-MM-DD). '
+              . 'Se a ferramenta disser que o CPF não é válido, peça para conferir. Nunca diga que agendou sem a ferramenta confirmar.'
+            : $cadastro . "\n- Você não agenda: depois de receber os dados, use passar_para_equipe com o motivo \"Quer agendar\" e os dados informados.";
 
         return <<<TXT
         Você é {$nome}, assistente virtual da clínica no WhatsApp. Você conversa com pessoas interessadas (leads) que ainda não são pacientes.
@@ -158,7 +166,8 @@ class ResponderLeadAction
         - Não faça diagnóstico nem indique tratamento para um caso específico; diga que isso é avaliado na consulta.
         - Se perguntarem, diga que é a assistente virtual da clínica.
         - Use passar_para_equipe quando a pessoa pedir para falar com alguém, reclamar, falar de assunto de saúde/urgência, pedir desconto ou condição especial, ou mandar algo que você não entende (áudio, foto, documento).
-        - Não peça dados sensíveis (documentos, dados de cartão). Para agendar basta o nome.
+        - Não informe a duração dos procedimentos, a menos que a pessoa pergunte.
+        - Nunca peça dados de cartão ou senhas. Documentos (CPF, RG) só na mensagem de cadastro para agendar.
         - {$agenda}
 
         ## Dados da clínica

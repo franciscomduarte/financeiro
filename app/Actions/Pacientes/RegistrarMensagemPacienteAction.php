@@ -12,11 +12,12 @@ use App\Models\PacienteMensagem;
  */
 class RegistrarMensagemPacienteAction
 {
-    public function execute(string $pacienteId, string $texto, bool $enviada, ?string $mensagemId = null, ?int $userId = null): PacienteMensagem
+    public function execute(string $pacienteId, string $texto, bool $enviada, ?string $mensagemId = null, ?int $userId = null, bool $doAssistente = false): PacienteMensagem
     {
         $dados = [
             'paciente_id' => $pacienteId,
             'enviada'     => $enviada,
+            'do_assistente' => $doAssistente,
             'texto'       => mb_substr(trim($texto), 0, 2000),
             'user_id'     => $userId,
             // Mensagem da clínica já nasce lida; a do paciente fica como nova até alguém abrir a ficha
@@ -28,8 +29,12 @@ class RegistrarMensagemPacienteAction
         }
 
         $mensagem = PacienteMensagem::createOrFirst(['mensagem_id' => mb_substr($mensagemId, 0, 100)], $dados);
+        // O eco do webhook chegou antes: completa com quem enviou
         if ($userId !== null && $mensagem->user_id === null) {
-            $mensagem->update(['user_id' => $userId]); // o eco chegou antes: completa com quem enviou
+            $mensagem->update(['user_id' => $userId]);
+        }
+        if ($doAssistente && ! $mensagem->do_assistente) {
+            $mensagem->update(['do_assistente' => true]);
         }
 
         return $mensagem;

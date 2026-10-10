@@ -40,7 +40,7 @@ class ConversaWhatsappPaciente extends Component
     public function mensagens(): Collection
     {
         return PacienteMensagem::query()
-            ->select(['id', 'paciente_id', 'user_id', 'enviada', 'texto', 'created_at'])
+            ->select(['id', 'paciente_id', 'user_id', 'enviada', 'do_assistente', 'texto', 'created_at'])
             ->with('autor:id,name')
             ->where('paciente_id', $this->pacienteId)
             ->latest('created_at')->limit(self::LIMITE)->get()

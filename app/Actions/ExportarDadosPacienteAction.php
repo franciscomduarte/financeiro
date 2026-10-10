@@ -50,6 +50,7 @@ class ExportarDadosPacienteAction
             'paciente'  => [
                 'nome'             => $paciente->nome,
                 'cpf'              => $paciente->cpf,
+                'rg'               => $paciente->rg,
                 'data_nascimento'  => $paciente->data_nascimento?->toDateString(),
                 'telefone'         => $paciente->telefone,
                 'email'            => $paciente->email,
