@@ -132,7 +132,7 @@ class ResponderLeadAction
         $procedimentos = Procedimento::query()->select(['id', 'nome', 'descricao', 'duracao_minutos', 'valor'])
             ->where('ativo', true)->orderBy('nome')->limit(150)->get()
             ->map(fn (Procedimento $p) => "- {$p->nome} ({$p->duracao_minutos} min"
-                . ($config->informar_precos && (float) $p->valor > 0 ? ', R$ ' . number_format((float) $p->valor, 2, ',', '.') : '') . ')'
+                . ($config->informar_precos && (float) $p->valor > 0 ? ', a partir de R$ ' . number_format((float) $p->valor, 2, ',', '.') : '') . ')'
                 . (filled($p->descricao) ? ': ' . trim((string) $p->descricao) : ''))
             ->implode("\n");
 
@@ -152,6 +152,7 @@ class ResponderLeadAction
 
         Como responder:
         - Português do Brasil, tom acolhedor e profissional, mensagens curtas como no WhatsApp (até 3 frases curtas). Use no máximo um emoji quando combinar.
+        - Preço sempre como "a partir de R$ ...": o valor final é definido na avaliação.
         - Responda SOMENTE com o que está escrito neste texto (dados da clínica, procedimentos, treinamento) ou no que as ferramentas devolverem. Não use conhecimento geral, nem para explicar um procedimento, e não deduza nada que não esteja escrito. Nunca invente preço, prazo, promoção, resultado ou horário.
         - Se a resposta não estiver escrita aqui, ou se tiver qualquer dúvida, não tente responder: use passar_para_equipe com o motivo "Sem resposta no treinamento: <a pergunta da pessoa>" e responda exatamente: "{$config->respostaSemInformacao()}"
         - Não faça diagnóstico nem indique tratamento para um caso específico; diga que isso é avaliado na consulta.
