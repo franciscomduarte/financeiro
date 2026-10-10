@@ -275,6 +275,14 @@
                     <label for="nfse-codigo" class="label">Código de tributação do município (opcional)</label>
                     <input id="nfse-codigo" type="text" wire:model="nfseCodigoTributario" maxlength="30" class="input" placeholder="Conforme a prefeitura">
                 </div>
+                @if ($nfsePadrao !== 'nacional')
+                <div>
+                    <label for="nfse-cnae" class="label">CNAE do serviço{{ $codigoMunicipio === '5300108' ? '' : ' (opcional)' }}</label>
+                    <input id="nfse-cnae" type="text" inputmode="numeric" wire:model="nfseCnae" maxlength="10" class="input tabular-nums" placeholder="Ex.: 9602-5/02">
+                    <p class="hint">Está no cartão CNPJ. Brasília e outras prefeituras exigem.</p>
+                    @error('nfseCnae') <p class="field-error">{{ $message }}</p> @enderror
+                </div>
+                @endif
                 <div>
                     <label for="nfse-aliquota" class="label">Alíquota do ISS (%)</label>
                     <input id="nfse-aliquota" type="text" inputmode="decimal" wire:model="nfseAliquotaIss" class="input tabular-nums" placeholder="Ex.: 2">

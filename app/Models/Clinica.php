@@ -42,6 +42,7 @@ class Clinica extends Model
         'codigo_municipio',
         'nfse_item_lista_servico',
         'nfse_codigo_tributario',
+        'nfse_codigo_cnae',
         'nfse_aliquota_iss',
         'nfse_optante_simples',
         'nfse_discriminacao_padrao',
@@ -110,7 +111,17 @@ class Clinica extends Model
             'Item da lista de serviço'    => ! $nacional && ! filled($this->nfse_item_lista_servico),
             'Código de tributação nacional' => $nacional && ! preg_match('/^\d{6}$/', (string) $this->nfse_codigo_tributacao_nacional),
             'Alíquota do ISS'             => ! $nacional && $this->nfse_aliquota_iss === null,
+            'CNAE do serviço'             => ! $nacional && $this->exigeEnderecoECnae() && ! preg_match('/^\d{7}$/', (string) $this->nfse_codigo_cnae),
         ]));
+    }
+
+    /** Prefeituras (padrão municipal) que recusam a nota sem CNAE e sem endereço do tomador. */
+    public const MUNICIPIOS_EXIGEM_ENDERECO_E_CNAE = ['5300108']; // Brasília/DF (IssNet)
+
+    public function exigeEnderecoECnae(): bool
+    {
+        return $this->nfse_padrao !== \App\Enums\PadraoNfse::Nacional
+            && in_array((string) $this->codigo_municipio, self::MUNICIPIOS_EXIGEM_ENDERECO_E_CNAE, true);
     }
 
     /** Alíquota como fração (6.00 → 0.06). */

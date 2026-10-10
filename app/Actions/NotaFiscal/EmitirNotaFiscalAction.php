@@ -49,6 +49,9 @@ class EmitirNotaFiscalAction
         }
 
         $endereco = $this->endereco($dados['tomador_endereco'] ?? null);
+        if ($endereco === null && $clinica->exigeEnderecoECnae()) {
+            throw new RuntimeException('A prefeitura da clínica exige o endereço de quem recebe a nota. Preencha o CEP e o número.');
+        }
 
         $nota = DB::transaction(function () use ($transacaoId, $dados, $cpf, $endereco, $clinica): NotaFiscal {
             $transacao = Transacao::query()->select(['id', 'tipo', 'status', 'valor_bruto', 'paciente_id', 'data_competencia'])->lockForUpdate()->findOrFail($transacaoId);

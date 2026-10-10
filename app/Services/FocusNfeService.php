@@ -133,6 +133,10 @@ class FocusNfeService
             ->filter();
 
         $mensagem = $erros->isNotEmpty() ? $erros->implode(' | ') : $resposta->json('mensagem');
+        if ($mensagem && str_contains(mb_strtolower((string) $mensagem), 'não habilitada')) {
+            $mensagem .= ' → No painel da Focus NFe, abra Empresas › sua clínica, marque a emissão de NFS-e'
+                . ' (a mesma opção do "Padrão da nota" escolhido aqui) para o ambiente em uso e salve. Se continuar, peça a habilitação ao suporte da Focus.';
+        }
 
         return $mensagem ? mb_substr((string) $mensagem, 0, 1000) : null;
     }

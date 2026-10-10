@@ -44,7 +44,7 @@ class NotaFiscalTest extends TestCase
     {
         $this->clinica->update([
             'cnpj' => '12.345.678/0001-90', 'nfse_token' => 'token-teste', 'nfse_homologacao' => true,
-            'inscricao_municipal' => '0812345', 'codigo_municipio' => '5300108', 'nfse_item_lista_servico' => '06.02',
+            'inscricao_municipal' => '0812345', 'codigo_municipio' => '3550308', 'nfse_item_lista_servico' => '06.02',
             'nfse_aliquota_iss' => 2, 'nfse_optante_simples' => true, 'nfse_discriminacao_padrao' => 'Serviços de estética.',
         ]);
         app(ClinicaAtual::class)->definir($this->clinica->fresh());
@@ -95,7 +95,7 @@ class NotaFiscalTest extends TestCase
             }
             $this->assertSame('Basic ' . base64_encode('token-teste:'), $r->header('Authorization')[0]);
             $this->assertSame('12345678000190', $r['prestador']['cnpj']);
-            $this->assertSame('5300108', $r['prestador']['codigo_municipio']);
+            $this->assertSame('3550308', $r['prestador']['codigo_municipio']);
             $this->assertSame('12345678909', $r['tomador']['cpf']);
             $this->assertSame('maria@exemplo.com', $r['tomador']['email']);
             $this->assertEquals(350, $r['servico']['valor_servicos']);
@@ -217,7 +217,7 @@ class NotaFiscalTest extends TestCase
             }
             $this->assertStringContainsString('/v2/nfsen?ref=nf-', $r->url());
             $this->assertSame('12345678000190', $r['cnpj_prestador']);
-            $this->assertSame('5300108', $r['codigo_municipio_emissora']);
+            $this->assertSame('3550308', $r['codigo_municipio_emissora']);
             $this->assertSame('060201', $r['codigo_tributacao_nacional_iss']);
             $this->assertSame('12345678909', $r['cpf_tomador']);
             $this->assertSame('Maria Silva', $r['razao_social_tomador']);

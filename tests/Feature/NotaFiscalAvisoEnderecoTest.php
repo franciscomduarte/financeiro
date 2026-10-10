@@ -52,7 +52,7 @@ class NotaFiscalAvisoEnderecoTest extends TestCase
         $this->clinica->update([
             'cnpj' => '12.345.678/0001-90', 'nfse_token' => 'token-teste', 'nfse_homologacao' => true,
             'inscricao_municipal' => '0812345', 'codigo_municipio' => '5300108', 'nfse_item_lista_servico' => '06.02',
-            'nfse_aliquota_iss' => 2, 'nfse_optante_simples' => true,
+            'nfse_aliquota_iss' => 2, 'nfse_optante_simples' => true, 'nfse_codigo_cnae' => '9602502',
         ]);
         app(ClinicaAtual::class)->definir($this->clinica->fresh());
     }
@@ -255,5 +255,40 @@ class NotaFiscalAvisoEnderecoTest extends TestCase
             ->set('endCep', '00000-000')
             ->assertSet('endAviso', 'Não encontramos esse CEP. Confira os números.')
             ->assertSet('endCodigoMunicipio', '');
+    }
+
+    public function test_brasilia_exige_cnae_e_endereco_e_cnae_vai_na_nota(): void
+    {
+        $this->clinica->update(['nfse_codigo_cnae' => null]);
+        app(ClinicaAtual::class)->definir($this->clinica->fresh());
+        $this->assertContains('CNAE do serviço', $this->clinica->fresh()->pendenciasNfse());
+
+        Livewire::test(ConfiguracaoClinica::class)->set('aba', 'nota_fiscal')
+            ->assertSee('CNAE do serviço')
+            ->set('nfseCnae', '9602-5/02')
+            ->call('salvarNotaFiscal')
+            ->assertHasNoErrors();
+        $this->assertSame('9602502', $this->clinica->fresh()->nfse_codigo_cnae);
+        $this->assertSame([], $this->clinica->fresh()->pendenciasNfse());
+
+        // Sem endereço a nota nem sai daqui (a prefeitura recusaria)
+        Livewire::test(NotaFiscalIndex::class)->call('abrirEmissao')->call('escolherReceita', $this->receita->id)
+            ->call('emitir')
+            ->assertSet('flashErro', 'A prefeitura da clínica exige o endereço de quem recebe a nota. Preencha o CEP e o número.');
+
+        $nota = $this->nota(['tomador_endereco' => ['cep' => '71900100', 'logradouro' => 'Rua 12', 'numero' => '3', 'bairro' => 'Centro', 'uf' => 'DF', 'codigo_municipio' => '5300108']]);
+        $json = app(MontarNotaFocus::class)->montar($nota->fresh(), $this->clinica->fresh());
+        $this->assertSame('9602502', $json['servico']['codigo_cnae']);
+    }
+
+    public function test_empresa_nao_habilitada_na_focus_explica_o_que_fazer(): void
+    {
+        Http::fake(['*/v2/nfse?ref=*' => Http::response(['codigo' => 'nao_habilitada', 'mensagem' => 'Empresa ainda não habilitada para emissão de NFSe, por favor contate o suporte técnico.'], 422)]);
+        $nota = $this->nota(['consultas' => 0]);
+
+        app()->call([new EnviarNotaFiscalJob($nota->id), 'handle']);
+
+        $this->assertSame(StatusNotaFiscal::Erro, $nota->fresh()->status);
+        $this->assertStringContainsString('No painel da Focus NFe, abra Empresas', $nota->fresh()->mensagem_erro);
     }
 }

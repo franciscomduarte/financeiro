@@ -53,6 +53,7 @@ class ConfiguracaoClinica extends Component
     public string $inscricaoMunicipal    = '';
     public string $codigoMunicipio       = '';
     public string $nfseItemListaServico  = '';
+    public string $nfseCnae              = '';
     public string $nfseCodigoTributario  = '';
     public string $nfseAliquotaIss       = '';
     public bool   $nfseOptanteSimples    = true;
@@ -81,6 +82,7 @@ class ConfiguracaoClinica extends Component
         $this->inscricaoMunicipal   = (string) $c->inscricao_municipal;
         $this->codigoMunicipio      = (string) $c->codigo_municipio;
         $this->nfseItemListaServico = (string) $c->nfse_item_lista_servico;
+        $this->nfseCnae             = (string) $c->nfse_codigo_cnae;
         $this->nfseCodigoTributario = (string) $c->nfse_codigo_tributario;
         $this->nfseAliquotaIss      = $c->nfse_aliquota_iss !== null ? (string) $c->nfse_aliquota_iss : '';
         $this->nfseOptanteSimples   = (bool) $c->nfse_optante_simples;
@@ -170,6 +172,7 @@ class ConfiguracaoClinica extends Component
             'inscricaoMunicipal'   => 'nullable|string|max:30',
             'codigoMunicipio'      => ['nullable', 'regex:/^\d{7}$/'],
             'nfseItemListaServico' => 'nullable|string|max:10',
+            'nfseCnae'             => ['nullable', 'regex:/^\d{4}-?\d\/?\d{2}$/'],
             'nfseCodigoTributario' => 'nullable|string|max:30',
             'nfseAliquotaIss'      => 'nullable|numeric|min:0|max:10',
             'nfseOptanteSimples'   => 'boolean',
@@ -180,6 +183,7 @@ class ConfiguracaoClinica extends Component
             'nfseCodigoNacional.regex' => 'Use os 6 números do código de tributação nacional. Ex.: 060201.',
             'codigoMunicipio.regex' => 'Use o código IBGE de 7 números. Ex.: 5300108 (Brasília).',
             'nfseAliquotaIss.max'   => 'A alíquota do ISS vai de 0 a 10%.',
+            'nfseCnae.regex'        => 'Use os 7 números do CNAE. Ex.: 9602-5/02.',
         ]);
 
         // Outra conta da Focus ou outro padrão: o aviso cadastrado deixa de valer e precisa ser ativado de novo
@@ -193,6 +197,7 @@ class ConfiguracaoClinica extends Component
             'inscricao_municipal'       => trim($this->inscricaoMunicipal) ?: null,
             'codigo_municipio'          => trim($this->codigoMunicipio) ?: null,
             'nfse_item_lista_servico'   => trim($this->nfseItemListaServico) ?: null,
+            'nfse_codigo_cnae'          => preg_replace('/\D/', '', $this->nfseCnae) ?: null,
             'nfse_codigo_tributario'    => trim($this->nfseCodigoTributario) ?: null,
             'nfse_aliquota_iss'         => $this->nfseAliquotaIss !== '' ? (float) str_replace(',', '.', $this->nfseAliquotaIss) : null,
             'nfse_optante_simples'      => $this->nfseOptanteSimples,
