@@ -215,4 +215,24 @@ class AnexoTest extends TestCase
 
         $this->getJson("/api/v1/anexos/{$anexo->id}/download")->assertStatus(401);
     }
+
+    public function test_abrir_anexo_resolve_a_clinica_antes_de_buscar_o_arquivo(): void
+    {
+        $caminho = "anexos/transacoes/{$this->transacao->id}/nota.pdf";
+        Storage::disk('local')->put($caminho, '%PDF-1.4');
+        $anexo = TransacaoAnexo::factory()->create([
+            'transacao_id' => $this->transacao->id, 'tipo' => TipoAnexo::Boleto,
+            'caminho' => $caminho, 'nome_arquivo' => 'NFS-ADRIANE PAGNO.pdf', 'mime_type' => 'application/pdf',
+        ]);
+
+        // Como no navegador: a requisição chega sem clínica ativa; quem define é o middleware
+        app(\App\Support\ClinicaAtual::class)->definir(null);
+
+        $this->actingAs($this->user)
+            ->get("/api/v1/anexos/{$anexo->id}/download")
+            ->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf')
+            ->assertHeader('X-Content-Type-Options', 'nosniff')
+            ->assertHeader('Content-Disposition', 'inline; filename="NFS-ADRIANE PAGNO.pdf"');
+    }
 }
