@@ -60,7 +60,7 @@ class NotaFiscalAvisoEnderecoTest extends TestCase
     private function nota(array $atributos = []): NotaFiscal
     {
         return NotaFiscal::create([
-            'transacao_id' => $this->receita->id, 'paciente_id' => $this->paciente->id, 'referencia' => 'nf-' . uniqid(),
+            'transacao_id' => $this->receita->id, 'paciente_id' => $this->paciente->id, 'referencia' => 'nf' . uniqid(),
             'status' => StatusNotaFiscal::Processando, 'homologacao' => true, 'padrao' => PadraoNfse::Municipal,
             'valor' => 350, 'discriminacao' => 'Limpeza de pele', 'tomador_nome' => 'Maria Silva', ...$atributos,
         ]);
@@ -191,6 +191,7 @@ class NotaFiscalAvisoEnderecoTest extends TestCase
             ->assertSet('flashErro', null);
 
         $nota = NotaFiscal::sole();
+        $this->assertMatchesRegularExpression('/^[a-z0-9]+$/', $nota->referencia); // a Focus aceita só letras e números
         $this->assertSame('5300108', $nota->tomador_endereco['codigo_municipio']);
         $this->assertSame(now()->subDays(3)->toDateString(), $nota->data_competencia->toDateString());
         Http::assertSent(fn (Request $r) => str_contains($r->url(), '/v2/nfse?ref=')

@@ -215,7 +215,7 @@ class NotaFiscalTest extends TestCase
             if ($r->method() !== 'POST') {
                 return false;
             }
-            $this->assertStringContainsString('/v2/nfsen?ref=nf-', $r->url());
+            $this->assertStringContainsString('/v2/nfsen?ref=nf', $r->url());
             $this->assertSame('12345678000190', $r['cnpj_prestador']);
             $this->assertSame('3550308', $r['codigo_municipio_emissora']);
             $this->assertSame('060201', $r['codigo_tributacao_nacional_iss']);
