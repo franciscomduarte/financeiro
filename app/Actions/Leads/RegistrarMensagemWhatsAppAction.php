@@ -88,6 +88,13 @@ class RegistrarMensagemWhatsAppAction
         if ($chave !== null && BuscarPacienteDoLead::porContato($chave, null) !== null) {
             return 'paciente';
         }
+        // Contato já marcado como "Já é paciente" (ex.: número diferente do da ficha): não vira lead de novo
+        if (Lead::query()->where('etapa', EtapaLead::JaPaciente)
+            ->where(fn ($q) => $q->when($chave, fn ($w) => $w->where('telefone_chave', $chave))
+                ->when(filled($lid), fn ($w) => $w->orWhere('whatsapp_lid', $lid)))
+            ->exists()) {
+            return 'paciente';
+        }
 
         [$lead] = $this->criar->execute(
             ['nome' => filled($nome) ? $nome : 'Contato do WhatsApp', 'telefone' => $telefone, 'whatsapp_lid' => $lid],

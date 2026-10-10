@@ -29,6 +29,7 @@ use Throwable;
 /** Gestão de leads: funil (colunas no computador, lista no celular), ficha com histórico e relatório. */
 class LeadIndex extends Component
 {
+    use Concerns\EscolhePaciente;
     use Concerns\MensagemDeErro;
 
     private const POR_COLUNA = 50;
@@ -75,6 +76,9 @@ class LeadIndex extends Component
     public string $motivoPerda = '';
     public string $motivoOutro = '';
 
+    // ─── Já é paciente ──────────────────────────────────────────
+    public ?string $vinculandoId = null;
+
     public bool $modalLinks = false;
 
     // ─── Relatório ──────────────────────────────────────────────
@@ -107,8 +111,8 @@ class LeadIndex extends Component
 
         return Lead::query()
             ->select(['id', 'nome', 'telefone', 'email', 'origem', 'procedimento_id', 'interesse', 'etapa', 'motivo_perda', 'responsavel_id',
-                'proximo_contato_em', 'primeiro_contato_em', 'ultima_interacao_em', 'created_at', 'updated_at'])
-            ->with(['procedimento:id,nome', 'responsavel:id,name'])
+                'paciente_id', 'proximo_contato_em', 'primeiro_contato_em', 'ultima_interacao_em', 'created_at', 'updated_at'])
+            ->with(['procedimento:id,nome', 'responsavel:id,name', 'paciente:id,nome'])
             ->when($termo !== '', fn ($q) => $q->where(fn ($w) => $w->where('nome', 'ilike', '%' . addcslashes($termo, '%_\\') . '%')
                 ->orWhere('email', 'ilike', '%' . addcslashes($termo, '%_\\') . '%')
                 ->when(strlen($digitos) >= 4, fn ($x) => $x->orWhereRaw("regexp_replace(coalesce(telefone,''), '\\D', '', 'g') like ?", ['%' . $digitos . '%']))))
@@ -328,12 +332,49 @@ class LeadIndex extends Component
 
             return;
         }
+        if ($destino === EtapaLead::JaPaciente) {
+            $this->abrirVinculo($id);
+
+            return;
+        }
 
         try {
             $atualizar->moverEtapa($id, $destino);
             unset($this->colunas, $this->resumo, $this->lead);
         } catch (Throwable $e) {
             $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível mover');
+        }
+    }
+
+    /** "Já é paciente": escolhe a ficha (já sugere a que tem o mesmo telefone ou e-mail). */
+    public function abrirVinculo(string $id): void
+    {
+        $this->limparFlash();
+        if ($this->somenteLeituraAvisado()) {
+            return;
+        }
+        $lead = Lead::query()->select(['id', 'telefone_chave', 'email', 'paciente_id'])->findOrFail($id);
+
+        $this->resetValidation();
+        $this->reset('buscaPaciente', 'pacienteId', 'pacienteNome');
+        $sugestao = $lead->paciente_id ?? BuscarPacienteDoLead::porContato($lead->telefone_chave, $lead->email)?->id;
+        if ($sugestao !== null) {
+            $this->escolherPaciente($sugestao);
+        }
+        $this->vinculandoId = $lead->id;
+    }
+
+    public function confirmarVinculo(AtualizarLeadAction $atualizar): void
+    {
+        $this->validate(['pacienteId' => ['required', 'uuid']], ['pacienteId.required' => 'Escolha o paciente na lista.']);
+
+        try {
+            $atualizar->vincularPaciente((string) $this->vinculandoId, $this->pacienteId);
+            $this->flashSucesso = "Lead ligado à ficha de {$this->pacienteNome}. Ele saiu do funil.";
+            $this->vinculandoId = null;
+            unset($this->colunas, $this->resumo, $this->lead);
+        } catch (Throwable $e) {
+            $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível ligar ao paciente');
         }
     }
 

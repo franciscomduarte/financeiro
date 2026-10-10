@@ -71,40 +71,51 @@
             </label>
         </div>
 
-        {{-- Celular: escolhe a etapa e vê a lista --}}
-        <div class="md:hidden">
+        {{-- Celular e tablet: escolhe a etapa e vê a lista --}}
+        <div class="lg:hidden">
             <select wire:model.live="etapaCelular" class="input mb-3" aria-label="Etapa">
                 @foreach ($etapas as $e) <option value="{{ $e->value }}">{{ $e->label() }} ({{ $this->colunas[$e->value]->count() }})</option> @endforeach
             </select>
-            <div class="space-y-2">
+            <div class="grid gap-2 sm:grid-cols-2">
                 @forelse ($this->colunas[$etapaCelular] ?? [] as $l)
                     @include('livewire.leads.cartao', ['l' => $l])
                 @empty
-                    <p class="card p-4 text-sm text-stone-500">Nenhum lead nesta etapa.</p>
+                    <p class="card p-4 text-sm text-stone-500 sm:col-span-2">Nenhum lead nesta etapa.</p>
                 @endforelse
             </div>
         </div>
 
-        {{-- Computador: colunas com arrastar e soltar --}}
-        <div class="hidden gap-3 overflow-x-auto pb-2 md:flex" x-data="{ arrastando: null, sobre: null }">
-            @foreach ($etapas as $e)
-                <section class="flex w-72 shrink-0 flex-col rounded-2xl bg-stone-100/70 p-2" aria-label="{{ $e->label() }}"
-                         x-on:dragover.prevent="sobre = '{{ $e->value }}'" x-on:dragleave="sobre = null"
-                         x-on:drop.prevent="if (arrastando) { $wire.mover(arrastando, '{{ $e->value }}') } arrastando = null; sobre = null"
-                         :class="sobre === '{{ $e->value }}' && 'ring-2 ring-rose-300'">
-                    <header class="flex items-center justify-between px-2 py-2">
-                        <span class="badge {{ $e->badge() }}">{{ $e->label() }}</span>
-                        <span class="text-xs tabular-nums text-stone-500">{{ $this->colunas[$e->value]->count() }}{{ $this->colunas[$e->value]->count() >= 50 ? '+' : '' }}</span>
-                    </header>
-                    <div class="flex min-h-24 flex-col gap-2">
-                        @foreach ($this->colunas[$e->value] as $l)
-                            <div draggable="true" x-on:dragstart="arrastando = '{{ $l->id }}'" x-on:dragend="arrastando = null" wire:key="col-{{ $l->id }}">
-                                @include('livewire.leads.cartao', ['l' => $l])
+        {{-- Computador: etapas em aberto lado a lado (cabem na tela) e as encerradas embaixo; arrastar e soltar entre elas --}}
+        <div class="hidden space-y-4 lg:block" x-data="{ arrastando: null, sobre: null }">
+            @foreach ([['abertas', \App\Enums\EtapaLead::abertas(), 'grid-cols-4'], ['encerradas', \App\Enums\EtapaLead::encerradas(), 'grid-cols-3']] as [$grupo, $lista, $grade])
+                @if ($grupo === 'encerradas')
+                    <h2 class="px-1 text-sm font-semibold text-stone-700">Encerrados <span class="font-normal text-stone-400">· últimos 30 dias</span></h2>
+                @endif
+                <div class="grid {{ $grade }} items-start gap-3">
+                    @foreach ($lista as $e)
+                        @php $leads = $this->colunas[$e->value]; @endphp
+                        <section class="flex min-w-0 flex-col rounded-2xl bg-stone-100/70 p-2 dark:bg-stone-800/40" aria-label="{{ $e->label() }}"
+                                 x-on:dragover.prevent="sobre = '{{ $e->value }}'" x-on:dragleave="sobre = null"
+                                 x-on:drop.prevent="if (arrastando) { $wire.mover(arrastando, '{{ $e->value }}') } arrastando = null; sobre = null"
+                                 :class="sobre === '{{ $e->value }}' && 'ring-2 ring-rose-300'">
+                            <header class="flex items-center justify-between gap-2 px-2 py-2">
+                                <span class="badge {{ $e->badge() }} truncate">{{ $e->label() }}</span>
+                                <span class="text-xs tabular-nums text-stone-500">{{ $leads->count() }}{{ $leads->count() >= 50 ? '+' : '' }}</span>
+                            </header>
+                            <div @class(['flex flex-col gap-2', 'min-h-24' => $grupo === 'abertas', 'min-h-14 max-h-80 overflow-y-auto' => $grupo === 'encerradas'])>
+                                @forelse ($leads as $l)
+                                    <div draggable="true" x-on:dragstart="arrastando = '{{ $l->id }}'" x-on:dragend="arrastando = null" wire:key="col-{{ $l->id }}">
+                                        @include('livewire.leads.cartao', ['l' => $l])
+                                    </div>
+                                @empty
+                                    <p class="px-2 py-3 text-center text-xs text-stone-400">
+                                        {{ $e === \App\Enums\EtapaLead::JaPaciente ? 'Arraste aqui quem já tem ficha' : 'Nenhum lead' }}
+                                    </p>
+                                @endforelse
                             </div>
-                        @endforeach
-                    </div>
-                    @unless ($e->aberta()) <p class="px-2 pt-2 text-xs text-stone-400">Últimos 30 dias</p> @endunless
-                </section>
+                        </section>
+                    @endforeach
+                </div>
             @endforeach
         </div>
     @endif
@@ -194,10 +205,13 @@
                             <a href="tel:+55{{ \App\Support\Telefone::nacional($l->telefone) }}" class="btn-secondary">Ligar</a>
                         @endif
                         <button type="button" wire:click="editar" class="btn-secondary">Editar</button>
-                        @if ($l->etapa === \App\Enums\EtapaLead::Fechado && $l->paciente)
+                        @if (in_array($l->etapa, [\App\Enums\EtapaLead::Fechado, \App\Enums\EtapaLead::JaPaciente], true) && $l->paciente)
                             <a href="{{ route('pacientes.index', ['q' => $l->paciente->nome]) }}" wire:navigate class="btn-secondary">Paciente: {{ $l->paciente->nome }}</a>
                         @elseif ($l->etapa !== \App\Enums\EtapaLead::Perdido)
-                            <button type="button" wire:click="converter" wire:confirm="Converter {{ $l->nome }} em paciente e agendar a avaliação?" class="btn-primary">Converter em paciente</button>
+                            @podeEditar
+                                <button type="button" wire:click="abrirVinculo('{{ $l->id }}')" class="btn-secondary">Já é paciente</button>
+                                <button type="button" wire:click="converter" wire:confirm="Converter {{ $l->nome }} em paciente e agendar a avaliação?" class="btn-primary">Converter em paciente</button>
+                            @endpodeEditar
                         @endif
                     </div>
 
@@ -405,6 +419,27 @@
                 <div class="flex justify-end gap-2">
                     <button type="button" wire:click="$set('perdendoId', null)" class="btn-secondary">Voltar</button>
                     <button type="submit" class="btn-primary">Marcar como perdido</button>
+                </div>
+            </form>
+        </div>
+    @endif
+
+    {{-- Já é paciente: escolher a ficha --}}
+    @if ($vinculandoId)
+        <div class="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
+            <div class="absolute inset-0 bg-black/40" wire:click="$set('vinculandoId', null)"></div>
+            <form wire:submit="confirmarVinculo" class="relative z-10 max-h-[90vh] w-full max-w-md space-y-4 overflow-y-auto rounded-t-2xl bg-surface p-5 shadow-xl sm:rounded-2xl sm:p-6" role="dialog" aria-modal="true" aria-labelledby="titulo-vinculo">
+                <div>
+                    <h2 id="titulo-vinculo" class="text-lg font-semibold text-stone-900">Já é paciente</h2>
+                    <p class="mt-1 text-sm text-stone-500">Escolha a ficha de quem entrou em contato. O lead sai do funil e não conta como conversão.</p>
+                </div>
+                @include('livewire.partials.escolhe-paciente', ['idCampo' => 'vinculo-paciente', 'listaNoFluxo' => true])
+                @if ($pacienteId !== '')
+                    <p class="rounded-xl bg-teal-50 px-3 py-2 text-sm text-teal-800">Ficha escolhida: <strong>{{ $pacienteNome }}</strong>. Novas mensagens deste número não viram lead de novo.</p>
+                @endif
+                <div class="flex justify-end gap-2">
+                    <button type="button" wire:click="$set('vinculandoId', null)" class="btn-secondary">Voltar</button>
+                    <button type="submit" wire:loading.attr="disabled" class="btn-primary">Confirmar</button>
                 </div>
             </form>
         </div>

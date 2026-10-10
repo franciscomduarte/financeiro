@@ -20,7 +20,8 @@ class RelatorioLeadsService
     {
         $doPeriodo = fn () => Lead::query()->whereBetween('created_at', [$de->copy()->startOfDay(), $ate->copy()->endOfDay()]);
 
-        $porOrigem = $doPeriodo()->selectRaw("origem, count(*) as total, count(*) filter (where etapa = 'fechado') as convertidos")
+        // Quem já era paciente não entra na conversão (não era um lead de verdade)
+        $porOrigem = $doPeriodo()->where('etapa', '!=', EtapaLead::JaPaciente)->selectRaw("origem, count(*) as total, count(*) filter (where etapa = 'fechado') as convertidos")
             ->groupBy('origem')->get()->keyBy(fn ($r) => $r->origem instanceof OrigemLead ? $r->origem->value : (string) $r->origem);
 
         // Faturamento dos pacientes que vieram de leads do período (receitas pagas depois da conversão)

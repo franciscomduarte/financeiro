@@ -275,4 +275,70 @@ class LeadsTest extends TestCase
         $this->actingAs(User::factory()->create(['role' => 'financeiro']))->get('/leads')->assertRedirect();
         $this->actingAs(User::factory()->create(['role' => 'recepcao']))->get('/leads')->assertOk()->assertDontSee('Relatório');
     }
+
+    public function test_lead_que_ja_e_paciente_vai_para_a_ficha_escolhida_e_nao_volta_a_virar_lead(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => 'admin']));
+        // A ficha tem outro número: o sistema não reconhece sozinho
+        $ana  = Paciente::create(['nome' => 'Ana Paula Lima', 'telefone' => '(61) 91111-0000']);
+        $lead = Lead::create(['nome' => 'Ana (WhatsApp)', 'telefone' => '(61) 93333-2222', 'telefone_chave' => Telefone::chave('(61) 93333-2222'),
+            'email' => 'ana@exemplo.com', 'origem' => OrigemLead::WhatsApp, 'etapa' => EtapaLead::EmContato]);
+
+        Livewire::test(LeadIndex::class)
+            ->assertSee('Encerrados')
+            ->assertSee('Arraste aqui quem já tem ficha')
+            ->call('mover', $lead->id, 'ja_paciente')                 // arrastou para "Já é paciente"
+            ->assertSet('vinculandoId', $lead->id)
+            ->assertSee('Escolha a ficha de quem entrou em contato')
+            ->call('confirmarVinculo')
+            ->assertHasErrors(['pacienteId' => 'required'])
+            ->set('buscaPaciente', 'Ana Pa')
+            ->assertSee('Ana Paula Lima')
+            ->call('escolherPaciente', $ana->id)
+            ->call('confirmarVinculo')
+            ->assertHasNoErrors()
+            ->assertSet('vinculandoId', null)
+            ->assertSet('flashSucesso', 'Lead ligado à ficha de Ana Paula Lima. Ele saiu do funil.')
+            ->assertSee('Ficha: Ana Paula Lima');
+
+        $lead->refresh();
+        $this->assertSame(EtapaLead::JaPaciente, $lead->etapa);
+        $this->assertSame($ana->id, $lead->paciente_id);
+        $this->assertNull($lead->convertido_em);                    // não conta como conversão
+        $this->assertSame('ana@exemplo.com', $ana->fresh()->email); // ficha sem e-mail ganhou o do contato
+        $this->assertSame('(61) 91111-0000', $ana->fresh()->telefone); // telefone da ficha não é trocado
+        $this->assertStringContainsString('Já é paciente (Ana Paula Lima)', $lead->interacoes()->value('texto'));
+
+        // Nova mensagem desse número não cria outro lead
+        app(ClinicaAtual::class)->definir(null);
+        $this->postJson('/api/whatsapp/webhook', [
+            'event' => 'messages.upsert', 'instance' => 'lc',
+            'data'  => ['key' => ['remoteJid' => '5561933332222@s.whatsapp.net', 'fromMe' => false, 'id' => 'J1'], 'pushName' => 'Ana', 'messageType' => 'conversation', 'message' => ['conversation' => 'Oi, quero remarcar']],
+        ])->assertJson(['status' => 'paciente']);
+        app(ClinicaAtual::class)->definir($this->clinica->fresh());
+        $this->assertSame(1, Lead::query()->count());
+
+        // Voltar ao funil desfaz o vínculo
+        Livewire::test(LeadIndex::class)->call('mover', $lead->id, 'em_contato');
+        $this->assertNull($lead->fresh()->paciente_id);
+    }
+
+    public function test_ja_e_paciente_sugere_a_ficha_com_o_mesmo_contato_e_fica_fora_da_conversao(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => 'admin']));
+        $bia  = Paciente::create(['nome' => 'Bia Souza', 'email' => 'bia@exemplo.com']);
+        $lead = Lead::create(['nome' => 'Bia', 'email' => 'bia@exemplo.com', 'origem' => OrigemLead::Instagram, 'etapa' => EtapaLead::Novo]);
+
+        Livewire::test(LeadIndex::class)
+            ->set('leadId', $lead->id)
+            ->assertSee('Já é paciente')
+            ->call('abrirVinculo', $lead->id)
+            ->assertSet('pacienteId', $bia->id)
+            ->assertSee('Ficha escolhida')
+            ->call('confirmarVinculo');
+
+        $relatorio = app(\App\Services\RelatorioLeadsService::class)->gerar(now()->subDay(), now());
+        $this->assertSame(0, $relatorio['total']);
+        $this->assertSame(1, $relatorio['etapas']['ja_paciente']);
+    }
 }

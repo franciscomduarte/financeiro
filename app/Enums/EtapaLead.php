@@ -12,6 +12,7 @@ enum EtapaLead: string
     case AvaliacaoAgendada = 'avaliacao_agendada';
     case OrcamentoEnviado  = 'orcamento_enviado';
     case Fechado           = 'fechado';
+    case JaPaciente        = 'ja_paciente'; // quem entrou em contato já tinha ficha
     case Perdido           = 'perdido';
 
     public function label(): string
@@ -22,6 +23,7 @@ enum EtapaLead: string
             self::AvaliacaoAgendada => 'Avaliação agendada',
             self::OrcamentoEnviado  => 'Orçamento enviado',
             self::Fechado           => 'Fechado',
+            self::JaPaciente        => 'Já é paciente',
             self::Perdido           => 'Perdido',
         };
     }
@@ -34,6 +36,7 @@ enum EtapaLead: string
             self::AvaliacaoAgendada => 'bg-violet-50 text-violet-700',
             self::OrcamentoEnviado  => 'bg-rose-50 text-rose-700',
             self::Fechado           => 'bg-emerald-50 text-emerald-700',
+            self::JaPaciente        => 'bg-teal-50 text-teal-700',
             self::Perdido           => 'bg-stone-100 text-stone-600',
         };
     }
@@ -41,13 +44,19 @@ enum EtapaLead: string
     /** Ainda em negociação (aparece nos alertas de contato). */
     public function aberta(): bool
     {
-        return $this !== self::Fechado && $this !== self::Perdido;
+        return ! in_array($this, [self::Fechado, self::JaPaciente, self::Perdido], true);
     }
 
     /** @return array<int, self> */
     public static function abertas(): array
     {
         return array_values(array_filter(self::cases(), fn (self $e) => $e->aberta()));
+    }
+
+    /** Encerradas: saem do funil (aparecem só os últimos 30 dias). @return array<int, self> */
+    public static function encerradas(): array
+    {
+        return array_values(array_filter(self::cases(), fn (self $e) => ! $e->aberta()));
     }
 
     /** Motivos de perda sugeridos. @return array<int, string> */
