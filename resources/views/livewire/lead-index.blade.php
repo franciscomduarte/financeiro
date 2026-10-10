@@ -71,23 +71,23 @@
             </label>
         </div>
 
-        {{-- Celular e tablet: escolhe a etapa e vê a lista --}}
-        <div class="lg:hidden">
+        {{-- Celular: escolhe a etapa e vê a lista --}}
+        <div class="md:hidden">
             <select wire:model.live="etapaCelular" class="input mb-3" aria-label="Etapa">
                 @foreach ($etapas as $e) <option value="{{ $e->value }}">{{ $e->label() }} ({{ $this->colunas[$e->value]->count() }})</option> @endforeach
             </select>
-            <div class="grid gap-2 sm:grid-cols-2">
+            <div class="space-y-2">
                 @forelse ($this->colunas[$etapaCelular] ?? [] as $l)
                     @include('livewire.leads.cartao', ['l' => $l])
                 @empty
-                    <p class="card p-4 text-sm text-stone-500 sm:col-span-2">Nenhum lead nesta etapa.</p>
+                    <p class="card p-4 text-sm text-stone-500">Nenhum lead nesta etapa.</p>
                 @endforelse
             </div>
         </div>
 
-        {{-- Computador: etapas em aberto lado a lado (cabem na tela) e as encerradas embaixo; arrastar e soltar entre elas --}}
-        <div class="hidden space-y-4 lg:block" x-data="{ arrastando: null, sobre: null }">
-            @foreach ([['abertas', \App\Enums\EtapaLead::abertas(), 'grid-cols-4'], ['encerradas', \App\Enums\EtapaLead::encerradas(), 'grid-cols-3']] as [$grupo, $lista, $grade])
+        {{-- Tablet e computador: etapas em aberto (2×2 ou lado a lado, sempre cabendo na tela) e as encerradas embaixo; arrastar e soltar entre elas --}}
+        <div class="hidden space-y-4 md:block" x-data="{ arrastando: null, sobre: null }">
+            @foreach ([['abertas', \App\Enums\EtapaLead::abertas(), 'md:grid-cols-2 xl:grid-cols-4'], ['encerradas', \App\Enums\EtapaLead::encerradas(), 'md:grid-cols-3']] as [$grupo, $lista, $grade])
                 @if ($grupo === 'encerradas')
                     <h2 class="px-1 text-sm font-semibold text-stone-700">Encerrados <span class="font-normal text-stone-400">· últimos 30 dias</span></h2>
                 @endif

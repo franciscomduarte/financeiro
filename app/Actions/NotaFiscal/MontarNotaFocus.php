@@ -52,6 +52,7 @@ class MontarNotaFocus
                 'discriminacao'               => $nota->discriminacao,
                 'item_lista_servico'          => $clinica->nfse_item_lista_servico,
                 'codigo_tributario_municipio' => $clinica->nfse_codigo_tributario,
+                'codigo_cnae'                 => $clinica->nfse_codigo_cnae,
                 'aliquota'                    => (float) $clinica->nfse_aliquota_iss,
                 'iss_retido'                  => false,
                 'codigo_municipio'            => $clinica->codigo_municipio,
