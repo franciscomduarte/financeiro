@@ -235,6 +235,9 @@ class LeadIndex extends Component
 
     public function novo(): void
     {
+        if ($this->somenteLeituraAvisado()) {
+            return;
+        }
         $this->limparFlash();
         $this->resetValidation();
         $this->reset('leadId', 'nome', 'telefone', 'email', 'procedimentoId', 'interesse', 'observacoes', 'proximoContato');
@@ -245,6 +248,9 @@ class LeadIndex extends Component
 
     public function editar(): void
     {
+        if ($this->somenteLeituraAvisado()) {
+            return;
+        }
         $l = $this->lead;
         if ($l === null) {
             return;

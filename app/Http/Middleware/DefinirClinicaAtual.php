@@ -70,6 +70,26 @@ class DefinirClinicaAtual
             return $this->testeEncerrado($request, $user, $next);
         }
 
+        if ($user->papelNa($clinica)?->somenteLeitura()) {
+            return $this->perfilSomenteConsulta($request, $next);
+        }
+
+        return $next($request);
+    }
+
+    /**
+     * Perfil "Somente consulta": vê, mas não grava. Gravações via HTTP (API, formulários) são recusadas
+     * aqui; as do Livewire, nos Models (BelongsToClinica) e nas Actions (garantirEscrita).
+     */
+    private function perfilSomenteConsulta(Request $request, Closure $next): Response
+    {
+        $this->clinicaAtual->definirLeituraPorPerfil(true);
+
+        $leitura = $request->isMethodSafe() || \Livewire\Livewire::isLivewireRequest() || $request->routeIs(...self::ROTAS_LIVRES);
+        if (! $leitura) {
+            throw new \App\Exceptions\ClinicaSomenteLeituraException(\App\Exceptions\ClinicaSomenteLeituraException::PERFIL);
+        }
+
         return $next($request);
     }
 

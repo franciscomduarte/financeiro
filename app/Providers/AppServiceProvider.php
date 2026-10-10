@@ -80,6 +80,9 @@ class AppServiceProvider extends ServiceProvider
         \Illuminate\Support\Facades\Event::listen(\Spatie\Backup\Events\CleanupHasFailed::class,
             fn ($e) => \Illuminate\Support\Facades\Log::error('[Backup] limpeza dos backups antigos falhou', ['erro' => $e->exception->getMessage()]));
 
+        // Botões de criar/editar somem para quem só consulta (perfil, suporte ou teste encerrado)
+        \Illuminate\Support\Facades\Blade::if('podeEditar', fn (): bool => ! app(ClinicaAtual::class)->somenteLeitura());
+
         // Ações das telas Livewire passam pelas mesmas regras de acesso da rota da página
         \Livewire\Livewire::addPersistentMiddleware([
             \App\Http\Middleware\EnsureModulo::class,

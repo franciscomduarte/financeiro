@@ -11,6 +11,7 @@ enum RoleUsuario: string
     case Recepcao     = 'recepcao';
     case Profissional = 'profissional';
     case Financeiro   = 'financeiro';
+    case Consulta     = 'consulta';
 
     public function label(): string
     {
@@ -19,6 +20,7 @@ enum RoleUsuario: string
             self::Recepcao     => 'Recepção',
             self::Profissional => 'Profissional',
             self::Financeiro   => 'Financeiro',
+            self::Consulta     => 'Somente consulta',
         };
     }
 
@@ -29,6 +31,7 @@ enum RoleUsuario: string
             self::Recepcao     => 'Agenda, cadastro de pacientes e cobranças. Sem prontuário e sem financeiro.',
             self::Profissional => 'Só a própria agenda, os próprios pacientes (com prontuário) e o estoque.',
             self::Financeiro   => 'Financeiro, cobranças, estoque e administrativo. Sem dados clínicos.',
+            self::Consulta     => 'Só vê a agenda, os pacientes e os leads. Não cria, não altera e não exclui nada.',
         };
     }
 
@@ -39,11 +42,18 @@ enum RoleUsuario: string
             self::Admin        => Modulo::cases(),
             self::Recepcao     => [Modulo::Agenda, Modulo::Pacientes, Modulo::Cobrancas, Modulo::Notificacoes, Modulo::Leads],
             self::Profissional => [Modulo::Agenda, Modulo::Pacientes, Modulo::DadosClinicos, Modulo::Estoque],
+            self::Consulta     => [Modulo::Agenda, Modulo::Pacientes, Modulo::Leads],
             self::Financeiro   => [
                 Modulo::Inicio, Modulo::Cobrancas, Modulo::Lancamentos, Modulo::Relatorios, Modulo::Taxas,
                 Modulo::Estoque, Modulo::Administrativo,
             ],
         };
+    }
+
+    /** Perfil que só consulta: nenhuma gravação (ver DefinirClinicaAtual e ClinicaAtual::somenteLeitura). */
+    public function somenteLeitura(): bool
+    {
+        return $this === self::Consulta;
     }
 
     public function pode(Modulo $modulo): bool

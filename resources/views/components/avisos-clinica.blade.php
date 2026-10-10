@@ -22,6 +22,10 @@
                 @endif
             </div>
         </div>
+    @elseif ($perfilConsulta)
+        <div class="bg-sky-50 border-b border-sky-100 px-4 py-2.5 md:px-6 text-sm text-sky-800 dark:bg-sky-950/40 dark:border-sky-900 dark:text-sky-200" role="status">
+            <p><strong>Somente consulta:</strong> você pode ver a agenda, os pacientes e os leads, mas não criar, alterar ou excluir.</p>
+        </div>
     @elseif ($mostrarContagem)
         <div class="bg-rose-50 border-b border-rose-100 px-4 py-2.5 md:px-6 text-sm text-rose-800 flex flex-wrap items-center justify-between gap-2" role="status">
             <p>

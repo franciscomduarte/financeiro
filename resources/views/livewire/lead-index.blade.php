@@ -14,7 +14,7 @@
                 <a href="{{ route('leads.assistente') }}" wire:navigate class="btn-secondary">Assistente</a>
             @endif
             <button type="button" wire:click="$set('modalLinks', true)" class="btn-secondary">Links do formulário</button>
-            <button type="button" wire:click="novo" class="btn-primary">+ Novo lead</button>
+            @podeEditar<button type="button" wire:click="novo" class="btn-primary">+ Novo lead</button>@endpodeEditar
         </x-slot:acoes>
     </x-ui.page-header>
 

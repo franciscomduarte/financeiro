@@ -95,6 +95,9 @@ class PacienteIndex extends Component
     // ─── Modal Criar ────────────────────────────────────────────
     public function abrirModalCriar(): void
     {
+        if ($this->somenteLeituraAvisado()) {
+            return;
+        }
         $this->resetFormulario();
         $this->modalCriar = true;
     }
@@ -122,6 +125,9 @@ class PacienteIndex extends Component
     // ─── Modal Editar ───────────────────────────────────────────
     public function abrirModalEditar(string $id): void
     {
+        if ($this->somenteLeituraAvisado()) {
+            return;
+        }
         $paciente = Paciente::findOrFail($id);
         abort_if($paciente->anonimizado(), 403, 'Paciente anonimizado não pode ser editado.');
 

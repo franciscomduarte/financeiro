@@ -31,10 +31,12 @@
     {{-- Cabeçalho --}}
     <x-ui.page-header titulo="Pacientes" subtitulo="Cadastre e acompanhe seus pacientes.">
         <x-slot:acoes>
+            @podeEditar
             <button wire:click="abrirModalCriar" class="btn-primary">
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                 Novo paciente
             </button>
+            @endpodeEditar
         </x-slot:acoes>
     </x-ui.page-header>
 
@@ -95,7 +97,7 @@
                     titulo="Nenhum paciente ainda"
                     texto="Cadastre o primeiro paciente para agendar e cobrar por aqui."
                     icone="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z">
-                    <button wire:click="abrirModalCriar" class="btn-primary">Cadastrar paciente</button>
+                    @podeEditar<button wire:click="abrirModalCriar" class="btn-primary">Cadastrar paciente</button>@endpodeEditar
                 </x-ui.empty-state>
             @endif
         @else
@@ -205,12 +207,12 @@
                                             class="rounded-lg p-2 text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-colors" title="Ver detalhes" aria-label="Ver detalhes de {{ $paciente->nome }}">
                                         <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                     </button>
-                                    @unless ($paciente->anonimizado_em)
+                                    @if (! $paciente->anonimizado_em && ! app(\App\Support\ClinicaAtual::class)->somenteLeitura())
                                     <button wire:click="abrirModalEditar('{{ $paciente->id }}')"
                                             class="rounded-lg p-2 text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-colors" title="Editar" aria-label="Editar {{ $paciente->nome }}">
                                         <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg>
                                     </button>
-                                    @endunless
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -502,11 +504,11 @@
                     @if ($veDadosClinicos)
                         <a href="{{ route('pacientes.prontuario', $p->id) }}" wire:navigate class="btn-secondary">Abrir prontuário</a>
                     @endif
-                    @unless ($p->anonimizado())
+                    @if (! $p->anonimizado() && ! app(\App\Support\ClinicaAtual::class)->somenteLeitura())
                         <button wire:click="abrirModalEditar('{{ $p->id }}')" class="btn-primary">
                             Editar paciente
                         </button>
-                    @endunless
+                    @endif
                 </div>
             </div>
         </div>
