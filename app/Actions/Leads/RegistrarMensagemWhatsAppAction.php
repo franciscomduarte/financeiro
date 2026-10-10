@@ -9,6 +9,7 @@ use App\Enums\OrigemLead;
 use App\Enums\TipoInteracaoLead;
 use App\Models\Lead;
 use App\Jobs\ResponderLeadJob;
+use App\Jobs\ResponderPacienteJob;
 use App\Models\AssistenteConfiguracao;
 use App\Models\LeadInteracao;
 use App\Support\Telefone;
@@ -89,7 +90,13 @@ class RegistrarMensagemWhatsAppAction
         // Quem já é paciente não vira lead: a conversa (nos dois sentidos) fica na ficha
         $pacienteId = $this->pacienteDoContato($chave, $lid);
         if ($pacienteId !== null) {
-            $this->registrarPaciente->execute($pacienteId, $texto, $daClinica, $mensagemId);
+            $mensagem = $this->registrarPaciente->execute($pacienteId, $texto, $daClinica, $mensagemId);
+            if (! $daClinica && $mensagem->wasRecentlyCreated && AssistenteConfiguracao::query()->where('ativo', true)->exists()) {
+                // O assistente avisa que a equipe vai responder (junta mensagens seguidas, como nos leads)
+                ResponderPacienteJob::dispatch($pacienteId, $mensagem->id)
+                    ->delay(now()->addSeconds((int) config('services.anthropic.espera_assistente', 15)))
+                    ->afterCommit();
+            }
 
             return $daClinica ? 'paciente_resposta' : 'paciente';
         }

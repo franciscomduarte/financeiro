@@ -18,9 +18,9 @@ class PacienteMensagem extends Model
 
     protected $table = 'paciente_mensagens';
 
-    protected $fillable = ['paciente_id', 'user_id', 'enviada', 'texto', 'mensagem_id', 'lida_em'];
+    protected $fillable = ['paciente_id', 'user_id', 'enviada', 'do_assistente', 'texto', 'mensagem_id', 'lida_em'];
 
-    protected $casts = ['enviada' => 'boolean', 'lida_em' => 'datetime'];
+    protected $casts = ['enviada' => 'boolean', 'do_assistente' => 'boolean', 'lida_em' => 'datetime'];
 
     public function paciente(): BelongsTo
     {
