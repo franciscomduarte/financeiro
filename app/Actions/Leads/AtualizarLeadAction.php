@@ -56,6 +56,9 @@ class AtualizarLeadAction
         if ($etapa === EtapaLead::Fechado) {
             throw new RuntimeException('Para fechar, use "Converter em paciente": o cadastro do paciente é criado junto.');
         }
+        if ($etapa === EtapaLead::JaPaciente) {
+            throw new RuntimeException('Para marcar como "Já é paciente", escolha a ficha do paciente.');
+        }
         $motivoPerda = filled($motivoPerda) ? mb_substr(trim($motivoPerda), 0, 150) : null;
         if ($etapa === EtapaLead::Perdido && $motivoPerda === null) {
             throw new InvalidArgumentException('Escolha o motivo da perda.');
@@ -73,6 +76,7 @@ class AtualizarLeadAction
             $de = $lead->etapa;
             $lead->update([
                 'etapa'               => $etapa,
+                'paciente_id'         => $de === EtapaLead::JaPaciente ? null : $lead->paciente_id, // voltou ao funil: desfaz o vínculo
                 'motivo_perda'        => $etapa === EtapaLead::Perdido ? $motivoPerda : null,
                 'proximo_contato_em'  => $etapa === EtapaLead::Perdido ? null : $lead->proximo_contato_em,
                 'ultima_interacao_em' => now(),
@@ -133,6 +137,43 @@ class AtualizarLeadAction
             Log::info('[Leads] convertido em paciente', ['lead_id' => $lead->id, 'paciente_id' => $paciente->id, 'user_id' => auth()->id()]);
 
             return $paciente;
+        });
+    }
+
+    /**
+     * Quem entrou em contato já tinha ficha: liga o lead ao paciente e tira do funil (não conta como conversão).
+     * Se a ficha não tem telefone/e-mail, guarda os do contato para as próximas mensagens serem reconhecidas.
+     */
+    public function vincularPaciente(string $id, string $pacienteId): Lead
+    {
+        $this->clinicaAtual->garantirEscrita();
+
+        return DB::transaction(function () use ($id, $pacienteId): Lead {
+            $lead = Lead::query()->lockForUpdate()->findOrFail($id);
+            if ($lead->etapa === EtapaLead::Fechado) {
+                throw new RuntimeException('Este lead já virou paciente.');
+            }
+            $paciente = Paciente::query()->select(['id', 'nome', 'telefone', 'email'])->whereNull('anonimizado_em')->find($pacienteId)
+                ?? throw new InvalidArgumentException('Paciente não encontrado.');
+
+            $completar = array_filter([
+                'telefone' => blank($paciente->telefone) ? $lead->telefone : null,
+                'email'    => blank($paciente->email) ? $lead->email : null,
+            ]);
+            if ($completar !== []) {
+                $paciente->update($completar);
+            }
+
+            $de = $lead->etapa;
+            $lead->update([
+                'etapa' => EtapaLead::JaPaciente, 'paciente_id' => $paciente->id, 'motivo_perda' => null,
+                'proximo_contato_em' => null, 'ultima_interacao_em' => now(),
+            ]);
+            $this->registrarNoHistorico($lead, TipoInteracaoLead::Etapa, "{$de->label()} → Já é paciente ({$paciente->nome})");
+
+            Log::info('[Leads] ligado a paciente existente', ['lead_id' => $lead->id, 'paciente_id' => $paciente->id, 'user_id' => auth()->id()]);
+
+            return $lead;
         });
     }
 

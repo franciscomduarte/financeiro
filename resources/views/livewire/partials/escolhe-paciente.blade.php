@@ -1,10 +1,11 @@
-{{-- Busca de paciente (trait EscolhePaciente). Uso: @include('livewire.partials.escolhe-paciente', ['idCampo' => 'x']) --}}
+{{-- Busca de paciente (trait EscolhePaciente). Uso: @include('livewire.partials.escolhe-paciente', ['idCampo' => 'x', 'listaNoFluxo' => false]) --}}
+@php $listaNoFluxo ??= false; /* true: a lista empurra o conteúdo (janelas pequenas) em vez de flutuar por cima */ @endphp
 <div class="relative">
     <label for="{{ $idCampo }}" class="label">Paciente</label>
     <input id="{{ $idCampo }}" type="search" wire:model.live.debounce.300ms="buscaPaciente" autocomplete="off"
            class="input" placeholder="Digite o nome. Ex.: Maria Silva">
     @if ($this->pacientesEncontrados->isNotEmpty())
-        <ul class="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-stone-200 bg-surface py-1 shadow-lg" role="listbox">
+        <ul class="{{ $listaNoFluxo ? 'relative max-h-48' : 'absolute z-20 max-h-64' }} mt-1 w-full overflow-y-auto rounded-xl border border-stone-200 bg-surface py-1 shadow-lg" role="listbox">
             @foreach ($this->pacientesEncontrados as $pe)
                 <li>
                     <button type="button" wire:click="escolherPaciente('{{ $pe->id }}')"

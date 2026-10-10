@@ -16,6 +16,9 @@
             @elseif ($l->proximo_contato_em && $l->etapa->aberta())
                 <span class="badge bg-sky-50 text-sky-700">Contatar {{ $l->proximo_contato_em->isToday() ? 'hoje ' . $l->proximo_contato_em->format('H:i') : $l->proximo_contato_em->format('d/m') }}</span>
             @endif
+            @if ($l->etapa === \App\Enums\EtapaLead::JaPaciente && $l->paciente)
+                <span class="truncate text-teal-700">Ficha: {{ $l->paciente->nome }}</span>
+            @endif
             @if ($l->etapa === \App\Enums\EtapaLead::Perdido && $l->motivo_perda)
                 <span class="text-stone-400">{{ $l->motivo_perda }}</span>
             @endif
