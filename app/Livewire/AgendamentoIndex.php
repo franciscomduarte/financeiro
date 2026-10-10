@@ -625,7 +625,10 @@ class AgendamentoIndex extends Component
                 $this->flashErro = 'Só dá para confirmar agendamentos com status "Agendado".';
                 return;
             }
-            $agendamento->update(['status' => StatusAgendamento::Confirmado->value]);
+            $agendamento->update([
+                'status' => StatusAgendamento::Confirmado->value, 'confirmado_em' => now(),
+                'confirmacao_origem' => \App\Enums\OrigemConfirmacao::Equipe, 'pediu_remarcar_em' => null,
+            ]);
             $this->flashSucesso = 'Agendamento confirmado.';
         } catch (Throwable $e) {
             $this->flashErro = $this->mensagemDeErro($e, 'Não foi possível confirmar');
@@ -782,7 +785,8 @@ class AgendamentoIndex extends Component
                 'procedimento:id,nome,duracao_minutos',
             ])
                 ->select(['id', 'paciente_id', 'profissional_id', 'procedimento_id', 'procedimentos_ids',
-                          'inicio_em', 'fim_em', 'status', 'observacoes', 'motivo_cancelamento', 'google_event_id'])
+                          'inicio_em', 'fim_em', 'status', 'observacoes', 'motivo_cancelamento', 'google_event_id',
+                          'confirmacao_pedida_em', 'confirmacao_origem', 'pediu_remarcar_em'])
                 ->orderBy('inicio_em', 'asc')
                 ->when($this->filtroData, fn ($q) => $q->whereDate('inicio_em', $this->filtroData))
                 ->when($this->filtroProfissionalId, fn ($q) => $q->where('profissional_id', $this->filtroProfissionalId))
@@ -800,6 +804,14 @@ class AgendamentoIndex extends Component
             StatusAgendamento::Agendado->value,
             StatusAgendamento::Confirmado->value,
         ])->count();
+
+        // Acompanhamento das confirmações da véspera (WhatsApp): quem ainda não respondeu e quem pediu para remarcar
+        $statsAguardando = (clone $statsBase)->where('status', StatusAgendamento::Agendado->value)
+            ->whereNotNull('confirmacao_pedida_em')->whereNull('pediu_remarcar_em')->count();
+        $pediramRemarcar = (clone $statsBase)->with('paciente:id,nome')
+            ->select(['id', 'paciente_id', 'inicio_em', 'pediu_remarcar_em', 'resposta_confirmacao'])
+            ->where('status', StatusAgendamento::Agendado->value)->whereNotNull('pediu_remarcar_em')
+            ->orderBy('inicio_em')->limit(20)->get();
 
         $agendamentoDetalhe = $this->detalheId
             ? Agendamento::with(['paciente', 'profissional', 'procedimento', 'agendamentoOrigem', 'receita:id,agendamento_id,valor_bruto,status'])->find($this->detalheId)
@@ -828,6 +840,8 @@ class AgendamentoIndex extends Component
             'statsTotal'         => $statsTotal,
             'statsConfirmado'    => $statsConfirmado,
             'statsPendente'      => $statsPendente,
+            'statsAguardando'    => $statsAguardando,
+            'pediramRemarcar'    => $pediramRemarcar,
         ])->layout('layouts.app', ['title' => 'Agenda']);
     }
 }

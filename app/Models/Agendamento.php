@@ -42,6 +42,11 @@ class Agendamento extends Model
         'email_enviado_em',
         'lembrete_1dia_em',
         'lembrete_2horas_em',
+        'confirmacao_pedida_em',
+        'confirmado_em',
+        'confirmacao_origem',
+        'pediu_remarcar_em',
+        'resposta_confirmacao',
     ];
 
     protected $casts = [
@@ -52,6 +57,10 @@ class Agendamento extends Model
         'email_enviado_em'    => 'datetime',
         'lembrete_1dia_em'    => 'datetime',
         'lembrete_2horas_em'  => 'datetime',
+        'confirmacao_pedida_em' => 'datetime',
+        'confirmado_em'       => 'datetime',
+        'confirmacao_origem'  => \App\Enums\OrigemConfirmacao::class,
+        'pediu_remarcar_em'   => 'datetime',
         'status'              => StatusAgendamento::class,
     ];
 

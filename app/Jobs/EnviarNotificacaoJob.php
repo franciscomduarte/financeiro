@@ -87,6 +87,11 @@ class EnviarNotificacaoJob implements ShouldQueue
         }
 
         $n->fill(['status' => StatusNotificacao::Enviada, 'enviada_em' => now(), 'erro' => null])->save();
+
+        // Lembrete da véspera no WhatsApp pede confirmação: a resposta do paciente (SIM/NÃO) passa a valer
+        if ($agendamento !== null && $n->tipo === \App\Enums\TipoNotificacao::LembreteVespera && $n->canal === CanalNotificacao::WhatsApp) {
+            $agendamento->forceFill(['confirmacao_pedida_em' => now()])->saveQuietly();
+        }
     }
 
     private function falhou(Notificacao $n, string $motivo): void

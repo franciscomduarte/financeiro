@@ -78,7 +78,7 @@ enum TipoNotificacao: string
             self::AgendamentoConfirmado => 'Sai assim que o horário é marcado.',
             self::AgendamentoRemarcado  => 'Sai quando o horário muda de dia ou hora.',
             self::AgendamentoCancelado  => 'Sai quando o agendamento é cancelado.',
-            self::LembreteVespera       => 'Primeiro lembrete, normalmente um dia antes.',
+            self::LembreteVespera       => 'Um dia antes, pede a confirmação: o paciente responde SIM (confirma na agenda) ou NÃO (a equipe é avisada).',
             self::LembreteDia           => 'Último lembrete, poucas horas antes.',
             default                     => '',
         };
@@ -103,7 +103,7 @@ enum TipoNotificacao: string
             self::AgendamentoConfirmado => "📅 *Agendamento confirmado — {clinica}*\n\nOlá, *{primeiro_nome}*!\n\nSeu horário está marcado:\n{$detalhes}\n\nSe tiver dúvidas, é só responder esta mensagem. 🙏",
             self::AgendamentoRemarcado  => "🔄 *Agendamento remarcado — {clinica}*\n\nOlá, *{primeiro_nome}*!\n\nSeu novo horário:\n{$detalhes}\n\nSe tiver dúvidas, é só responder esta mensagem. 🙏",
             self::AgendamentoCancelado  => "❌ *Agendamento cancelado — {clinica}*\n\nOlá, *{primeiro_nome}*!\n\nSeu horário de *{procedimento}* em *{data}* às *{hora}* foi cancelado.{motivo}\n\nPara marcar outro horário, é só responder esta mensagem. 🙏",
-            self::LembreteVespera       => "⏰ *Lembrete — {clinica}*\n\nOlá, *{primeiro_nome}*! Seu horário é *{quando}*:\n\n{$detalhes}\n\nSe precisar remarcar, avise com antecedência. 🙏",
+            self::LembreteVespera       => "⏰ *Confirmação de horário — {clinica}*\n\nOlá, *{primeiro_nome}*! Seu horário é *{quando}*:\n\n{$detalhes}\n\n✅ Responda *SIM* para confirmar sua presença.\n🔄 Se não puder vir, responda *NÃO* que a nossa equipe fala com você para remarcar. 🙏",
             self::LembreteDia           => "⏰ *Te esperamos {quando} às {hora} — {clinica}*\n\nOlá, *{primeiro_nome}*! Seu horário de *{procedimento}* com *{profissional}* está chegando.\n\nSe tiver algum imprevisto, responda esta mensagem. 🙏",
             default                     => '',
         };

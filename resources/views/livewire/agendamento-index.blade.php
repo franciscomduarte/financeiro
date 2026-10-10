@@ -66,12 +66,39 @@
         <div class="card p-3 sm:p-5">
             <p class="text-xs text-stone-500 sm:text-sm">Confirmados</p>
             <p class="mt-1 text-xl font-semibold text-emerald-700 tabular-nums sm:text-2xl">{{ $statsConfirmado }}</p>
+            @if ($statsAguardando > 0)
+                <p class="mt-0.5 truncate text-xs text-amber-700">{{ $statsAguardando }} sem resposta</p>
+            @endif
         </div>
         <div class="card p-3 sm:p-5">
             <p class="text-xs text-stone-500 sm:text-sm">Pendentes</p>
             <p class="mt-1 text-xl font-semibold text-stone-900 tabular-nums sm:text-2xl">{{ $statsPendente }}</p>
         </div>
     </div>
+
+    {{-- ─── Pediram para remarcar (resposta NÃO ao pedido de confirmação) ─── --}}
+    @if ($pediramRemarcar->isNotEmpty())
+        <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4" role="status">
+            <p class="text-sm font-semibold text-amber-800">🔄 {{ $pediramRemarcar->count() === 1 ? '1 paciente pediu' : $pediramRemarcar->count() . ' pacientes pediram' }} para remarcar</p>
+            <p class="mt-0.5 text-xs text-amber-700">Responderam NÃO ao pedido de confirmação. Fale com eles e reagende ou cancele o horário.</p>
+            <ul class="mt-2 divide-y divide-amber-100">
+                @foreach ($pediramRemarcar as $pr)
+                    <li wire:key="remarcar-{{ $pr->id }}">
+                        <button type="button" wire:click="abrirDetalhe('{{ $pr->id }}')"
+                                class="flex min-h-11 w-full items-center justify-between gap-3 py-1.5 text-left text-sm hover:text-amber-900">
+                            <span class="min-w-0">
+                                <span class="block truncate font-medium text-stone-900">{{ $pr->paciente?->nome ?? '—' }}</span>
+                                @if ($pr->resposta_confirmacao)
+                                    <span class="block truncate text-xs text-stone-500">“{{ $pr->resposta_confirmacao }}”</span>
+                                @endif
+                            </span>
+                            <span class="shrink-0 text-xs font-medium text-amber-800 tabular-nums">{{ $pr->inicio_em->format('d/m H:i') }}</span>
+                        </button>
+                    </li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
     {{-- ─── Navegação do período + troca de visão ──────────────────────── --}}
     <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -221,7 +248,10 @@
                                     <span class="truncate">{{ $ag->profissional?->nome ?? '—' }}{{ $ag->procedimento ? ' · ' . $ag->procedimento->nome : '' }}</span>
                                 </p>
                             </div>
-                            <span class="badge shrink-0 {{ $badgesStatus[$ag->status->value] ?? 'bg-stone-100 text-stone-600' }}">{{ $ag->status->label() }}</span>
+                            <span class="flex shrink-0 flex-col items-end gap-1">
+                                <span class="badge {{ $badgesStatus[$ag->status->value] ?? 'bg-stone-100 text-stone-600' }}">{{ $ag->status->label() }}</span>
+                                <x-agenda.situacao-confirmacao :agendamento="$ag" />
+                            </span>
                         </button>
                     </li>
                 @endforeach
@@ -293,6 +323,7 @@
                                     <span class="badge {{ $badgesStatus[$ag->status->value] ?? 'bg-stone-100 text-stone-600' }}">
                                         {{ $ag->status->label() }}
                                     </span>
+                                    <div class="mt-1"><x-agenda.situacao-confirmacao :agendamento="$ag" /></div>
                                 </td>
                                 {{-- Ações --}}
                                 <td class="px-5 py-3.5 text-right">
@@ -926,6 +957,23 @@
                             <dd class="text-xs text-stone-500 tabular-nums">{{ $d->procedimento->duracao_minutos }} min · R$ {{ number_format($d->procedimento->valor, 2, ',', '.') }}</dd>
                         @endif
                     </div>
+                    @if ($d->confirmado_em || $d->pediu_remarcar_em || ($d->confirmacao_pedida_em && $d->status->isPendente()))
+                        <div class="col-span-2">
+                            <dt class="text-xs text-stone-500">Confirmação</dt>
+                            <dd class="mt-1 text-sm text-stone-800">
+                                @if ($d->pediu_remarcar_em && $d->status === \App\Enums\StatusAgendamento::Agendado)
+                                    <span class="font-medium text-amber-700">🔄 Pediu para remarcar</span> em {{ $d->pediu_remarcar_em->timezone(config('clinica.fuso_horario'))->format('d/m H:i') }}
+                                @elseif ($d->confirmado_em)
+                                    <span class="font-medium text-emerald-700">✅ Confirmado {{ $d->confirmacao_origem?->label() }}</span> em {{ $d->confirmado_em->timezone(config('clinica.fuso_horario'))->format('d/m H:i') }}
+                                @else
+                                    <span class="font-medium text-amber-700">⏳ Aguardando resposta</span> · pedido enviado em {{ $d->confirmacao_pedida_em->timezone(config('clinica.fuso_horario'))->format('d/m H:i') }}
+                                @endif
+                            </dd>
+                            @if ($d->resposta_confirmacao)
+                                <dd class="mt-0.5 text-xs text-stone-500">Resposta: “{{ $d->resposta_confirmacao }}”</dd>
+                            @endif
+                        </div>
+                    @endif
                     @if ($d->observacoes)
                         <div class="col-span-2">
                             <dt class="text-xs text-stone-500">Observações</dt>

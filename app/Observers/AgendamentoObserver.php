@@ -17,6 +17,18 @@ class AgendamentoObserver
 {
     public function __construct(private readonly NotificacaoService $notificacoes) {}
 
+    /** Horário mudou: a confirmação e a resposta do paciente valiam para o horário antigo. */
+    public function updating(Agendamento $agendamento): void
+    {
+        if (! $agendamento->isDirty('inicio_em') || ! $agendamento->status->isPendente()) {
+            return;
+        }
+        if ($agendamento->status === \App\Enums\StatusAgendamento::Confirmado && ! $agendamento->isDirty('status')) {
+            $agendamento->status = \App\Enums\StatusAgendamento::Agendado;
+        }
+        $agendamento->fill(['confirmacao_pedida_em' => null, 'confirmado_em' => null, 'confirmacao_origem' => null, 'pediu_remarcar_em' => null, 'resposta_confirmacao' => null]);
+    }
+
     public function created(Agendamento $agendamento): void
     {
         $this->seguro($agendamento, fn () => $this->notificacoes->agendarLembretes($agendamento));
