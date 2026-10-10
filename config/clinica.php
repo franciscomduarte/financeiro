@@ -10,7 +10,7 @@ return [
     'tabelas' => [
         'agendamentos', 'atendimento_fichas', 'atendimento_injetaveis', 'atendimentos', 'bloqueios_agenda', 'cobrancas', 'comissao_fechamentos', 'conta_consumo_faturas', 'contas_consumo',
         'contrato_pagamentos', 'contratos', 'contratos_reajustes', 'documento_categorias', 'documento_versoes',
-        'documentos', 'fichas_modelos', 'fornecedores', 'notas_fiscais', 'notificacao_configuracoes', 'notificacoes', 'grade_horarios', 'lead_interacoes', 'leads', 'obrigacao_fiscal_lancamentos', 'obrigacoes_fiscais', 'orcamento_itens', 'orcamentos',
+        'documentos', 'fichas_modelos', 'fornecedores', 'notas_fiscais', 'notificacao_configuracoes', 'notificacoes', 'grade_horarios', 'lead_interacoes', 'leads', 'obrigacao_fiscal_lancamentos', 'obrigacoes_fiscais', 'orcamento_itens', 'orcamentos', 'paciente_mensagens',
         'pacote_sessoes', 'pacotes', 'paciente_acessos', 'pacientes', 'parcelamentos', 'procedimentos', 'profissionais', 'prontuario_anexos', 'prontuario_evolucoes', 'prontuario_fotos', 'prontuario_modelos',
         'pesquisas_satisfacao', 'plano_tratamento_itens', 'planos_tratamento', 'prontuario_orientacoes', 'prontuario_termos', 'recorrencias', 'relacionamento_contatos', 'stock_batches', 'stock_categories',
         'stock_movements', 'stock_products', 'taxas_cartao', 'transacao_anexos', 'transacao_baixas', 'transacoes', 'transferencias',

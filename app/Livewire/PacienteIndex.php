@@ -30,6 +30,10 @@ class PacienteIndex extends Component
     #[Url(as: 'status', except: '')]
     public string $filtroStatus = '';
 
+    /** Só quem mandou WhatsApp e ninguém leu ainda */
+    #[Url(as: 'mensagens', except: false)]
+    public bool $soMensagensNovas = false;
+
     // ─── Estado dos modais ──────────────────────────────────────
     public bool $modalCriar   = false;
     public bool $modalEditar  = false;
@@ -83,6 +87,11 @@ class PacienteIndex extends Component
 
     // ─── Paginação reset ao filtrar ─────────────────────────────
     public function updatingBusca(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingSoMensagensNovas(): void
     {
         $this->resetPage();
     }
@@ -266,6 +275,8 @@ class PacienteIndex extends Component
     {
         $query = Paciente::query()
             ->select(['id', 'nome', 'cpf', 'telefone', 'email', 'status', 'foto_path', 'valor_mensalidade', 'forma_pagamento', 'anonimizado_em', 'created_at'])
+            ->withCount(['mensagensWhatsApp as mensagens_novas' => fn ($q) => $q->where('enviada', false)->whereNull('lida_em')])
+            ->when($this->soMensagensNovas, fn ($q) => $q->whereHas('mensagensWhatsApp', fn ($m) => $m->where('enviada', false)->whereNull('lida_em')))
             ->orderBy('nome');
 
         if ($this->filtroStatus !== '') {

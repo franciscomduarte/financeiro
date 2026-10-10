@@ -40,6 +40,8 @@ class ExportarDadosPacienteAction
                 ->orderBy('assinado_em')->limit(self::LIMITE),
             'orientacoes' => fn ($q) => $q->select(['id', 'paciente_id', 'titulo', 'texto', 'created_at'])
                 ->orderBy('created_at')->limit(self::LIMITE),
+            'mensagensWhatsApp' => fn ($q) => $q->select(['id', 'paciente_id', 'enviada', 'texto', 'created_at'])
+                ->orderBy('created_at')->limit(self::LIMITE),
         ]);
 
         $dados = [
@@ -116,6 +118,11 @@ class ExportarDadosPacienteAction
                     'texto'  => $o->texto,
                 ])->all(),
             ],
+            'mensagens_whatsapp' => $paciente->mensagensWhatsApp->map(fn ($m) => [
+                'data'  => $m->created_at?->toIso8601String(),
+                'de'    => $m->enviada ? 'clínica' : 'paciente',
+                'texto' => $m->texto,
+            ])->all(),
             'acessos_aos_dados' => $this->consultarAcessos->execute($paciente, self::LIMITE),
         ];
 
