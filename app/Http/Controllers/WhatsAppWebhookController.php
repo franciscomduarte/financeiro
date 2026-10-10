@@ -97,17 +97,17 @@ class WhatsAppWebhookController extends Controller
             return 'ignored_unknown_instance';
         }
 
-        $m     = (array) $request->input('data.message', []);
-        $texto = (string) ($m['conversation'] ?? $m['extendedTextMessage']['text'] ?? $m['imageMessage']['caption'] ?? $m['videoMessage']['caption'] ?? '');
-        if ($texto === '') {
-            $texto = match ((string) $request->input('data.messageType')) {
-                'audioMessage'    => '[áudio]',
-                'imageMessage'    => '[foto]',
-                'videoMessage'    => '[vídeo]',
-                'documentMessage' => '[documento]',
-                'stickerMessage'  => '[figurinha]',
-                default           => '[mensagem]',
-            };
+        $mensagem = (array) $request->input('data.message', []);
+        $tipo     = (string) $request->input('data.messageType', '');
+        $texto    = \App\Support\MensagemWhatsApp::texto($mensagem, $tipo);
+        if ($texto === null) {
+            return $this->ignorar('ignored_type', $request, $remoteJid); // reação, mensagem apagada, aviso interno
+        }
+        if ($texto === '[mensagem]') {
+            // Formato ainda não reconhecido: registra só a estrutura (sem conteúdo) para incluir depois
+            Log::warning('WhatsApp webhook: tipo de mensagem não reconhecido', [
+                'tenant_id' => $clinica->id, 'messageType' => $tipo, 'campos' => array_keys($mensagem),
+            ]);
         }
 
         try {
