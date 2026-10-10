@@ -21,6 +21,12 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         // Multiclínica: toda requisição web autenticada (inclusive Livewire) tem clínica ativa
         $middleware->web(append: [\App\Http\Middleware\DefinirClinicaAtual::class]);
+        // A clínica ativa precisa existir antes de o Laravel buscar os Models da URL (ex.: anexos/{anexo}),
+        // senão o escopo por clínica não tem clínica e a rota quebra (API e rotas com middleware "clinica")
+        $middleware->prependToPriorityList(
+            before: \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            prepend: \App\Http\Middleware\DefinirClinicaAtual::class,
+        );
         $middleware->api(prepend: [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         ]);

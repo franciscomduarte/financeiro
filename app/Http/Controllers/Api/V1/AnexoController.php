@@ -51,14 +51,20 @@ class AnexoController extends Controller
         return response()->json(['message' => 'Anexo removido com sucesso.']);
     }
 
+    /** PDF e imagem abrem no navegador ("Abrir arquivo"); o resto é baixado. */
+    private const ABRE_NO_NAVEGADOR = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
     public function download(TransacaoAnexo $anexo): StreamedResponse
     {
         abort_unless(Storage::disk('local')->exists($anexo->caminho), 404, 'Arquivo não encontrado.');
 
-        return Storage::disk('local')->download(
+        $tipo = (string) ($anexo->mime_type ?? 'application/octet-stream');
+
+        return Storage::disk('local')->response(
             $anexo->caminho,
             $anexo->nome_arquivo,
-            ['Content-Type' => $anexo->mime_type ?? 'application/octet-stream'],
+            ['Content-Type' => $tipo, 'X-Content-Type-Options' => 'nosniff'],
+            in_array($tipo, self::ABRE_NO_NAVEGADOR, true) ? 'inline' : 'attachment',
         );
     }
 }
