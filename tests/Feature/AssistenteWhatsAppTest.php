@@ -90,7 +90,7 @@ class AssistenteWhatsAppTest extends TestCase
         [$instrucoes, $contexto, $mensagens] = $this->ia->chamadas[0];
         $this->assertStringContainsString('Você é Bia', $instrucoes);
         $this->assertStringContainsString('Pix, débito e até 10x no cartão.', $instrucoes);
-        $this->assertStringContainsString('Botox (30 min, R$ 1.200,00): Toxina botulínica', $instrucoes);
+        $this->assertStringContainsString('Botox (30 min, a partir de R$ 1.200,00): Toxina botulínica', $instrucoes);
         $this->assertStringContainsString('Rua das Flores, 10', $instrucoes);
         $this->assertStringContainsString('Contato: Carla', $contexto);
         $this->assertSame([['role' => 'user', 'content' => 'Oi, quanto custa o botox?']], $mensagens);
