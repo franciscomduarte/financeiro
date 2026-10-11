@@ -31,7 +31,15 @@ class ConfirmarPeloWhatsAppAction
                 ->select(['id', 'tenant_id', 'paciente_id', 'inicio_em', 'status', 'confirmacao_pedida_em', 'confirmado_em', 'confirmacao_origem', 'pediu_remarcar_em'])
                 ->where('paciente_id', $pacienteId)
                 ->whereIn('status', [StatusAgendamento::Agendado->value, StatusAgendamento::Confirmado->value])
-                ->whereNotNull('confirmacao_pedida_em')
+                // Pedido registrado no agendamento ou, por segurança, o lembrete da véspera que saiu no WhatsApp
+                ->where(fn ($q) => $q->whereNotNull('confirmacao_pedida_em')
+                    ->orWhereExists(fn ($n) => $n->selectRaw('1')->from('notificacoes')
+                        ->whereColumn('notificacoes.tenant_id', 'agendamentos.tenant_id')
+                        ->whereRaw('notificacoes.origem_id = agendamentos.id::text')
+                        ->where('notificacoes.origem_type', Agendamento::class)
+                        ->where('notificacoes.tipo', \App\Enums\TipoNotificacao::LembreteVespera->value)
+                        ->where('notificacoes.canal', \App\Enums\CanalNotificacao::WhatsApp->value)
+                        ->whereIn('notificacoes.status', ['enviada', 'entregue', 'lida'])))
                 ->where('inicio_em', '>', now())
                 ->orderBy('inicio_em')
                 ->lockForUpdate()->first();
@@ -64,6 +72,8 @@ class ConfirmarPeloWhatsAppAction
         });
 
         if ($resultado === null) {
+            Log::info('[Agenda] resposta SIM/NÃO sem horário aguardando confirmação', ['paciente_id' => $pacienteId]);
+
             return false;
         }
         if ($resultado['acao'] !== null) {

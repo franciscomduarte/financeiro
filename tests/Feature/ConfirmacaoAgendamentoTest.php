@@ -160,6 +160,27 @@ class ConfirmacaoAgendamentoTest extends TestCase
         $this->assertNull($ag->confirmacao_pedida_em);
     }
 
+    public function test_confirma_mesmo_sem_a_marca_no_agendamento_quando_o_lembrete_saiu(): void
+    {
+        $this->enviarVespera();
+        Agendamento::query()->whereKey($this->agendamento->id)->update(['confirmacao_pedida_em' => null]); // lembrete enviado por versão antiga da fila
+
+        $this->webhook('Sim', 'R1');
+
+        $this->assertSame(StatusAgendamento::Confirmado, $this->agendamento->fresh()->status);
+    }
+
+    public function test_confirma_quando_o_numero_tambem_tem_lead_em_aberto_sem_paciente_vinculado(): void
+    {
+        \App\Models\Lead::create(['nome' => 'Ana', 'telefone' => '(61) 97777-2222', 'telefone_chave' => '6177772222', 'origem' => 'whatsapp', 'etapa' => 'em_contato']);
+        $this->enviarVespera();
+
+        $this->webhook('Confirmo', 'R1')->assertJson(['status' => 'lead_atualizado']);
+
+        $this->assertSame(StatusAgendamento::Confirmado, $this->agendamento->fresh()->status);
+        Http::assertSent(fn ($r) => str_contains($r['textMessage']['text'] ?? '', 'está confirmado'));
+    }
+
     public function test_interpreta_as_respostas(): void
     {
         foreach (['Sim', 'SIM!', 's', 'Confirmo', 'confirmado, obrigada', 'Ok', '👍', 'Estarei aí', 'Com certeza!'] as $sim) {

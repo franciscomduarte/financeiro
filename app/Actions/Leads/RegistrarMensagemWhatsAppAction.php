@@ -83,6 +83,8 @@ class RegistrarMensagemWhatsAppAction
 
         if ($resultado !== null) {
             // Lead que já agendou e respondeu SIM/NÃO ao pedido de confirmação: a agenda registra e o assistente não entra
+            // (o lead pode não ter o paciente vinculado: procura também pelo telefone)
+            $leadPacienteId ??= $daClinica ? null : $this->pacienteDoContato($chave, $lid);
             if (! $daClinica && ! ($leadPacienteId !== null && $this->confirmar->execute($leadPacienteId, $texto))) {
                 $this->agendarResposta($leadId, $interacaoId);
             }
