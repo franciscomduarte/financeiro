@@ -11,6 +11,17 @@ final class BuscarPacienteDoLead
 {
     public static function porContato(?string $chaveTelefone, ?string $email): ?Paciente
     {
+        return self::consulta($chaveTelefone, $email)?->first();
+    }
+
+    /** @return array<int, string> todas as fichas com o telefone (cadastro em duplicidade acontece) */
+    public static function idsPorTelefone(?string $chaveTelefone): array
+    {
+        return self::consulta($chaveTelefone, null)?->limit(10)->pluck('id')->all() ?? [];
+    }
+
+    private static function consulta(?string $chaveTelefone, ?string $email): ?\Illuminate\Database\Eloquent\Builder
+    {
         if ($chaveTelefone === null && $email === null) {
             return null;
         }
@@ -26,7 +37,6 @@ final class BuscarPacienteDoLead
                 if ($email !== null) {
                     $q->orWhereRaw('lower(email) = ?', [$email]);
                 }
-            })
-            ->first();
+            });
     }
 }

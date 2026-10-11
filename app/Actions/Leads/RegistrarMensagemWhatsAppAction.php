@@ -83,9 +83,9 @@ class RegistrarMensagemWhatsAppAction
 
         if ($resultado !== null) {
             // Lead que já agendou e respondeu SIM/NÃO ao pedido de confirmação: a agenda registra e o assistente não entra
-            // (o lead pode não ter o paciente vinculado: procura também pelo telefone)
-            $leadPacienteId ??= $daClinica ? null : $this->pacienteDoContato($chave, $lid);
-            if (! $daClinica && ! ($leadPacienteId !== null && $this->confirmar->execute($leadPacienteId, $texto))) {
+            // (o lead pode não ter o paciente vinculado: procura também pelas fichas com o telefone)
+            $pacientes = $daClinica ? [] : $this->fichasDoContato($chave, $leadPacienteId ?? $this->pacienteDoContato($chave, $lid));
+            if (! $daClinica && ! ($pacientes !== [] && $this->confirmar->execute($pacientes, $texto))) {
                 $this->agendarResposta($leadId, $interacaoId);
             }
 
@@ -95,7 +95,8 @@ class RegistrarMensagemWhatsAppAction
         $pacienteId = $this->pacienteDoContato($chave, $lid);
         if ($pacienteId !== null) {
             $mensagem = $this->registrarPaciente->execute($pacienteId, $texto, $daClinica, $mensagemId);
-            $respondeuConfirmacao = ! $daClinica && $mensagem->wasRecentlyCreated && $this->confirmar->execute($pacienteId, $texto);
+            $respondeuConfirmacao = ! $daClinica && $mensagem->wasRecentlyCreated
+                && $this->confirmar->execute($this->fichasDoContato($chave, $pacienteId), $texto);
             if (! $daClinica && ! $respondeuConfirmacao && $mensagem->wasRecentlyCreated && AssistenteConfiguracao::query()->where('ativo', true)->exists()) {
                 // O assistente avisa que a equipe vai responder (junta mensagens seguidas, como nos leads)
                 ResponderPacienteJob::dispatch($pacienteId, $mensagem->id)
@@ -120,6 +121,12 @@ class RegistrarMensagemWhatsAppAction
         }
 
         return 'lead_criado';
+    }
+
+    /** @return array<int, string> a ficha do contato e as outras com o mesmo telefone (o horário pode estar em qualquer uma) */
+    private function fichasDoContato(?string $chave, ?string $pacienteId): array
+    {
+        return array_values(array_unique(array_filter([$pacienteId, ...BuscarPacienteDoLead::idsPorTelefone($chave)])));
     }
 
     /** Paciente pelo telefone da ficha ou pelo lead marcado como "Já é paciente" (que pode ter outro número). */
