@@ -72,6 +72,13 @@ Schedule::call($porClinica(fn () => \App\Jobs\DespacharNotificacoesJob::dispatch
     ->name('despachar-notificacoes')
     ->withoutOverlapping();
 
+// Véspera às 19h: cada profissional recebe por e-mail a agenda do dia seguinte
+Schedule::call($porClinica(fn () => \App\Jobs\AgendaProfissionaisJob::dispatch()))
+    ->dailyAt('19:00')
+    ->timezone('America/Sao_Paulo')
+    ->name('agenda-profissionais')
+    ->withoutOverlapping();
+
 // ─── Alertas de vencimento ────────────────────────────────────────────────────
 
 // Resumo diário (e-mail aos admins + WhatsApp da gestão) de contas, contratos e documentos
