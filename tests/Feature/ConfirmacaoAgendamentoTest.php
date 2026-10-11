@@ -181,6 +181,18 @@ class ConfirmacaoAgendamentoTest extends TestCase
         Http::assertSent(fn ($r) => str_contains($r['textMessage']['text'] ?? '', 'está confirmado'));
     }
 
+    public function test_confirma_quando_o_horario_esta_em_outra_ficha_com_o_mesmo_celular(): void
+    {
+        $duplicada = Paciente::create(['nome' => 'Ana Paula Souza', 'telefone' => '61977772222']);
+        Agendamento::query()->whereKey($this->agendamento->id)->update(['paciente_id' => $duplicada->id]);
+        $this->enviarVespera();
+
+        $this->webhook('sim', 'R1')->assertJson(['status' => 'paciente']);
+
+        $this->assertSame($this->ana->id, PacienteMensagem::where('enviada', false)->sole()->paciente_id); // a mensagem fica na 1ª ficha
+        $this->assertSame(StatusAgendamento::Confirmado, $this->agendamento->fresh()->status);
+    }
+
     public function test_interpreta_as_respostas(): void
     {
         foreach (['Sim', 'SIM!', 's', 'Confirmo', 'confirmado, obrigada', 'Ok', '👍', 'Estarei aí', 'Com certeza!'] as $sim) {

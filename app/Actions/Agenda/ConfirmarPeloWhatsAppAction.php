@@ -19,7 +19,8 @@ use Illuminate\Support\Facades\Log;
  */
 class ConfirmarPeloWhatsAppAction
 {
-    public function execute(string $pacienteId, string $texto): bool
+    /** @param string|array<int, string> $pacienteId a ficha do contato ou todas as fichas com o mesmo telefone */
+    public function execute(string|array $pacienteId, string $texto): bool
     {
         $confirma = RespostaConfirmacao::interpretar($texto);
         if ($confirma === null) {
@@ -29,7 +30,7 @@ class ConfirmarPeloWhatsAppAction
         $resultado = DB::transaction(function () use ($pacienteId, $texto, $confirma): ?array {
             $agendamento = Agendamento::query()->withoutGlobalScope(\App\Models\Scopes\ProfissionalScope::class)
                 ->select(['id', 'tenant_id', 'paciente_id', 'inicio_em', 'status', 'confirmacao_pedida_em', 'confirmado_em', 'confirmacao_origem', 'pediu_remarcar_em'])
-                ->where('paciente_id', $pacienteId)
+                ->whereIn('paciente_id', (array) $pacienteId)
                 ->whereIn('status', [StatusAgendamento::Agendado->value, StatusAgendamento::Confirmado->value])
                 // Pedido registrado no agendamento ou, por segurança, o lembrete da véspera que saiu no WhatsApp
                 ->where(fn ($q) => $q->whereNotNull('confirmacao_pedida_em')
