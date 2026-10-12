@@ -238,12 +238,18 @@ class WhatsAppService
         return (bool) $resposta?->successful();
     }
 
-    private function enviarImagem(string $numero, string $base64, string $caption = ''): bool
+    /** Imagem com legenda (campanhas). */
+    public function enviarImagemParaTelefone(string $telefone, string $base64, string $mimeType, string $legenda = ''): bool
+    {
+        return $this->enviarImagem($this->formatarTelefone($telefone), $base64, $legenda, $mimeType);
+    }
+
+    private function enviarImagem(string $numero, string $base64, string $caption = '', string $mimeType = 'image/png'): bool
     {
         $resposta = $this->enviar('sendMedia', [
             'number'      => $numero,
             'mediatype'   => 'image',
-            'mimetype'    => 'image/png',
+            'mimetype'    => $mimeType,
             'caption'     => $caption,
             'media'       => $base64,
         ]);

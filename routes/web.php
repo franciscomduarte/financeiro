@@ -127,6 +127,11 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/leads', \App\Livewire\LeadIndex::class)->name('leads.index')->middleware('modulo:leads');
     Route::get('/leads/assistente', \App\Livewire\AssistenteIndex::class)->name('leads.assistente')->middleware('modulo:dados_clinica');
     Route::get('/notificacoes', NotificacaoIndex::class)->name('notificacoes.index')->middleware('modulo:notificacoes');
+    Route::middleware('modulo:notificacoes')->group(function (): void {
+        Route::get('/campanhas', \App\Livewire\CampanhaIndex::class)->name('campanhas.index');
+        Route::get('/campanhas/{campanha}', \App\Livewire\CampanhaEditor::class)->whereUuid('campanha')->name('campanhas.editar');
+        Route::get('/campanhas/{campanha}/imagem', \App\Http\Controllers\CampanhaImagemController::class)->whereUuid('campanha')->name('campanhas.imagem');
+    });
     Route::get('/comissoes', ComissaoIndex::class)->name('comissoes.index')->middleware('modulo:relatorios');
     Route::middleware('modulo:lancamentos')->group(function (): void {
         Route::get('/transacoes', TransacaoIndex::class)->name('transacoes.index');

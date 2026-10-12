@@ -79,6 +79,18 @@ Schedule::call($porClinica(fn () => \App\Jobs\AgendaProfissionaisJob::dispatch()
     ->name('agenda-profissionais')
     ->withoutOverlapping();
 
+// Campanhas de WhatsApp: (re)começa a fila de envio quando há campanha enviando e nenhuma fila ativa.
+// O ritmo (30–90 s, 150/dia, seg–sáb 9h–19h) fica no EnviarCampanhasJob / config/campanhas.php.
+Schedule::call($porClinica(function (): void {
+    if (\App\Models\Campanha::query()->where('status', \App\Enums\StatusCampanha::Enviando->value)->exists()
+        && app(\App\Services\Campanhas\RitmoCampanhas::class)->dentroDoHorario()) {
+        \App\Jobs\EnviarCampanhasJob::iniciarCadeia();
+    }
+}))
+    ->everyMinute()
+    ->name('campanhas-whatsapp')
+    ->withoutOverlapping();
+
 // ─── Alertas de vencimento ────────────────────────────────────────────────────
 
 // Resumo diário (e-mail aos admins + WhatsApp da gestão) de contas, contratos e documentos
