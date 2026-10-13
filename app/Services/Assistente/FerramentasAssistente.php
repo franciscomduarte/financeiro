@@ -93,7 +93,7 @@ class FerramentasAssistente
     {
         try {
             return match ($nome) {
-                'consultar_horarios' => $config->podeAgendar() ? $this->horarios($config, $entrada['a_partir_de'] ?? null) : 'Agendamento pelo assistente está desligado.',
+                'consultar_horarios' => $config->podeAgendar() ? $this->horarios($config, $entrada['a_partir_de'] ?? null) . $this->lembreteAgendado($lead) : 'Agendamento pelo assistente está desligado.',
                 'agendar_avaliacao'  => $config->podeAgendar() ? $this->agendar($lead, $config, (string) ($entrada['data'] ?? ''), (string) ($entrada['hora'] ?? ''), $entrada, $simulacao) : 'Agendamento pelo assistente está desligado.',
                 'passar_para_equipe' => $this->passarParaEquipe($lead, (string) ($entrada['motivo'] ?? ''), $simulacao),
                 default              => "Ferramenta desconhecida: {$nome}.",
@@ -103,6 +103,33 @@ class FerramentasAssistente
 
             return 'Não foi possível concluir agora. Peça desculpas e use passar_para_equipe.';
         }
+    }
+
+    /** Horários futuros já marcados para o contato, para o assistente saber o que está gravado (não vê o resultado de conversas anteriores). */
+    public function agendamentosDoContato(?Lead $lead): string
+    {
+        $pacienteId = $lead ? Lead::query()->whereKey($lead->id)->value('paciente_id') : null; // pode ter mudado nesta conversa
+        if ($pacienteId === null) {
+            return 'Agendamentos deste contato: nenhum.';
+        }
+
+        $itens = Agendamento::query()->withoutGlobalScope(\App\Models\Scopes\ProfissionalScope::class)
+            ->with('procedimento:id,nome')
+            ->select(['id', 'procedimento_id', 'inicio_em', 'status'])
+            ->where('paciente_id', $pacienteId)
+            ->whereIn('status', [StatusAgendamento::Agendado->value, StatusAgendamento::Confirmado->value])
+            ->where('inicio_em', '>=', now())->orderBy('inicio_em')->limit(5)->get()
+            ->map(fn (Agendamento $a) => ucfirst($a->inicio_em->timezone((string) config('clinica.fuso_horario'))->locale('pt_BR')->translatedFormat('l, d/m \à\s H:i'))
+                . ($a->procedimento?->nome ? " ({$a->procedimento->nome})" : ''));
+
+        return 'Agendamentos deste contato: ' . ($itens->isEmpty() ? 'nenhum.' : $itens->implode('; ') . '.');
+    }
+
+    private function lembreteAgendado(?Lead $lead): string
+    {
+        $agendados = $this->agendamentosDoContato($lead);
+
+        return str_ends_with($agendados, 'nenhum.') ? '' : "\n{$agendados} Esse horário já é da pessoa e por isso não aparece como livre.";
     }
 
     /** @return Collection<int, Profissional> */
@@ -180,7 +207,7 @@ class FerramentasAssistente
             ->whereIn('status', [StatusAgendamento::Agendado->value, StatusAgendamento::Confirmado->value])
             ->where('inicio_em', '>=', now())->orderBy('inicio_em')->first() : null;
         if ($existente) {
-            return 'Já existe uma avaliação agendada para ' . $existente->inicio_em->format('d/m \à\s H:i') . '. Não agende outra; se a pessoa quiser mudar, use passar_para_equipe.';
+            return 'Já existe uma avaliação agendada e valendo para ' . $existente->inicio_em->format('d/m \à\s H:i') . '. Não agende outra. Confirme esse horário com a pessoa; se ela quiser mudar, use passar_para_equipe com o motivo "Quer remarcar a avaliação".';
         }
 
         $agendamento = DB::transaction(function () use ($lead, $config, $dia, $hora, $nomeCompleto, $cpf, $cadastro, $profissionalId, $quando): Agendamento {

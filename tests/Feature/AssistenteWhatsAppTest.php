@@ -272,6 +272,38 @@ class AssistenteWhatsAppTest extends TestCase
         $this->assertSame(0, Lead::count()); // simulação não grava nada
     }
 
+    public function test_na_conversa_seguinte_sabe_o_horario_que_ja_marcou(): void
+    {
+        $this->profissionalComGrade();
+        $lead = $this->lead('Quero agendar');
+        $dia  = CarbonImmutable::today()->addDays(2);
+        $this->ia->roteiro[] = function (array $ferramentas, Closure $executar) use ($dia): RespostaAssistente {
+            $executar('agendar_avaliacao', ['data' => $dia->toDateString(), 'hora' => '11:00', 'nome_completo' => 'Carla Souza']);
+
+            return new RespostaAssistente('Sua avaliação está agendada para ' . $dia->format('d/m') . ' às 11:00.');
+        };
+        app(ResponderLeadAction::class)->execute($lead->id);
+
+        // A pessoa agradece: o assistente recebe no contexto o horário gravado, e a consulta de horários explica por que as 11:00 não aparecem
+        LeadInteracao::create(['lead_id' => $lead->id, 'tipo' => TipoInteracaoLead::WhatsAppRecebido, 'texto' => 'obrigada']);
+        $this->ia->roteiro[] = function (array $ferramentas, Closure $executar) use ($dia): RespostaAssistente {
+            $horarios = $executar('consultar_horarios', ['a_partir_de' => $dia->toDateString()]);
+            $this->assertStringNotContainsString('11:00,', $horarios);
+            $this->assertStringContainsString('às 11:00 (Avaliação). Esse horário já é da pessoa', $horarios);
+            $this->assertStringContainsString('Confirme esse horário com a pessoa', $executar('agendar_avaliacao', ['data' => $dia->toDateString(), 'hora' => '11:30', 'nome_completo' => null]));
+
+            return new RespostaAssistente('Por nada! Até lá 😊');
+        };
+        app(ResponderLeadAction::class)->execute($lead->id);
+
+        [$instrucoes, $contexto] = $this->ia->chamadas[1];
+        $esperado = ucfirst($dia->locale('pt_BR')->translatedFormat('l, d/m')) . ' às 11:00 (Avaliação)';
+        $this->assertStringContainsString("Agendamentos deste contato: {$esperado}.", $contexto);
+        $this->assertStringContainsString('Nunca diga que um agendamento não foi feito', $instrucoes);
+        $this->assertStringContainsString('Agendamentos deste contato: nenhum.', $this->ia->chamadas[0][1]);
+        $this->assertSame(1, Agendamento::count());
+    }
+
     public function test_pede_os_dados_de_cadastro_e_agenda_com_a_ficha_completa(): void
     {
         $this->profissionalComGrade();

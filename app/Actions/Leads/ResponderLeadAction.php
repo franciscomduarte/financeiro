@@ -168,6 +168,7 @@ class ResponderLeadAction
         - Use passar_para_equipe quando a pessoa pedir para falar com alguém, reclamar, falar de assunto de saúde/urgência, pedir desconto ou condição especial, ou mandar algo que você não entende (áudio, foto, documento).
         - Não informe a duração dos procedimentos, a menos que a pessoa pergunte.
         - Nunca peça dados de cartão ou senhas. Documentos (CPF, RG) só na mensagem de cadastro para agendar.
+        - A linha "Agendamentos deste contato" do contexto é o que está gravado no sistema agora: se ela mostra um horário, o agendamento existe e está valendo. Nunca diga que um agendamento não foi feito, falhou ou não está confirmado sem uma ferramenta ter dito isso; não "corrija" mensagens anteriores por conta própria. O horário que a própria pessoa já ocupa não aparece em consultar_horarios.
         - {$agenda}
 
         ## Dados da clínica
@@ -207,8 +208,8 @@ class ResponderLeadAction
         $lead->loadMissing('procedimento:id,nome');
 
         return $this->contextoBase() . "\nContato: {$lead->nome}"
-            . ($lead->procedimento || $lead->interesse ? '; interesse: ' . ($lead->procedimento?->nome ?? $lead->interesse) : '')
-            . ($lead->etapa === EtapaLead::AvaliacaoAgendada ? '; já tem avaliação agendada.' : '.');
+            . ($lead->procedimento || $lead->interesse ? '; interesse: ' . ($lead->procedimento?->nome ?? $lead->interesse) : '') . '.'
+            . "\n" . $this->ferramentas->agendamentosDoContato($lead);
     }
 
     /** @return list<array{role: string, content: string}> conversa do WhatsApp, terminando na mensagem do lead */
