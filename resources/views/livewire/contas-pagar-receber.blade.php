@@ -1,7 +1,7 @@
 @php
     $brl = fn ($v) => 'R$ ' . number_format((float) $v, 2, ',', '.');
     $verbo = $aPagar ? 'Pagar' : 'Receber';
-    $nomeDe = fn ($t) => $t?->fornecedor?->nome ?? $t?->paciente?->nome ?? $t?->cliente;
+    $nomeDe = fn ($t) => $t?->fornecedor?->nome_fantasia ?? $t?->paciente?->nome ?? $t?->cliente;
     $r = $this->resumo;
 @endphp
 <div>

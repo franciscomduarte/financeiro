@@ -137,7 +137,7 @@ class ContasPagarReceber extends Component
         $q = Transacao::query()
             ->select(['id', 'tipo', 'descricao', 'categoria', 'cliente', 'paciente_id', 'fornecedor_id', 'valor_bruto', 'valor_pago',
                 'data_competencia', 'data_vencimento', 'forma_pagamento', 'status', 'recorrencia_id'])
-            ->with(['paciente:id,nome', 'fornecedor:id,nome'])
+            ->with(['paciente:id,nome', 'fornecedor:id,nome_fantasia'])
             ->where('tipo', $this->tipo)
             ->whereIn('status', StatusTransacao::abertos());
 
@@ -157,7 +157,7 @@ class ContasPagarReceber extends Component
                     ->orWhereRaw('LOWER(COALESCE(cliente, \'\')) LIKE ?', [$like])
                     ->orWhereRaw('LOWER(categoria) LIKE ?', [$like])
                     ->orWhereHas('paciente', fn (Builder $p) => $p->whereRaw('LOWER(nome) LIKE ?', [$like]))
-                    ->orWhereHas('fornecedor', fn (Builder $f) => $f->whereRaw('LOWER(nome) LIKE ?', [$like]));
+                    ->orWhereHas('fornecedor', fn (Builder $f) => $f->whereRaw('LOWER(nome_fantasia) LIKE ?', [$like])->orWhereRaw('LOWER(razao_social) LIKE ?', [$like]));
             });
         }
 
@@ -170,7 +170,7 @@ class ContasPagarReceber extends Component
 
         $q = TransacaoBaixa::query()
             ->select(['id', 'transacao_id', 'conta_financeira_id', 'data', 'valor', 'juros', 'multa', 'desconto', 'taxa', 'valor_movimentado', 'forma_pagamento', 'created_at'])
-            ->with(['transacao:id,descricao,categoria,cliente,paciente_id,fornecedor_id,status', 'transacao.paciente:id,nome', 'transacao.fornecedor:id,nome', 'conta:id,nome'])
+            ->with(['transacao:id,descricao,categoria,cliente,paciente_id,fornecedor_id,status', 'transacao.paciente:id,nome', 'transacao.fornecedor:id,nome_fantasia', 'conta:id,nome'])
             ->where('tipo', $this->tipo)
             ->whereBetween('data', [$inicio->toDateString(), $inicio->endOfMonth()->toDateString()]);
 
@@ -319,7 +319,7 @@ class ContasPagarReceber extends Component
     {
         return $this->detalheId
             ? Transacao::query()
-                ->with(['paciente:id,nome', 'fornecedor:id,nome', 'baixas' => fn ($q) => $q->with(['conta:id,nome', 'usuario:id,name'])->orderBy('data')->orderBy('created_at')])
+                ->with(['paciente:id,nome', 'fornecedor:id,nome_fantasia', 'baixas' => fn ($q) => $q->with(['conta:id,nome', 'usuario:id,name'])->orderBy('data')->orderBy('created_at')])
                 ->find($this->detalheId)
             : null;
     }
