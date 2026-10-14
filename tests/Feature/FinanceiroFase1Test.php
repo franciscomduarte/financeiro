@@ -208,6 +208,25 @@ class FinanceiroFase1Test extends TestCase
         Livewire::test(ContasPagarReceber::class, ['tipo' => 'entrada'])->assertSee('Venda')->assertDontSee('Aluguel');
     }
 
+    public function test_conta_de_fornecedor_aparece_nas_telas_com_o_nome_do_fornecedor(): void
+    {
+        $fornecedor = \App\Models\Fornecedor::create(['nome_fantasia' => 'Dermo Distribuidora', 'razao_social' => 'Dermo Comércio Ltda', 'servico_prestado' => 'Insumos']);
+        $conta = $this->lancamento(['descricao' => 'Compra de ácidos', 'data_competencia' => today()->toDateString()]);
+        Transacao::query()->whereKey($conta->id)->update(['fornecedor_id' => $fornecedor->id]);
+
+        Livewire::test(ContasPagarReceber::class, ['tipo' => 'saida'])
+            ->assertSee('Compra de ácidos')->assertSee('Dermo Distribuidora')
+            ->set('busca', 'dermo comércio')->assertSee('Compra de ácidos')
+            ->call('abrirDetalhe', $conta->id)->assertSee('Dermo Distribuidora')
+            ->set('busca', '')
+            ->call('abrirBaixa', $conta->id)->call('confirmarBaixa')->assertHasNoErrors()
+            ->set('filtro', 'quitados')->assertSee('Dermo Distribuidora');
+
+        Livewire::test(ContasFinanceirasIndex::class)
+            ->call('verExtrato', $this->conta(TipoContaFinanceira::Banco)->id)
+            ->assertSee('Dermo Distribuidora');
+    }
+
     public function test_tela_caixa_e_bancos_mostra_saldo_extrato_e_transfere(): void
     {
         $banco = $this->conta(TipoContaFinanceira::Banco);

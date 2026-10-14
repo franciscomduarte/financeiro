@@ -187,7 +187,7 @@ class ContasFinanceirasIndex extends Component
 
         TransacaoBaixa::query()
             ->select(['id', 'transacao_id', 'tipo', 'data', 'valor_movimentado', 'juros', 'multa', 'desconto', 'taxa', 'created_at'])
-            ->with(['transacao:id,descricao,categoria,cliente,paciente_id,fornecedor_id', 'transacao.paciente:id,nome', 'transacao.fornecedor:id,nome'])
+            ->with(['transacao:id,descricao,categoria,cliente,paciente_id,fornecedor_id', 'transacao.paciente:id,nome', 'transacao.fornecedor:id,nome_fantasia'])
             ->where('conta_financeira_id', $conta->id)
             ->whereBetween('data', [$desde->toDateString(), $fim->toDateString()])
             ->orderBy('data')->orderBy('created_at')
@@ -199,7 +199,7 @@ class ContasFinanceirasIndex extends Component
                     'data'             => $b->data,
                     'ordem'            => $b->created_at?->getTimestamp() ?? 0,
                     'descricao'        => $t?->descricao ?? 'Lançamento',
-                    'detalhe'          => collect([$t?->categoria, $t?->fornecedor?->nome ?? $t?->paciente?->nome ?? $t?->cliente])->filter()->implode(' · ') ?: null,
+                    'detalhe'          => collect([$t?->categoria, $t?->fornecedor?->nome_fantasia ?? $t?->paciente?->nome ?? $t?->cliente])->filter()->implode(' · ') ?: null,
                     'valor'            => ($b->tipo === TipoTransacao::Entrada ? 1 : -1) * (float) $b->valor_movimentado,
                     'transferencia_id' => null,
                 ]);
