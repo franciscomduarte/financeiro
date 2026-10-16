@@ -201,9 +201,16 @@
                         @error('googleAdsId') <p class="field-error">{{ $message }}</p> @enderror
                     </div>
                     <div>
-                        <label for="google-ads-conversao" class="label">Conversão (send_to)</label>
+                        <label for="google-ads-conversao" class="label">Conversão do formulário (send_to)</label>
                         <input id="google-ads-conversao" type="text" wire:model="googleAdsConversao" maxlength="100" placeholder="AW-123456789/AbCdEf123" class="input font-mono" autocomplete="off">
+                        <p class="hint">Registrada na página de obrigado, depois do envio.</p>
                         @error('googleAdsConversao') <p class="field-error">{{ $message }}</p> @enderror
+                    </div>
+                    <div class="sm:col-start-2">
+                        <label for="google-ads-conversao-whatsapp" class="label">Conversão do clique no WhatsApp (send_to)</label>
+                        <input id="google-ads-conversao-whatsapp" type="text" wire:model="googleAdsConversaoWhatsapp" maxlength="100" placeholder="AW-123456789/XyZ987" class="input font-mono" autocomplete="off">
+                        <p class="hint">Registrada quando a pessoa toca em "Chamar no WhatsApp".</p>
+                        @error('googleAdsConversaoWhatsapp') <p class="field-error">{{ $message }}</p> @enderror
                     </div>
                 </div>
                 <p class="hint">Os dois valores vêm do código que o Google Ads fornece: o ID está em <span class="font-mono">gtag('config', 'AW-…')</span> e a conversão em <span class="font-mono">'send_to': 'AW-…/…'</span>.</p>

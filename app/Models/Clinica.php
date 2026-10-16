@@ -54,6 +54,7 @@ class Clinica extends Model
         'whatsapp_contato',
         'google_ads_id',
         'google_ads_conversao',
+        'google_ads_conversao_whatsapp',
     ];
 
     /** Segredos nunca vão para arrays/JSON. */
@@ -171,6 +172,13 @@ class Clinica extends Model
     {
         return $this->googleAdsId() && preg_match(self::REGEX_GOOGLE_ADS_CONVERSAO, (string) $this->google_ads_conversao)
             ? $this->google_ads_conversao : null;
+    }
+
+    /** Conversão disparada no clique de "Chamar no WhatsApp" (null quando não configurada). */
+    public function googleAdsConversaoWhatsapp(): ?string
+    {
+        return $this->googleAdsId() && preg_match(self::REGEX_GOOGLE_ADS_CONVERSAO, (string) $this->google_ads_conversao_whatsapp)
+            ? $this->google_ads_conversao_whatsapp : null;
     }
 
     public function whatsappConfigurado(): bool

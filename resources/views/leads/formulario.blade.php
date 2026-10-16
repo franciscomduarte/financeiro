@@ -21,6 +21,16 @@
                 gtag('event', 'conversion', {'send_to': @json($conversao)});
             </script>
         @endif
+        @if (! $enviado && ($conversaoWhatsapp = $clinica->googleAdsConversaoWhatsapp()))
+            <script>
+                // Clique em "Chamar no WhatsApp" conta como conversão (o link abre em outra aba, a página continua aberta)
+                document.addEventListener('click', function (e) {
+                    if (e.target.closest('[data-whatsapp-contato]')) {
+                        gtag('event', 'conversion', {'send_to': @json($conversaoWhatsapp)});
+                    }
+                });
+            </script>
+        @endif
     @endif
 </head>
 <body class="min-h-full bg-stone-50 font-sans text-stone-800 antialiased">

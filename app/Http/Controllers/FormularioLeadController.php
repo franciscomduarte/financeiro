@@ -90,7 +90,7 @@ class FormularioLeadController extends Controller
 
     private function clinica(string $slug): Clinica
     {
-        return Clinica::query()->select(['id', 'nome', 'slug', 'status', 'logo_path', 'telefone', 'endereco', 'whatsapp_contato', 'google_ads_id', 'google_ads_conversao'])
+        return Clinica::query()->select(['id', 'nome', 'slug', 'status', 'logo_path', 'telefone', 'endereco', 'whatsapp_contato', 'google_ads_id', 'google_ads_conversao', 'google_ads_conversao_whatsapp'])
             ->where('slug', $slug)->where('status', '!=', StatusClinica::Bloqueada->value)->firstOrFail();
     }
 
