@@ -65,6 +65,7 @@ class ConfiguracaoClinica extends Component
     public string $whatsappContato     = '';
     public string $googleAdsId         = '';
     public string $googleAdsConversao  = '';
+    public string $googleAdsConversaoWhatsapp = '';
 
     public ?string $flashSucesso = null;
     public ?string $flashErro    = null;
@@ -98,6 +99,7 @@ class ConfiguracaoClinica extends Component
         $this->whatsappContato    = (string) $c->whatsapp_contato;
         $this->googleAdsId        = (string) $c->google_ads_id;
         $this->googleAdsConversao = (string) $c->google_ads_conversao;
+        $this->googleAdsConversaoWhatsapp = (string) $c->google_ads_conversao_whatsapp;
     }
 
     private function clinica(): Clinica
@@ -165,20 +167,20 @@ class ConfiguracaoClinica extends Component
     public function salvarPaginaContato(AtualizarConfiguracaoClinicaAction $action): void
     {
         $this->googleAdsId        = strtoupper(trim($this->googleAdsId));
-        $this->googleAdsConversao = trim($this->googleAdsConversao);
-        if ($this->googleAdsConversao !== '' && ! str_starts_with(strtoupper($this->googleAdsConversao), 'AW-') && $this->googleAdsId !== '') {
-            $this->googleAdsConversao = $this->googleAdsId . '/' . ltrim($this->googleAdsConversao, '/'); // colou só o rótulo
-        }
+        $this->googleAdsConversao = $this->completarConversao($this->googleAdsConversao);
+        $this->googleAdsConversaoWhatsapp = $this->completarConversao($this->googleAdsConversaoWhatsapp);
         $this->validate([
             'whatsappContato'    => ['nullable', 'string', 'max:30', 'regex:/^[\d\s()+-]+$/'],
             'googleAdsId'        => ['nullable', 'string', 'max:30', 'regex:' . Clinica::REGEX_GOOGLE_ADS_ID],
             'googleAdsConversao' => ['nullable', 'string', 'max:100', 'regex:' . Clinica::REGEX_GOOGLE_ADS_CONVERSAO],
+            'googleAdsConversaoWhatsapp' => ['nullable', 'string', 'max:100', 'regex:' . Clinica::REGEX_GOOGLE_ADS_CONVERSAO],
         ], [
             'whatsappContato.regex'    => 'Use apenas números, espaço, parênteses, + e hífen.',
             'googleAdsId.regex'        => 'Use o ID do Google Ads no formato AW-123456789.',
             'googleAdsConversao.regex' => 'Use o "send_to" da conversão, no formato AW-123456789/AbCdEf123.',
+            'googleAdsConversaoWhatsapp.regex' => 'Use o "send_to" da conversão, no formato AW-123456789/AbCdEf123.',
         ]);
-        if ($this->googleAdsConversao !== '' && $this->googleAdsId === '') {
+        if (($this->googleAdsConversao !== '' || $this->googleAdsConversaoWhatsapp !== '') && $this->googleAdsId === '') {
             $this->addError('googleAdsId', 'Informe o ID do Google Ads para usar a conversão.');
 
             return;
@@ -193,7 +195,19 @@ class ConfiguracaoClinica extends Component
             'whatsapp_contato'     => $this->whatsappContato ?: null,
             'google_ads_id'        => $this->googleAdsId ?: null,
             'google_ads_conversao' => $this->googleAdsConversao ?: null,
+            'google_ads_conversao_whatsapp' => $this->googleAdsConversaoWhatsapp ?: null,
         ]);
+    }
+
+    /** Aceita o "send_to" completo ou só o rótulo (completa com o ID da tag). */
+    private function completarConversao(string $valor): string
+    {
+        $valor = trim($valor);
+        if ($valor !== '' && ! str_starts_with(strtoupper($valor), 'AW-') && $this->googleAdsId !== '') {
+            return $this->googleAdsId . '/' . ltrim($valor, '/');
+        }
+
+        return $valor;
     }
 
     public function salvarFinanceiro(AtualizarConfiguracaoClinicaAction $action): void

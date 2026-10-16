@@ -100,22 +100,27 @@ class LeadsTest extends TestCase
         Livewire::test(\App\Livewire\ConfiguracaoClinica::class)
             ->set('googleAdsId', 'GTM-123')->call('salvarPaginaContato')->assertHasErrors('googleAdsId')
             ->set('whatsappContato', '(61) 98888-7777')->set('googleAdsId', 'aw-123456789')->set('googleAdsConversao', 'AbC_12345')
+            ->set('googleAdsConversaoWhatsapp', 'WaClique_99')
             ->call('salvarPaginaContato')->assertHasNoErrors();
         $clinica = $this->clinica->fresh();
-        $this->assertSame(['AW-123456789', 'AW-123456789/AbC_12345'], [$clinica->google_ads_id, $clinica->google_ads_conversao]);
+        $this->assertSame(['AW-123456789', 'AW-123456789/AbC_12345', 'AW-123456789/WaClique_99'],
+            [$clinica->google_ads_id, $clinica->google_ads_conversao, $clinica->google_ads_conversao_whatsapp]);
         app(ClinicaAtual::class)->definir(null);
 
         $this->get('/c/lc-estetica/contato')
             ->assertSee('https://wa.me/5561988887777?text=', false)->assertSee('Chamar no WhatsApp')
             ->assertSee('https://www.googletagmanager.com/gtag/js?id=AW-123456789', false)
             ->assertSee("gtag('config', \"AW-123456789\")", false)
-            ->assertDontSee("'conversion'", false);
+            ->assertSee("gtag('event', 'conversion', {'send_to': \"AW-123456789\\/WaClique_99\"})", false) // clique no WhatsApp
+            ->assertSee('data-whatsapp-contato', false)
+            ->assertDontSee('AbC_12345', false); // a conversão do formulário só sai no obrigado
 
         $this->post('/c/lc-estetica/contato', ['nome' => 'Ana Lima', 'telefone' => '(61) 99999-1111', 'procedimento_id' => $botox->id, 'consentimento' => '1'])
             ->assertRedirect('/c/lc-estetica/contato/obrigado');
         $this->get('/c/lc-estetica/contato/obrigado')->assertOk()->assertSee('Recebemos seu contato!')
             ->assertSee('googletagmanager.com/gtag/js?id=AW-123456789', false)
-            ->assertSee("gtag('event', 'conversion', {'send_to': \"AW-123456789\\/AbC_12345\"})", false);
+            ->assertSee("gtag('event', 'conversion', {'send_to': \"AW-123456789\\/AbC_12345\"})", false)
+            ->assertDontSee('WaClique_99', false);
 
         app(ClinicaAtual::class)->definir($this->clinica->fresh());
         $this->assertSame($botox->id, Lead::sole()->procedimento_id);
