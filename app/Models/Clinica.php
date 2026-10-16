@@ -51,6 +51,9 @@ class Clinica extends Model
         'nfse_webhook_token',
         'nfse_webhook_em',
         'nfse_webhook_homologacao',
+        'whatsapp_contato',
+        'google_ads_id',
+        'google_ads_conversao',
     ];
 
     /** Segredos nunca vão para arrays/JSON. */
@@ -139,6 +142,35 @@ class Clinica extends Model
     public function assinatura(): string
     {
         return $this->slogan ? "{$this->nome} — {$this->slogan}" : $this->nome;
+    }
+
+    /** Formato aceito para a tag do Google Ads (AW-123...) e para o "send_to" da conversão (AW-123.../rótulo). */
+    public const REGEX_GOOGLE_ADS_ID = '/^AW-\d{6,15}$/';
+    public const REGEX_GOOGLE_ADS_CONVERSAO = '/^AW-\d{6,15}\/[A-Za-z0-9_-]{4,60}$/';
+
+    /** Link wa.me do botão "Chamar no WhatsApp" da página de contato (null quando não configurado). */
+    public function linkWhatsappContato(string $mensagem = ''): ?string
+    {
+        $numero = preg_replace('/\D/', '', (string) $this->whatsapp_contato) ?? '';
+        if (strlen($numero) < 10) {
+            return null;
+        }
+        if (strlen($numero) <= 11) {
+            $numero = '55' . $numero;
+        }
+
+        return "https://wa.me/{$numero}" . ($mensagem !== '' ? '?text=' . rawurlencode($mensagem) : '');
+    }
+
+    public function googleAdsId(): ?string
+    {
+        return preg_match(self::REGEX_GOOGLE_ADS_ID, (string) $this->google_ads_id) ? $this->google_ads_id : null;
+    }
+
+    public function googleAdsConversao(): ?string
+    {
+        return $this->googleAdsId() && preg_match(self::REGEX_GOOGLE_ADS_CONVERSAO, (string) $this->google_ads_conversao)
+            ? $this->google_ads_conversao : null;
     }
 
     public function whatsappConfigurado(): bool

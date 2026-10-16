@@ -544,6 +544,20 @@
                            class="h-5 w-5 rounded border-stone-300 text-rose-600 focus:ring-rose-100">
                     <span class="text-sm font-medium text-stone-700">Ativo (aparece ao agendar)</span>
                 </label>
+                <div class="space-y-3 rounded-xl border border-stone-100 bg-stone-50/60 p-3">
+                    <p class="text-sm font-medium text-stone-700">Página de contato (formulário público)</p>
+                    <label for="procExibirFormulario" class="flex min-h-[44px] cursor-pointer items-center gap-3">
+                        <input type="checkbox" id="procExibirFormulario" wire:model="procExibirFormulario"
+                               class="h-5 w-5 rounded border-stone-300 text-rose-600 focus:ring-rose-100">
+                        <span class="text-sm text-stone-700">Mostrar como opção no formulário</span>
+                    </label>
+                    <div>
+                        <label for="proc-nome-publico" class="label">Nome no formulário (opcional)</label>
+                        <input id="proc-nome-publico" type="text" wire:model="procNomePublico" maxlength="100" class="input" placeholder="Ex.: Harmonização Facial">
+                        <p class="hint">Em branco, usa o nome do procedimento. Em páginas de anúncio, o Google não aceita nome de medicamento (ex.: Botox).</p>
+                        @error('procNomePublico') <p class="field-error">{{ $message }}</p> @enderror
+                    </div>
+                </div>
             </div>
             <div class="flex flex-col-reverse gap-2 border-t border-stone-100 px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
                 <button wire:click="fecharModalProcedimento" class="btn-secondary">

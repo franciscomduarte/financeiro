@@ -17,16 +17,19 @@ class Procedimento extends Model
 
     protected $fillable = [
         'nome',
+        'nome_publico',
         'descricao',
         'duracao_minutos',
         'valor',
         'retorno_dias',
         'ativo',
+        'exibir_formulario',
     ];
 
     protected $casts = [
         'duracao_minutos' => 'integer',
         'retorno_dias'    => 'integer',
+        'exibir_formulario' => 'boolean',
         'valor'           => 'decimal:2',
         'ativo'           => 'boolean',
     ];
