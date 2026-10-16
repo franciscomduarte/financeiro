@@ -57,8 +57,10 @@ class LeadsTest extends TestCase
         $this->post('/c/lc-estetica/contato', [
             'nome' => 'Ana Lima', 'telefone' => '(61) 99999-1111', 'email' => 'ANA@x.com', 'procedimento_id' => $botox->id,
             'mensagem' => 'Quero saber o valor', 'consentimento' => '1', 'origem' => 'instagram',
-        ])->assertRedirect('/c/lc-estetica/contato');
-        $this->get('/c/lc-estetica/contato')->assertSee('Recebemos seu contato!');
+        ])->assertRedirect('/c/lc-estetica/contato/obrigado');
+        $this->get('/c/lc-estetica/contato/obrigado')->assertSee('Recebemos seu contato!');
+        $this->get('/c/lc-estetica/contato/obrigado')->assertRedirect('/c/lc-estetica/contato'); // sem envio novo, volta ao formulário
+        $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class); // o limite por minuto não é o assunto daqui em diante
 
         app(ClinicaAtual::class)->definir($this->clinica->fresh());
         $lead = Lead::sole();
@@ -77,6 +79,46 @@ class LeadsTest extends TestCase
         $this->assertSame(2, LeadInteracao::count());
 
         $this->get('/c/nao-existe/contato')->assertNotFound();
+    }
+
+    public function test_pagina_de_contato_pronta_para_anuncios(): void
+    {
+        $botox = Procedimento::create(['nome' => 'Toxina Teste', 'nome_publico' => 'Harmonização Facial', 'duracao_minutos' => 30, 'valor' => 900, 'ativo' => true]);
+        Procedimento::create(['nome' => 'Bioestimulador', 'nome_publico' => 'harmonização facial', 'duracao_minutos' => 60, 'valor' => 1500, 'ativo' => true]);
+        Procedimento::create(['nome' => 'Limpeza de pele', 'duracao_minutos' => 60, 'valor' => 200, 'ativo' => true]);
+        Procedimento::create(['nome' => 'Remédio X', 'duracao_minutos' => 30, 'valor' => 100, 'ativo' => true, 'exibir_formulario' => false]);
+        app(ClinicaAtual::class)->definir(null);
+
+        $pagina = $this->get('/c/lc-estetica/contato')->assertOk()
+            ->assertDontSee('Toxina Teste')->assertDontSee('Remédio X')->assertSee('Limpeza de pele')
+            ->assertDontSee('googletagmanager')->assertDontSee('Chamar no WhatsApp');
+        $this->assertSame(1, substr_count($pagina->getContent(), '>Harmonização Facial</option>'));
+
+        // A clínica configura o WhatsApp e o Google Ads (colando só o rótulo da conversão)
+        app(ClinicaAtual::class)->definir($this->clinica->fresh());
+        $this->actingAs(\App\Models\User::factory()->create(['role' => 'admin']));
+        Livewire::test(\App\Livewire\ConfiguracaoClinica::class)
+            ->set('googleAdsId', 'GTM-123')->call('salvarPaginaContato')->assertHasErrors('googleAdsId')
+            ->set('whatsappContato', '(61) 98888-7777')->set('googleAdsId', 'aw-123456789')->set('googleAdsConversao', 'AbC_12345')
+            ->call('salvarPaginaContato')->assertHasNoErrors();
+        $clinica = $this->clinica->fresh();
+        $this->assertSame(['AW-123456789', 'AW-123456789/AbC_12345'], [$clinica->google_ads_id, $clinica->google_ads_conversao]);
+        app(ClinicaAtual::class)->definir(null);
+
+        $this->get('/c/lc-estetica/contato')
+            ->assertSee('https://wa.me/5561988887777?text=', false)->assertSee('Chamar no WhatsApp')
+            ->assertSee('https://www.googletagmanager.com/gtag/js?id=AW-123456789', false)
+            ->assertSee("gtag('config', \"AW-123456789\")", false)
+            ->assertDontSee("'conversion'", false);
+
+        $this->post('/c/lc-estetica/contato', ['nome' => 'Ana Lima', 'telefone' => '(61) 99999-1111', 'procedimento_id' => $botox->id, 'consentimento' => '1'])
+            ->assertRedirect('/c/lc-estetica/contato/obrigado');
+        $this->get('/c/lc-estetica/contato/obrigado')->assertOk()->assertSee('Recebemos seu contato!')
+            ->assertSee('googletagmanager.com/gtag/js?id=AW-123456789', false)
+            ->assertSee("gtag('event', 'conversion', {'send_to': \"AW-123456789\\/AbC_12345\"})", false);
+
+        app(ClinicaAtual::class)->definir($this->clinica->fresh());
+        $this->assertSame($botox->id, Lead::sole()->procedimento_id);
     }
 
     public function test_mensagem_de_whatsapp_de_numero_novo_vira_lead_e_paciente_e_ignorado(): void

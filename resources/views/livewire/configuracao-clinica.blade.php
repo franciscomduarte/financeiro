@@ -14,8 +14,8 @@
     <div class="max-w-3xl space-y-6">
 
     {{-- Abas --}}
-    <div class="grid grid-cols-2 gap-1 rounded-xl bg-stone-100 p-1 sm:grid-cols-4" role="tablist">
-        @foreach (['dados' => 'Dados', 'integracoes' => 'Integrações', 'financeiro' => 'Financeiro', 'nota_fiscal' => 'Nota fiscal'] as $chave => $titulo)
+    <div class="grid grid-cols-2 gap-1 rounded-xl bg-stone-100 p-1 sm:grid-cols-5" role="tablist">
+        @foreach (['dados' => 'Dados', 'integracoes' => 'Integrações', 'contato' => 'Página de contato', 'financeiro' => 'Financeiro', 'nota_fiscal' => 'Nota fiscal'] as $chave => $titulo)
             <button type="button" wire:click="$set('aba', '{{ $chave }}')"
                     role="tab" aria-selected="{{ $aba === $chave ? 'true' : 'false' }}"
                     class="min-h-[44px] rounded-lg text-sm font-medium transition-colors {{ $aba === $chave ? 'bg-surface text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700' }}">
@@ -167,6 +167,50 @@
 
             <div class="flex justify-end">
                 <button type="submit" wire:loading.attr="disabled" class="btn-primary">Salvar integrações</button>
+            </div>
+        </form>
+    @endif
+
+    {{-- ═══════════════ Página de contato ═══════════════ --}}
+    @if ($aba === 'contato')
+        @php $linkFormulario = route('leads.formulario', $clinica->slug); @endphp
+        <form wire:submit="salvarPaginaContato" class="card space-y-5 p-5 sm:p-6">
+            <div>
+                <h2 class="text-base font-semibold text-stone-900">Formulário de contato</h2>
+                <p class="mt-1 text-sm text-stone-500">Página pública onde a pessoa deixa o contato e vira lead. Use no Instagram, no site e como destino dos anúncios.</p>
+                <p class="mt-2 break-all rounded-lg bg-stone-50 px-3 py-2 font-mono text-xs text-stone-700">{{ $linkFormulario }}</p>
+                <p class="hint mt-1">Depois do envio, a pessoa vai para <span class="font-mono">{{ $linkFormulario }}/obrigado</span>. As opções de procedimento e o nome que aparece em cada uma ficam em Profissionais e horários › Procedimentos.</p>
+            </div>
+
+            <div>
+                <label for="whatsapp-contato" class="label">WhatsApp do botão "Chamar no WhatsApp"</label>
+                <input id="whatsapp-contato" type="tel" inputmode="tel" wire:model="whatsappContato" maxlength="30" placeholder="(61) 99999-0000" class="input max-w-xs">
+                <p class="hint">Aparece acima do formulário, para quem prefere conversar direto. Em branco, o botão não aparece.</p>
+                @error('whatsappContato') <p class="field-error">{{ $message }}</p> @enderror
+            </div>
+
+            <section class="space-y-4 border-t border-stone-100 pt-5">
+                <div>
+                    <h3 class="text-sm font-semibold text-stone-900">Google Ads</h3>
+                    <p class="mt-1 text-sm text-stone-500">Coloca a tag do Google no formulário e na página de obrigado, e registra a conversão quando alguém envia o contato.</p>
+                </div>
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <label for="google-ads-id" class="label">ID da tag (AW-…)</label>
+                        <input id="google-ads-id" type="text" wire:model="googleAdsId" maxlength="30" placeholder="AW-123456789" class="input font-mono" autocomplete="off">
+                        @error('googleAdsId') <p class="field-error">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label for="google-ads-conversao" class="label">Conversão (send_to)</label>
+                        <input id="google-ads-conversao" type="text" wire:model="googleAdsConversao" maxlength="100" placeholder="AW-123456789/AbCdEf123" class="input font-mono" autocomplete="off">
+                        @error('googleAdsConversao') <p class="field-error">{{ $message }}</p> @enderror
+                    </div>
+                </div>
+                <p class="hint">Os dois valores vêm do código que o Google Ads fornece: o ID está em <span class="font-mono">gtag('config', 'AW-…')</span> e a conversão em <span class="font-mono">'send_to': 'AW-…/…'</span>.</p>
+            </section>
+
+            <div class="flex justify-end">
+                <button type="submit" wire:loading.attr="disabled" class="btn-primary">Salvar página de contato</button>
             </div>
         </form>
     @endif

@@ -31,11 +31,37 @@ class FormularioLeadController extends Controller
 
         return view('leads.formulario', [
             'clinica'       => $clinica,
-            'procedimentos' => Procedimento::query()->withoutGlobalScope(ClinicaScope::class)->where('tenant_id', $clinica->id)
-                ->where('ativo', true)->orderBy('nome')->limit(100)->get(['id', 'nome']),
+            'procedimentos' => $this->opcoesProcedimento($clinica),
             'origem'        => $this->origem($request->query('origem'))->value,
-            'enviado'       => (bool) session('lead_enviado'),
+            'enviado'       => false,
         ]);
+    }
+
+    /** Página de obrigado (endereço próprio para o Google Ads). Só abre logo depois de um envio; senão volta ao formulário. */
+    public function obrigado(string $slug): View|RedirectResponse
+    {
+        $clinica = $this->clinica($slug);
+        if (! session('lead_enviado')) {
+            return redirect()->route('leads.formulario', ['slug' => $slug]);
+        }
+
+        return view('leads.formulario', ['clinica' => $clinica, 'procedimentos' => collect(), 'origem' => null, 'enviado' => true]);
+    }
+
+    /**
+     * Opções do "Tem interesse em algum procedimento?": procedimentos ativos marcados para o formulário, pelo nome público
+     * (ex.: "Botox" aparece como "Harmonização Facial"); nomes públicos iguais viram uma opção só.
+     *
+     * @return \Illuminate\Support\Collection<int, array{id: int, nome: string}>
+     */
+    private function opcoesProcedimento(Clinica $clinica): \Illuminate\Support\Collection
+    {
+        return Procedimento::query()->withoutGlobalScope(ClinicaScope::class)->where('tenant_id', $clinica->id)
+            ->where('ativo', true)->where('exibir_formulario', true)
+            ->orderBy('id')->limit(100)->get(['id', 'nome', 'nome_publico'])
+            ->map(fn (Procedimento $p) => ['id' => $p->id, 'nome' => trim((string) ($p->nome_publico ?: $p->nome))])
+            ->unique(fn (array $o) => mb_strtolower($o['nome']))
+            ->sortBy('nome', SORT_NATURAL | SORT_FLAG_CASE)->values();
     }
 
     public function enviar(string $slug, FormularioLeadRequest $request, CriarLeadAction $criar, ClinicaAtual $clinicaAtual): RedirectResponse
@@ -59,12 +85,12 @@ class FormularioLeadController extends Controller
             return back()->withInput()->withErrors(['nome' => $e->getMessage()]);
         }
 
-        return redirect()->route('leads.formulario', ['slug' => $slug])->with('lead_enviado', true);
+        return redirect()->route('leads.formulario.obrigado', ['slug' => $slug])->with('lead_enviado', true);
     }
 
     private function clinica(string $slug): Clinica
     {
-        return Clinica::query()->select(['id', 'nome', 'slug', 'status', 'logo_path', 'telefone', 'endereco'])
+        return Clinica::query()->select(['id', 'nome', 'slug', 'status', 'logo_path', 'telefone', 'endereco', 'whatsapp_contato', 'google_ads_id', 'google_ads_conversao'])
             ->where('slug', $slug)->where('status', '!=', StatusClinica::Bloqueada->value)->firstOrFail();
     }
 

@@ -73,6 +73,8 @@ Route::get('/c/{slug}/contato', [\App\Http\Controllers\FormularioLeadController:
     ->middleware('throttle:60,1')->name('leads.formulario');
 Route::post('/c/{slug}/contato', [\App\Http\Controllers\FormularioLeadController::class, 'enviar'])
     ->middleware('throttle:6,1')->name('leads.formulario.enviar');
+Route::get('/c/{slug}/contato/obrigado', [\App\Http\Controllers\FormularioLeadController::class, 'obrigado'])
+    ->middleware('throttle:60,1')->name('leads.formulario.obrigado');
 
 // Pesquisa de satisfação (link enviado ao paciente, sem login)
 Route::middleware('throttle:30,1')->group(function (): void {

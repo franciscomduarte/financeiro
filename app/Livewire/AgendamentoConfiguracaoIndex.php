@@ -50,6 +50,8 @@ class AgendamentoConfiguracaoIndex extends Component
     public string  $procValor     = '';
     public string  $procRetornoDias = '';
     public bool    $procAtivo     = true;
+    public string  $procNomePublico = '';
+    public bool    $procExibirFormulario = true;
 
     // ─── Profissional: modais ─────────────────────────────────────
     public function abrirModalNovoProfissional(): void
@@ -248,6 +250,8 @@ class AgendamentoConfiguracaoIndex extends Component
         $this->procValor    = (string) $p->valor;
         $this->procRetornoDias = $p->retorno_dias ? (string) $p->retorno_dias : '';
         $this->procAtivo    = $p->ativo;
+        $this->procNomePublico = (string) $p->nome_publico;
+        $this->procExibirFormulario = (bool) $p->exibir_formulario;
         $this->modalProcedimento = true;
     }
 
@@ -264,6 +268,7 @@ class AgendamentoConfiguracaoIndex extends Component
             'procDuracao' => 'required|integer|min:15|max:480',
             'procValor'   => 'required|numeric|min:0',
             'procRetornoDias' => 'nullable|integer|min:1|max:730',
+            'procNomePublico' => 'nullable|string|max:100',
         ], [
             'procRetornoDias.max' => 'Use no máximo 730 dias (2 anos).',
         ]);
@@ -276,6 +281,8 @@ class AgendamentoConfiguracaoIndex extends Component
                 'valor'           => (float) str_replace(',', '.', $this->procValor),
                 'retorno_dias'    => $this->procRetornoDias !== '' ? (int) $this->procRetornoDias : null,
                 'ativo'           => $this->procAtivo,
+                'nome_publico'    => trim($this->procNomePublico) ?: null,
+                'exibir_formulario' => $this->procExibirFormulario,
             ];
 
             if ($this->procedimentoEditandoId) {
@@ -300,6 +307,8 @@ class AgendamentoConfiguracaoIndex extends Component
         $this->procValor     = '';
         $this->procRetornoDias = '';
         $this->procAtivo     = true;
+        $this->procNomePublico = '';
+        $this->procExibirFormulario = true;
         $this->resetErrorBag();
     }
 

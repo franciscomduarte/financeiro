@@ -61,6 +61,11 @@ class ConfiguracaoClinica extends Component
     public string $nfsePadrao            = 'municipal';
     public string $nfseCodigoNacional    = '';
 
+    // Página de contato (formulário público) e anúncios
+    public string $whatsappContato     = '';
+    public string $googleAdsId         = '';
+    public string $googleAdsConversao  = '';
+
     public ?string $flashSucesso = null;
     public ?string $flashErro    = null;
 
@@ -90,6 +95,9 @@ class ConfiguracaoClinica extends Component
         $this->nfsePadrao           = ($c->nfse_padrao ?? \App\Enums\PadraoNfse::Municipal)->value;
         $this->nfseCodigoNacional   = (string) $c->nfse_codigo_tributacao_nacional;
         $this->aliquotaImposto   = number_format((float) $c->aliquota_imposto, 2, '.', '');
+        $this->whatsappContato    = (string) $c->whatsapp_contato;
+        $this->googleAdsId        = (string) $c->google_ads_id;
+        $this->googleAdsConversao = (string) $c->google_ads_conversao;
     }
 
     private function clinica(): Clinica
@@ -152,6 +160,40 @@ class ConfiguracaoClinica extends Component
 
         // Segredos digitados não ficam no estado do componente
         $this->evolutionApiKey = $this->asaasApiKey = $this->asaasWebhookToken = '';
+    }
+
+    public function salvarPaginaContato(AtualizarConfiguracaoClinicaAction $action): void
+    {
+        $this->googleAdsId        = strtoupper(trim($this->googleAdsId));
+        $this->googleAdsConversao = trim($this->googleAdsConversao);
+        if ($this->googleAdsConversao !== '' && ! str_starts_with(strtoupper($this->googleAdsConversao), 'AW-') && $this->googleAdsId !== '') {
+            $this->googleAdsConversao = $this->googleAdsId . '/' . ltrim($this->googleAdsConversao, '/'); // colou só o rótulo
+        }
+        $this->validate([
+            'whatsappContato'    => ['nullable', 'string', 'max:30', 'regex:/^[\d\s()+-]+$/'],
+            'googleAdsId'        => ['nullable', 'string', 'max:30', 'regex:' . Clinica::REGEX_GOOGLE_ADS_ID],
+            'googleAdsConversao' => ['nullable', 'string', 'max:100', 'regex:' . Clinica::REGEX_GOOGLE_ADS_CONVERSAO],
+        ], [
+            'whatsappContato.regex'    => 'Use apenas números, espaço, parênteses, + e hífen.',
+            'googleAdsId.regex'        => 'Use o ID do Google Ads no formato AW-123456789.',
+            'googleAdsConversao.regex' => 'Use o "send_to" da conversão, no formato AW-123456789/AbCdEf123.',
+        ]);
+        if ($this->googleAdsConversao !== '' && $this->googleAdsId === '') {
+            $this->addError('googleAdsId', 'Informe o ID do Google Ads para usar a conversão.');
+
+            return;
+        }
+        if ($this->whatsappContato !== '' && strlen((string) preg_replace('/\D/', '', $this->whatsappContato)) < 10) {
+            $this->addError('whatsappContato', 'Informe o WhatsApp com DDD. Ex.: (61) 99999-0000');
+
+            return;
+        }
+
+        $this->salvar($action, [
+            'whatsapp_contato'     => $this->whatsappContato ?: null,
+            'google_ads_id'        => $this->googleAdsId ?: null,
+            'google_ads_conversao' => $this->googleAdsConversao ?: null,
+        ]);
     }
 
     public function salvarFinanceiro(AtualizarConfiguracaoClinicaAction $action): void
